@@ -76,21 +76,36 @@ export const getVerseBackground = async (
   const fallback = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)]
 
   try {
+    if (!process.env.UNSPLASH_ACCESS_KEY) {
+      console.warn('Unsplash Access Key is missing. Falling back to local assets.')
+      return fallback
+    }
+
     const response = await fetch(
       `https://api.unsplash.com/photos/random?query=${encodeURIComponent(keyword)}&orientation=portrait&content_filter=high`,
       {
         headers: {
-          Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+          'Authorization': `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+          'Accept-Version': 'v1',
         },
         next: { revalidate: 86400 },
       },
     )
 
-    if (!response.ok) return fallback
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error(`Unsplash API error (${response.status}): ${errorData}`)
+      return fallback
+    }
 
     const data = await response.json() as {
       urls: { regular: string; thumb: string }
       user: { name: string; links: { html: string } }
+    }
+
+    if (!data.urls?.regular) {
+      console.error('Unsplash API returned malformed data', data)
+      return fallback
     }
 
     return {
@@ -100,7 +115,8 @@ export const getVerseBackground = async (
       photographerUrl: data.user.links.html,
       theme,
     }
-  } catch {
+  } catch (error) {
+    console.error('Unexpected error in getVerseBackground:', error)
     return fallback
   }
 }

@@ -71,32 +71,36 @@ export function VerseImageCard({
 
   return (
     <div
-      className={`relative overflow-hidden ${
+      className={`relative overflow-hidden bg-neutral-900 ${
         isFullscreen
           ? 'fixed inset-0 z-[100] rounded-none'
-          : 'h-[300px] rounded-2xl'
+          : 'h-[300px] rounded-2xl shadow-xl'
       }`}
     >
       {/* ── Background image ── */}
-      {background?.url && (
+      {background?.url ? (
         <Image
           src={background.url}
           alt="Verse background"
           fill
-          className="object-cover"
+          className="object-cover opacity-0 transition-opacity duration-1000"
+          onLoadingComplete={(img) => img.classList.remove('opacity-0')}
           priority
           sizes={isFullscreen ? '100vw' : '(max-width: 430px) 100vw, 430px'}
           placeholder={background.blurUrl ? 'blur' : 'empty'}
           blurDataURL={background.blurUrl || undefined}
         />
+      ) : (
+        /* ── Fallback Gradient if no image at all ── */
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900" />
       )}
 
-      {/* ── Gradient overlay ── */}
+      {/* ── Gradient overlay (always visible for contrast) ── */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-black/40"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.80) 100%)',
+            'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.75) 100%)',
         }}
       />
 
