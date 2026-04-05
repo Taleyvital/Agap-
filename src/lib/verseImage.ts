@@ -63,22 +63,14 @@ export interface VerseBackground {
 // Récupérer une photo Unsplash selon le thème
 export const getVerseBackground = async (
   verseText: string,
-): Promise<VerseBackground> => {
+): Promise<VerseBackground | null> => {
   const theme = await detectVerseTheme(verseText)
   const keyword = THEME_KEYWORDS[theme]
 
-  const FALLBACKS: VerseBackground[] = [
-    { url: '/images/verse-bg-1.jpg', blurUrl: '', photographer: '', photographerUrl: '', theme },
-    { url: '/images/verse-bg-2.jpg', blurUrl: '', photographer: '', photographerUrl: '', theme },
-    { url: '/images/verse-bg-3.jpg', blurUrl: '', photographer: '', photographerUrl: '', theme },
-  ]
-
-  const fallback = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)]
-
   try {
     if (!process.env.UNSPLASH_ACCESS_KEY) {
-      console.warn('Unsplash Access Key is missing. Falling back to local assets.')
-      return fallback
+      console.warn('Unsplash Access Key is missing.')
+      return null
     }
 
     const response = await fetch(
@@ -95,7 +87,7 @@ export const getVerseBackground = async (
     if (!response.ok) {
       const errorData = await response.text()
       console.error(`Unsplash API error (${response.status}): ${errorData}`)
-      return fallback
+      return null
     }
 
     const data = await response.json() as {
@@ -105,7 +97,7 @@ export const getVerseBackground = async (
 
     if (!data.urls?.regular) {
       console.error('Unsplash API returned malformed data', data)
-      return fallback
+      return null
     }
 
     return {
@@ -117,6 +109,6 @@ export const getVerseBackground = async (
     }
   } catch (error) {
     console.error('Unexpected error in getVerseBackground:', error)
-    return fallback
+    return null
   }
 }
