@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/Button";
 import { VerseImageCard } from "@/components/ui/VerseImageCard";
 import {
   DEFAULT_TRANSLATION,
-  TRANSLATION_OPTIONS,
   getBooks,
   getChapter,
 } from "@/lib/bible";
@@ -25,15 +24,6 @@ function stripHtml(html: string) {
 }
 
 // Abréviations courtes pour les pills de livres
-function shortName(name: string): string {
-  // Ex: "Évangile selon Jean" → "Jean", "1 Corinthiens" → "1 Co"
-  const parts = name.trim().split(" ");
-  if (parts.length === 1) return parts[0].slice(0, 4);
-  // Numéro en tête (1, 2, 3)
-  const num = /^\d$/.test(parts[0]) ? parts[0] + " " : "";
-  const base = num ? parts[1] : parts[parts.length - 1];
-  return num + base.slice(0, 4);
-}
 
 export default function BiblePage() {
   // ── State ──────────────────────────────────

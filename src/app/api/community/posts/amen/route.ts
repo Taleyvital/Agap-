@@ -38,8 +38,9 @@ export async function POST(request: Request) {
       if (error) throw error;
       return NextResponse.json({ action: "added" });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Amen error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

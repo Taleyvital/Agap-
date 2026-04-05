@@ -99,7 +99,7 @@ export default async function HomePage() {
           <Card>
             <p className="ui-label text-text-tertiary">COMMUNAUTÉ</p>
             <p className="mt-2 font-serif text-lg font-bold text-text-primary">
-              Partage ta foi, prie avec d'autres
+              Partage ta foi, prie avec d&apos;autres
             </p>
             <p className="mt-2 line-clamp-2 font-sans text-sm text-text-secondary">
               Connecte-toi avec la famille Agape. Partage tes réflexions, confie tes requêtes et lis les témoignages pour encourager et être encouragé.
