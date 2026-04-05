@@ -86,6 +86,7 @@ export function VerseImageCard({
           className="object-cover opacity-0 transition-opacity duration-1000"
           onLoadingComplete={(img) => img.classList.remove('opacity-0')}
           priority
+          unoptimized={background.url.startsWith("/")}
           sizes={isFullscreen ? '100vw' : '(max-width: 430px) 100vw, 430px'}
           placeholder={background.blurUrl ? 'blur' : 'empty'}
           blurDataURL={background.blurUrl || undefined}
