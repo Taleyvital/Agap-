@@ -153,3 +153,23 @@ alter table public.verse_notes enable row level security;
 create policy "Users own verse_notes"
   on public.verse_notes for all
   using (auth.uid() = user_id);
+
+-- Sujets de prière
+create table if not exists public.prayer_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  titre text not null check (char_length(titre) <= 100),
+  note_initiale text check (char_length(note_initiale) <= 300),
+  exaucee boolean default false,
+  date_exaucement timestamptz,
+  temoignage text check (char_length(temoignage) <= 500),
+  partage_communaute boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.prayer_requests enable row level security;
+
+create policy "Users own prayer_requests"
+  on public.prayer_requests for all
+  using (auth.uid() = user_id);

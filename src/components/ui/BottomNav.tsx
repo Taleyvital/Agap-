@@ -17,7 +17,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[430px] -translate-x-1/2 items-center justify-around border-t border-separator bg-bg-nav/95 px-6 pt-3 pb-[env(safe-area-inset-bottom,16px)] backdrop-blur-sm"
+      className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[430px] -translate-x-1/2 items-center justify-around border-t border-separator bg-bg-nav/95 px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,16px)+12px)] backdrop-blur-sm"
       aria-label="Navigation principale"
     >
       {items.map(({ href, label, Icon }) => {

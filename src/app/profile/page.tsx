@@ -32,11 +32,6 @@ interface Profile {
   avatar_url: string | null;
 }
 
-const STATS = [
-  { value: "12", label: "Jours consécutifs" },
-  { value: "156", label: "Versets lus" },
-  { value: "42", label: "Prières" },
-];
 
 const MENU_SECTIONS = [
   {
@@ -66,6 +61,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [initial, setInitial] = useState("A");
   const [since, setSince] = useState("");
+  const [answeredCount, setAnsweredCount] = useState(0);
   const [themeSheetOpen, setThemeSheetOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -98,6 +94,14 @@ export default function ProfilePage() {
           );
         }
       }
+
+      // Fetch answered prayers count
+      const { count } = await supabase
+        .from("prayer_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("exaucee", true);
+      if (count !== null) setAnsweredCount(count);
     })();
   }, []);
 
@@ -250,13 +254,29 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* ── Stats strip ───────────────────────────── */}
-        <motion.div {...stagger(1)} className="mt-8 flex divide-x divide-separator overflow-hidden rounded-2xl border border-separator bg-bg-secondary">
-          {STATS.map((s) => (
-            <div key={s.label} className="flex flex-1 flex-col items-center py-4">
-              <span className="font-serif text-2xl font-semibold text-text-primary">{s.value}</span>
-              <span className="mt-0.5 px-1 text-center font-sans text-[9px] uppercase tracking-wider text-text-tertiary leading-tight">{s.label}</span>
-            </div>
-          ))}
+        <motion.div {...stagger(1)} className="mt-8 flex flex-col gap-4">
+          <div className="flex divide-x divide-separator overflow-hidden rounded-2xl border border-separator bg-bg-secondary">
+            {[
+              { value: "12", label: "Jours consécutifs" },
+              { value: "156", label: "Versets lus" },
+              { value: answeredCount.toString(), label: "Prières exaucées" },
+            ].map((s) => (
+              <div key={s.label} className="flex flex-1 flex-col items-center py-4">
+                <span className="font-serif text-2xl font-semibold text-text-primary">
+                  {s.label === "Prières exaucées" && "✅ "}
+                  {s.value}
+                </span>
+                <span className="mt-0.5 px-1 text-center font-sans text-[9px] uppercase tracking-wider text-text-tertiary leading-tight">{s.label}</span>
+              </div>
+            ))}
+          </div>
+          
+          <Link 
+            href="/prayer" 
+            className="flex items-center justify-center gap-2 rounded-xl bg-bg-secondary/50 py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-accent hover:bg-bg-tertiary transition-colors"
+          >
+            PRAYER HISTORY <ChevronRight size={12} />
+          </Link>
         </motion.div>
 
         {/* ── Reading progress ──────────────────────── */}

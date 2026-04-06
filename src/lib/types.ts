@@ -27,3 +27,16 @@ export type BibleBook = {
   chronorder: number;
   chapters: number;
 };
+
+export interface PrayerRequest {
+  id: string;
+  user_id: string;
+  titre: string;
+  note_initiale?: string;
+  exaucee: boolean;
+  date_exaucement?: string;
+  temoignage?: string;
+  partage_communaute: boolean;
+  created_at: string;
+  updated_at: string;
+}
