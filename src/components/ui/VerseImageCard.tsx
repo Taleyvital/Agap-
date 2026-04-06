@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-
-interface VerseBackground {
-  url: string
-  blurUrl: string
-  photographer: string
-  photographerUrl: string
-  theme: string
-}
+import { getVerseBackground, type VerseBackground } from '@/lib/verseImage'
 
 interface VerseImageCardProps {
   verseText: string
