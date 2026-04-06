@@ -38,6 +38,21 @@ body {
   @apply bg-bg-primary text-text-primary font-sans antialiased transition-colors duration-300;
 }
 
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
 .ui-label {
   @apply font-sans text-[11px] uppercase tracking-[0.15em] text-text-secondary;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }

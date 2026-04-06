@@ -10,6 +10,7 @@ create table if not exists public.profiles (
   spiritual_level text not null,
   current_challenge text not null,
   anonymous_name text,
+  avatar_url text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

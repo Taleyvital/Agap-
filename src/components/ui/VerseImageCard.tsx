@@ -92,15 +92,22 @@ export function VerseImageCard({
         />
       ) : (
         /* ── Fallback Gradient if no image at all ── */
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-800" />
+      )}
+
+      {/* ── Debug Error (only visible if there's an error) ── */}
+      {background?.error && (
+        <div className="absolute top-2 right-2 z-50 rounded bg-red-500/80 px-2 py-1 font-mono text-[8px] text-white backdrop-blur-md">
+          ERR: {background.error.slice(0, 50)}
+        </div>
       )}
 
       {/* ── Gradient overlay (always visible for contrast) ── */}
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/30"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.75) 100%)',
+            'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.6) 100%)',
         }}
       />
 

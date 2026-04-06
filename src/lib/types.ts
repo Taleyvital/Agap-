@@ -4,6 +4,7 @@ export interface UserProfile {
   spiritual_level: string;
   current_challenge: string;
   anonymous_name?: string;
+  avatar_url?: string;
 }
 
 export interface ChatMessage {

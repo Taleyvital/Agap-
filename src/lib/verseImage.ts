@@ -58,6 +58,8 @@ export interface VerseBackground {
   photographer: string
   photographerUrl: string
   theme: string
+  error?: string
+  status?: number
 }
 
 // Récupérer une photo Unsplash selon le thème
@@ -70,7 +72,7 @@ export const getVerseBackground = async (
   try {
     if (!process.env.UNSPLASH_ACCESS_KEY) {
       console.warn('Unsplash Access Key is missing.')
-      return null
+      return { url: '', blurUrl: '', photographer: '', photographerUrl: '', theme, error: 'Missing Unsplash Access Key' }
     }
 
     const response = await fetch(
@@ -86,8 +88,9 @@ export const getVerseBackground = async (
 
     if (!response.ok) {
       const errorData = await response.text()
-      console.error(`Unsplash API error (${response.status}): ${errorData}`)
-      return null
+      const status = response.status
+      console.error(`Unsplash API error (${status}): ${errorData}`)
+      return { url: '', blurUrl: '', photographer: '', photographerUrl: '', theme, error: errorData, status }
     }
 
     const data = await response.json() as {
@@ -97,7 +100,7 @@ export const getVerseBackground = async (
 
     if (!data.urls?.regular) {
       console.error('Unsplash API returned malformed data', data)
-      return null
+      return { url: '', blurUrl: '', photographer: '', photographerUrl: '', theme, error: 'Malformed Unsplash response' }
     }
 
     return {
@@ -106,9 +109,11 @@ export const getVerseBackground = async (
       photographer: data.user.name,
       photographerUrl: data.user.links.html,
       theme,
+      status: 200,
     }
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
     console.error('Unexpected error in getVerseBackground:', error)
-    return null
+    return { url: '', blurUrl: '', photographer: '', photographerUrl: '', theme: 'default', error: errorMsg }
   }
 }

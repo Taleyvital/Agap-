@@ -10,15 +10,18 @@ export async function GET(req: NextRequest) {
 
   try {
     const background = await getVerseBackground(verse)
+    
+    // If there's an error in the background object, we still return 200 
+    // to let the client see the error message for debugging.
     return NextResponse.json(background, {
+      status: background?.status === 200 ? 200 : 500,
       headers: {
-        // Cache 24h côté client + CDN
-        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+        'Cache-Control': 'no-store, max-age=0',
       },
     })
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch image' },
+      { error: 'Failed to fetch image', details: String(error) },
       { status: 500 },
     )
   }

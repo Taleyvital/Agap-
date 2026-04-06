@@ -21,11 +21,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { Camera, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { useRef } from "react";
 
 interface Profile {
   first_name: string | null;
   anonymous_name: string | null;
   created_at: string | null;
+  avatar_url: string | null;
 }
 
 const STATS = [
@@ -65,6 +69,8 @@ export default function ProfilePage() {
   const [themeSheetOpen, setThemeSheetOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -77,7 +83,7 @@ export default function ProfilePage() {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("first_name, anonymous_name, created_at")
+        .select("first_name, anonymous_name, created_at, avatar_url")
         .eq("id", user.id)
         .single();
       if (data) {
@@ -103,6 +109,50 @@ export default function ProfilePage() {
     router.replace("/onboarding");
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const supabase = createSupabaseBrowserClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 1. Upload file
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // 3. Update profile
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      // 4. Update local state
+      setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      alert("Erreur lors de l'envoi de la photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <AppShell>
       <div className="px-5 pt-6 pb-32">
@@ -124,30 +174,72 @@ export default function ProfilePage() {
 
         {/* ── Avatar + Identity ─────────────────────── */}
         <motion.div {...stagger(0)} className="mt-8 flex flex-col items-center">
-          {/* Avatar ring */}
-          <div className="relative">
-            <div className="relative h-20 w-20">
+          {/* Avatar container */}
+          <div className="relative group overflow-visible">
+            {/* Main Avatar Clickable Area */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="relative h-28 w-28 rounded-full transition-all duration-300 active:scale-95 focus:outline-none"
+              aria-label="Changer la photo de profil"
+            >
               {/* Gradient ring */}
               <div
-                className="absolute inset-0 rounded-full"
+                className="absolute inset-0 rounded-full animate-pulse-slow shadow-xl shadow-accent/10"
                 style={{
                   background: "conic-gradient(from 180deg, #7B6FD4, #9D93E8, #5B5099, #7B6FD4)",
-                  padding: "2px",
+                  padding: "4px",
                 }}
               >
                 <div className="h-full w-full rounded-full bg-bg-primary" />
               </div>
-              {/* Initial */}
-              <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-bg-secondary">
-                <span className="font-serif text-2xl italic text-text-primary">{initial}</span>
+              
+              {/* Avatar content */}
+              <div className="absolute inset-[6px] overflow-hidden rounded-full bg-bg-secondary flex items-center justify-center">
+                {profile?.avatar_url ? (
+                  <Image 
+                    src={profile.avatar_url} 
+                    alt={displayName} 
+                    fill 
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                ) : (
+                  <span className="font-serif text-4xl italic text-text-primary">{initial}</span>
+                )}
+                
+                {/* Hover overlay (subtle) */}
+                <div className={`absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${uploading ? 'opacity-100' : ''}`}>
+                  {uploading && <Loader2 className="h-8 w-8 animate-spin text-white" />}
+                </div>
               </div>
-            </div>
-            {/* Online dot */}
-            <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-bg-primary bg-emerald-400" />
+            </button>
+
+            {/* Camera Trigger Button (Icon) */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              className="absolute bottom-1 right-1 z-20 flex h-9 w-9 items-center justify-center rounded-full border-2 border-bg-primary bg-accent text-white shadow-lg transition-all duration-300 hover:bg-accent-light hover:scale-110 active:scale-90"
+              aria-label="Prendre une photo"
+            >
+              <Camera className="h-4.5 w-4.5" />
+            </button>
+
+            {/* Hidden Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarUpload}
+              accept="image/*"
+              className="hidden"
+              aria-hidden="true"
+            />
           </div>
 
           {/* Name */}
-          <p className="mt-4 font-serif text-2xl italic text-text-primary">{displayName}</p>
+          <p className="mt-5 font-serif text-2xl italic text-text-primary">{displayName}</p>
 
           {/* Since */}
           {since && (
