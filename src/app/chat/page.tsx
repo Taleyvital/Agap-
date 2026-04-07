@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Bell, Plus, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
@@ -30,20 +31,40 @@ function timeLabel() {
   return { line: "Apaise ton esprit.", tag: "SOIR" as const };
 }
 
-export default function ChatPage() {
-  const { line, tag } = timeLabel();
+export default function ChatPageWrapper() {
+  return (
+    <Suspense fallback={
+      <AppShell>
+        <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
+          <p className="text-text-tertiary">Chargement...</p>
+        </div>
+      </AppShell>
+    }>
+      <ChatPage />
+    </Suspense>
+  );
+}
+
+function ChatPage() {
+  const searchParams = useSearchParams();
+  const verseParam = searchParams.get("verse");
+  const textParam = searchParams.get("text");
+  const refParam = searchParams.get("ref");
+  
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<UiMessage[]>([
     {
       id: "welcome",
       role: "assistant",
       content:
-        "Je suis là avec toi. Parle-moi de ce qui occupe ton cœur aujourd’hui.",
+        "Je suis là avec toi. Parle-moi de ce qui occupe ton cœur aujourd'hui.",
       time: formatTime(new Date()),
     },
   ]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasSentInitialVerse = useRef<string | null>(null);
+  const { line, tag } = timeLabel();
 
   const scrollToEnd = useCallback(() => {
     scrollRef.current?.scrollTo({
@@ -52,11 +73,7 @@ export default function ChatPage() {
     });
   }, []);
 
-  useEffect(() => {
-    scrollToEnd();
-  }, [messages, scrollToEnd]);
-
-  const send = async (text: string) => {
+  const send = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
     const userMsg: UiMessage = {
@@ -100,14 +117,35 @@ export default function ChatPage() {
           id: crypto.randomUUID(),
           role: "assistant",
           content:
-            "Je n’ai pas pu répondre pour le moment. Réessaie dans un instant.",
+            "Je n'ai pas pu répondre pour le moment. Réessaie dans un instant.",
           time: formatTime(new Date()),
         },
       ]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, messages]);
+
+  // Auto-send verse message when coming from Bible
+  useEffect(() => {
+    if (!verseParam || !textParam || !refParam) return;
+    
+    const messageKey = `${verseParam}-${textParam}-${refParam}`;
+    if (hasSentInitialVerse.current === messageKey) return;
+    
+    hasSentInitialVerse.current = messageKey;
+    
+    const verseText = decodeURIComponent(textParam);
+    const verseRef = decodeURIComponent(refParam);
+    const verseNumber = verseParam.split("-")[2];
+    const message = `Peux-tu m'expliquer ce verset : "${verseText}" (${verseRef} ${verseNumber})`;
+    
+    void send(message);
+  }, [verseParam, textParam, refParam, send]);
+
+  useEffect(() => {
+    scrollToEnd();
+  }, [messages, scrollToEnd]);
 
   return (
     <AppShell>

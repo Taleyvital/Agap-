@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Check, HandHeart, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
 import { PrayerRequest } from "@/lib/types";
@@ -107,7 +107,7 @@ export function PrayerList() {
                       className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-separator bg-bg-secondary p-4 transition-colors hover:bg-bg-tertiary"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-xl">
-                        🙏
+                        <HandHeart className="h-5 w-5 text-accent" aria-hidden />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-text-primary">{prayer.titre}</p>
@@ -150,7 +150,7 @@ export function PrayerList() {
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-xl">
-                          ✅
+                          <Check className="h-5 w-5 text-green-600" aria-hidden />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-text-secondary line-through decoration-text-tertiary/40">{prayer.titre}</p>
@@ -200,7 +200,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-bg-secondary text-4xl">
-        🙏
+        <HandHeart className="h-10 w-10 text-accent" aria-hidden />
       </div>
       <h3 className="font-serif text-2xl italic text-text-primary">
         Commence à noter tes prières
@@ -308,7 +308,7 @@ function BottomSheets({
                  type="submit"
                  className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-4 font-bold uppercase tracking-[0.15em] text-white transition-opacity hover:opacity-90 active:scale-[0.98]"
                >
-                 Ajouter 🙏
+                 Ajouter <HandHeart className="h-4 w-4" aria-hidden />
                </button>
              </form>
           </motion.div>

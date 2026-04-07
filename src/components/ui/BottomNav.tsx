@@ -29,7 +29,7 @@ export function BottomNav() {
             className="flex min-w-[52px] flex-col items-center gap-0.5"
           >
             <Icon
-              className={`h-5 w-5 ${active ? "text-text-primary transition-colors" : "text-text-tertiary transition-colors"}`}
+              className={`h-6 w-6 ${active ? "text-text-primary transition-colors" : "text-text-tertiary transition-colors"}`}
               strokeWidth={active ? 2.2 : 1.5}
               aria-hidden
             />

@@ -4,24 +4,26 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  LogOut,
-  ChevronRight,
-  BookOpen,
-  MessageCircle,
-  Flame,
   Bell,
-  Shield,
+  BookOpen,
+  Camera,
+  Check,
+  ChevronRight,
+  Flame,
   HelpCircle,
-  Settings,
-  Sun,
-  Moon,
+  Loader2,
+  LogOut,
+  MessageCircle,
   Monitor,
+  Moon,
+  Settings,
+  Shield,
+  Sun,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
-import { Camera, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRef } from "react";
 
@@ -263,7 +265,9 @@ export default function ProfilePage() {
             ].map((s) => (
               <div key={s.label} className="flex flex-1 flex-col items-center py-4">
                 <span className="font-serif text-2xl font-semibold text-text-primary">
-                  {s.label === "Prières exaucées" && "✅ "}
+                  {s.label === "Prières exaucées" ? (
+                    <Check className="mr-1 inline-block h-5 w-5 align-[-2px] text-green-600" aria-hidden />
+                  ) : null}
                   {s.value}
                 </span>
                 <span className="mt-0.5 px-1 text-center font-sans text-[9px] uppercase tracking-wider text-text-tertiary leading-tight">{s.label}</span>
@@ -349,7 +353,7 @@ export default function ProfilePage() {
 
         {/* ── App version ───────────────────────────── */}
         <p className="mt-6 text-center font-sans text-[10px] text-text-tertiary/40">
-          AGAPE v2.0 · Fait avec 🕊️
+          Agape studio Webey
         </p>
 
       </div>
