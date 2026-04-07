@@ -59,24 +59,30 @@ export const moderateCommunityPost = async (text: string): Promise<{
   allowed: boolean;
   reason?: string;
 }> => {
-  const response = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    messages: [
-      {
-        role: "system",
-        content: `Tu es un modérateur pour une app chrétienne. Réponds uniquement JSON : {"allowed":true|false,"reason":"court motif si refus"}.
-Refuse : haine, harcèlement, contenu sexuel explicite, spam, propos anti-religieux offensants.`,
-      },
-      { role: "user", content: text },
-    ],
-    temperature: 0.2,
-    max_tokens: 120,
-  });
-  const raw = response.choices[0]?.message?.content ?? "";
   try {
-    const parsed = JSON.parse(raw) as { allowed: boolean; reason?: string };
-    return { allowed: Boolean(parsed.allowed), reason: parsed.reason };
-  } catch {
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content: `Tu es un modérateur pour une app chrétienne. Réponds uniquement JSON : {"allowed":true|false,"reason":"court motif si refus"}.
+Refuse : haine, harcèlement, contenu sexuel explicite, spam, propos anti-religieux offensants.`,
+        },
+        { role: "user", content: text },
+      ],
+      temperature: 0.2,
+      max_tokens: 120,
+    });
+    const raw = response.choices[0]?.message?.content ?? "";
+    try {
+      const parsed = JSON.parse(raw) as { allowed: boolean; reason?: string };
+      return { allowed: Boolean(parsed.allowed), reason: parsed.reason };
+    } catch {
+      return { allowed: true };
+    }
+  } catch (err) {
+    console.error("Moderation API error:", err);
+    // If moderation fails, allow the post (fail open)
     return { allowed: true };
   }
 };

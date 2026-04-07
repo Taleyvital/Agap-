@@ -9,6 +9,7 @@ import {
   Camera,
   Check,
   ChevronRight,
+  FileText,
   Flame,
   HelpCircle,
   Loader2,
@@ -39,6 +40,7 @@ const MENU_SECTIONS = [
   {
     title: "Mes contenus",
     items: [
+      { href: "/profile/posts", label: "Mes Publications", Icon: FileText },
       { href: "/bible", label: "Versets sauvegardés", Icon: BookOpen },
       { href: "/chat", label: "Historique AGAPE Chat", Icon: MessageCircle },
       { href: "/prayer", label: "Journal de prière", Icon: Flame },

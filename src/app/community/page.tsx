@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X } from "lucide-react";
+import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -31,51 +31,21 @@ interface Post {
   imageBadge?: string;
   recentAmens?: string[];
   plusAmens?: number;
+  isMine?: boolean; // Whether this post belongs to the current user
 }
 
-const MOCK_POSTS: Post[] = [
-  {
-    id: "mock-1",
-    author: "Grace Montgomery",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&q=80",
-    category: "TÉMOIGNAGE",
-    time: "IL Y A 2H",
-    quote: "\"Le silence matinal est là où je trouve les murmures les plus profonds de l'Esprit. Aujourd'hui, on me rappelle que la paix n'est pas l'absence de problèmes, mais la présence de Dieu.\"",
-    content: "J'ai passé un peu de temps dans Jean 14 aujourd'hui. Si quelqu'un d'autre se sent submergé par le bruit de cette semaine, je recommande vivement de prendre juste cinq minutes de silence absolu.",
-    amens: 0,
-    hasAmen: false,
-    comments: 12,
-  },
-  {
-    id: "mock-2",
-    author: "Samuel Chen",
-    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&q=80",
-    urgent: true,
-    category: "PRIÈRE",
-    time: "IL Y A 4H",
-    content: "Je demande à la communauté de prier pour ma grand-mère, Elena. Elle subit une opération demain matin. Je prie pour les mains des chirurgiens et pour sa paix intérieure.",
-    amens: 42,
-    hasAmen: true,
-    comments: 5,
-    recentAmens: [
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&h=50&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&q=80"
-    ],
-    plusAmens: 39,
-  },
-  {
-    id: "mock-3",
-    author: "Lydia Vance",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&q=80",
-    image: "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=600&h=400&fit=crop&q=80",
-    imageBadge: "TÉMOIGNAGE",
-    time: "IL Y A 6H",
-    category: "TÉMOIGNAGE",
-    content: "Après des mois de recherche, le Seigneur a débloqué notre situation de logement. Il est vraiment Jéhovah Jiré. Ne perdez pas espoir, les amis.",
-    amens: 0,
-    hasAmen: false,
-  }
-];
+interface SupabasePostRow {
+  id: string;
+  user_id: string;
+  content: string | null;
+  category: string;
+  created_at: string | null;
+  image_url: string | null;
+  anonymous_name: string | null;
+  community_amens: { user_id: string }[];
+}
+
+const MOCK_POSTS: Post[] = [];
 
 export default function CommunityPage() {
   const [filter, setFilter] = useState<Filter>("all");
@@ -85,6 +55,10 @@ export default function CommunityPage() {
   const [composerCategory, setComposerCategory] = useState<"testimony" | "prayer">("testimony");
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  
+  // Delete menu state
+  const [deleteMenuOpen, setDeleteMenuOpen] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   
   // Image Upload State
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -99,7 +73,7 @@ export default function CommunityPage() {
       
       void supabase
         .from("community_posts")
-        .select("id, content, category, created_at, image_url, community_amens(user_id)")
+        .select("id, user_id, content, category, created_at, image_url, anonymous_name, community_amens(user_id)")
         .order("created_at", { ascending: false })
         .limit(20)
         .then(({ data, error }) => {
@@ -112,7 +86,7 @@ export default function CommunityPage() {
             return;
           }
           console.log("Posts récupérés depuis Supabase:", data.length);
-          const mapped: Post[] = data.map((row) => {
+          const mapped: Post[] = data.map((row: SupabasePostRow) => {
             const created = row.created_at
               ? new Date(row.created_at).toLocaleTimeString("fr-FR", {
                   hour: "2-digit",
@@ -126,8 +100,8 @@ export default function CommunityPage() {
 
             return {
               id: String(row.id),
-              author: "Fidèle du chemin",
-              avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&q=80",
+              author: row.anonymous_name || "Fidèle du chemin",
+              avatar: "",
               category: row.category === "prayer" ? "PRIÈRE" : "TÉMOIGNAGE",
               time: created,
               content: String(row.content ?? ""),
@@ -136,6 +110,7 @@ export default function CommunityPage() {
               hasAmen: hasLiked,
               comments: 0,
               urgent: false,
+              isMine: uid === row.user_id,
             };
           });
           
@@ -198,15 +173,19 @@ export default function CommunityPage() {
         }),
       });
       
+      console.log("API response status:", res.status);
+      
       if (res.ok) {
+        const data = await res.json();
+        console.log("Post created:", data);
         setDraft("");
         removeImage();
         setComposer(false);
         // Optimistic UI update
         const newPost: Post = {
-            id: Date.now().toString(),
+            id: data.id || Date.now().toString(),
             author: "Toi",
-            avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80",
+            avatar: "",
             category: composerCategory === "prayer" ? "PRIÈRE" : "TÉMOIGNAGE",
             time: "À L'INSTANT",
             content: text,
@@ -217,9 +196,14 @@ export default function CommunityPage() {
             urgent: false,
         };
         setPosts([newPost, ...posts]);
+      } else {
+        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Failed to create post:", errorData);
+        alert("Erreur lors de la publication: " + (errorData.error || "Une erreur s'est produite"));
       }
     } catch (err) {
       console.error("Submit error:", err);
+      alert("Erreur lors de la publication: " + (err instanceof Error ? err.message : "Une erreur s'est produite"));
     } finally {
       setSubmitting(false);
     }
@@ -256,6 +240,27 @@ export default function CommunityPage() {
     }
   };
 
+  const deletePost = async (postId: string) => {
+    setDeleting(postId);
+    try {
+      const res = await fetch(`/api/community/posts?id=${postId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setPosts(posts.filter((p) => p.id !== postId));
+        setDeleteMenuOpen(null);
+      } else {
+        const errorData = await res.json().catch(() => ({ error: "Erreur inconnue" }));
+        alert("Erreur lors de la suppression: " + (errorData.error || "Une erreur s'est produite"));
+      }
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      alert("Erreur lors de la suppression");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const visiblePosts = filter === "all"
     ? posts
     : posts.filter((p) =>
@@ -273,15 +278,8 @@ export default function CommunityPage() {
         {/* HEADER */}
         <header className="px-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* User Avatar */}
-            <div className="h-9 w-9 overflow-hidden rounded-full border border-separator ring-2 ring-transparent">
-              <Image 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80" 
-                alt="My Profile" 
-                width={36} 
-                height={36} 
-                className="h-full w-full object-cover"
-              />
+            <div className="h-9 w-9 flex items-center justify-center rounded-full bg-bg-tertiary border border-separator">
+              <User className="h-5 w-5 text-text-primary" />
             </div>
             <h1 className="font-serif text-2xl font-semibold text-accent">Communauté</h1>
           </div>
@@ -347,14 +345,11 @@ export default function CommunityPage() {
                   {/* Post Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 overflow-hidden rounded-full">
-                        <Image
-                          src={post.avatar}
-                          alt={post.author}
-                          width={40}
-                          height={40}
-                          className="h-full w-full object-cover"
-                        />
+                      {/* Avatar - placeholder initial */}
+                      <div className="h-10 w-10 flex items-center justify-center rounded-full bg-bg-tertiary">
+                        <span className="font-sans text-sm font-semibold text-text-primary">
+                          {post.author.charAt(0).toUpperCase()}
+                        </span>
                       </div>
                       <div>
                         {/* Title Row */}
@@ -375,11 +370,53 @@ export default function CommunityPage() {
                       </div>
                     </div>
                     {/* More button */}
-                    {!post.image && (
-                       <button className="text-text-tertiary hover:text-text-primary transition-colors">
-                         <MoreHorizontal className="h-5 w-5" />
-                       </button>
-                    )}
+                    <div className="relative">
+                      {post.isMine ? (
+                        <>
+                          <button
+                            onClick={() => setDeleteMenuOpen(deleteMenuOpen === post.id ? null : post.id)}
+                            className="rounded-full p-2 text-text-tertiary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
+                          >
+                            <MoreHorizontal className="h-5 w-5" />
+                          </button>
+                          
+                          <AnimatePresence>
+                            {deleteMenuOpen === post.id && (
+                              <>
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="absolute right-0 top-full z-20 mt-1 w-40 overflow-hidden rounded-xl border border-separator bg-bg-secondary shadow-lg"
+                                >
+                                  <button
+                                    onClick={() => deletePost(post.id)}
+                                    disabled={deleting === post.id}
+                                    className="flex w-full items-center gap-3 px-4 py-3 font-sans text-sm text-danger transition-colors hover:bg-danger/10"
+                                  >
+                                    {deleting === post.id ? (
+                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-danger border-t-transparent" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                    Supprimer
+                                  </button>
+                                </motion.div>
+                                {/* Backdrop to close menu */}
+                                <div
+                                  className="fixed inset-0 z-10"
+                                  onClick={() => setDeleteMenuOpen(null)}
+                                />
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </>
+                      ) : (
+                        <button className="rounded-full p-2 text-text-tertiary transition-colors hover:bg-bg-tertiary hover:text-text-primary">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Post Content */}
@@ -424,24 +461,6 @@ export default function CommunityPage() {
 
                     {/* Right side stuff */}
                     <div className="flex items-center gap-3">
-                      {/* Avatar Pile */}
-                      {post.recentAmens && post.recentAmens.length > 0 && (
-                        <div className="flex items-center">
-                          <div className="flex -space-x-2">
-                            {post.recentAmens.map((img, i) => (
-                              <div key={i} className="h-6 w-6 overflow-hidden rounded-full border border-bg-secondary relative z-10">
-                                <Image src={img} alt="User" width={24} height={24} className="object-cover" />
-                              </div>
-                            ))}
-                          </div>
-                          {post.plusAmens && (
-                            <span className="-ml-1 flex h-6 min-w-6 items-center justify-center rounded-full border border-bg-secondary bg-text-tertiary/20 px-1 font-sans text-[9px] font-bold text-text-secondary z-0">
-                              +{post.plusAmens}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      
                       {/* Share Button (only if no image, or as per original design) */}
                       {!post.image && !post.urgent && (
                         <button className="text-text-secondary hover:text-text-primary transition-colors">

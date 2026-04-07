@@ -171,7 +171,7 @@ export default async function HomePage() {
               href="/prayer"
               className="mt-4 inline-flex rounded-3xl border border-separator px-6 py-3 font-sans text-xs uppercase tracking-wider text-text-secondary transition-colors hover:border-text-tertiary hover:text-text-primary"
             >
-              SET A REMINDER
+              RAPPEL DE PRIÈRE
             </Link>
           </Card>
         </div>
