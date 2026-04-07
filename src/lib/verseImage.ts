@@ -4,6 +4,9 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 })
 
+// Explicitly reference to ensure env var is included in serverless bundle
+const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY
+
 // Mapping thèmes → mots-clés Unsplash
 const THEME_KEYWORDS: Record<string, string> = {
   paix:       'calm ocean peaceful water',
@@ -70,7 +73,7 @@ export const getVerseBackground = async (
   const keyword = THEME_KEYWORDS[theme]
 
   try {
-    if (!process.env.UNSPLASH_ACCESS_KEY) {
+    if (!UNSPLASH_ACCESS_KEY) {
       console.warn('Unsplash Access Key is missing.')
       return { url: '', blurUrl: '', photographer: '', photographerUrl: '', theme, error: 'Missing Unsplash Access Key' }
     }
@@ -79,7 +82,7 @@ export const getVerseBackground = async (
       `https://api.unsplash.com/photos/random?query=${encodeURIComponent(keyword)}&orientation=portrait&content_filter=high`,
       {
         headers: {
-          'Authorization': `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+          'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`,
           'Accept-Version': 'v1',
         },
         next: { revalidate: 86400 },
