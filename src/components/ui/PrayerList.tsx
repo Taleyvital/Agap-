@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check, MoreVertical, Heart, Share2, Sparkles, Trophy } from "lucide-react";
+import { Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
 import { PrayerRequest } from "@/lib/types";
@@ -30,7 +30,7 @@ export function PrayerList() {
       setNewTitle("");
       setNewNote("");
       setAddSheetOpen(false);
-    } catch (err) {
+    } catch {
       alert("Erreur lors de l'ajout");
     }
   };
@@ -52,7 +52,7 @@ export function PrayerList() {
         colors: ["#7B6FD4", "#FFFFFF", "#FFD700"],
       });
       
-    } catch (err) {
+    } catch {
       alert("Erreur lors de la mise à jour");
     }
   };
@@ -191,7 +191,6 @@ export function PrayerList() {
         setShareCommunity={setShareCommunity}
         onAdd={handleAddPrayer}
         onAnswer={handleMarkAsAnswered}
-        selectedPrayer={selectedPrayer}
       />
     </div>
   );
@@ -219,6 +218,23 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   );
 }
 
+interface BottomSheetsProps {
+  addOpen: boolean;
+  setAddOpen: (open: boolean) => void;
+  answerOpen: boolean;
+  setAnswerOpen: (open: boolean) => void;
+  newTitle: string;
+  setNewTitle: (val: string) => void;
+  newNote: string;
+  setNewNote: (val: string) => void;
+  testimony: string;
+  setTestimony: (val: string) => void;
+  shareCommunity: boolean;
+  setShareCommunity: (val: boolean) => void;
+  onAdd: (e: React.FormEvent) => Promise<void>;
+  onAnswer: (e: React.FormEvent) => Promise<void>;
+}
+
 function BottomSheets({ 
   addOpen, setAddOpen, 
   answerOpen, setAnswerOpen,
@@ -226,9 +242,8 @@ function BottomSheets({
   newNote, setNewNote,
   testimony, setTestimony,
   shareCommunity, setShareCommunity,
-  onAdd, onAnswer,
-  selectedPrayer
-}: any) {
+  onAdd, onAnswer
+}: BottomSheetsProps) {
   return (
     <>
       {/* Overlay shared */}
