@@ -160,34 +160,34 @@ export async function POST(request: Request) {
     }
 
     // Récupérer les paramètres depuis le body ou le profil
-    let { life_challenge, spiritual_maturity } = await request.json() as {
-      life_challenge?: string;
-      spiritual_maturity?: string;
+    let { current_challenge, spiritual_level } = await request.json() as {
+      current_challenge?: string;
+      spiritual_level?: string;
     };
 
     // Si pas de paramètres fournis, les récupérer depuis le profil Supabase
-    if (!life_challenge || !spiritual_maturity) {
+    if (!current_challenge || !spiritual_level) {
       const { data: profile } = await authClient
         .from("profiles")
-        .select("life_challenge, spiritual_maturity")
+        .select("current_challenge, spiritual_level")
         .eq("id", user.id)
         .maybeSingle();
-      
+
       if (profile) {
-        life_challenge = life_challenge || profile.life_challenge;
-        spiritual_maturity = spiritual_maturity || profile.spiritual_maturity;
+        current_challenge = current_challenge || profile.current_challenge;
+        spiritual_level = spiritual_level || profile.spiritual_level;
       }
     }
 
     // Normaliser le défi de vie
-    const normalizedChallenge = life_challenge?.toLowerCase() || "default";
+    const normalizedChallenge = current_challenge?.toLowerCase() || "default";
     const challengeKey = versesByChallenge[normalizedChallenge] ? normalizedChallenge : "default";
     
     // Récupérer les versets pour ce défi
     const baseVerses = versesByChallenge[challengeKey];
     
     // Ajuster selon la maturité
-    const adjustedVerses = adjustByMaturity(baseVerses, spiritual_maturity?.toLowerCase() || "growing");
+    const adjustedVerses = adjustByMaturity(baseVerses, spiritual_level?.toLowerCase() || "growing");
     
     // Construire le plan avec les 14 jours
     const versesPerDay: ReadingDay[] = adjustedVerses.map((verse, index) => ({
@@ -238,7 +238,7 @@ export async function GET() {
     // Récupérer le profil de l'utilisateur
     const { data: profile } = await authClient
       .from("profiles")
-      .select("denomination, life_challenge, spiritual_maturity")
+      .select("current_challenge, spiritual_level")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -249,9 +249,8 @@ export async function GET() {
     // Appeler la logique POST interne avec les données du profil
     const mockRequest = {
       json: async () => ({
-        denomination: profile.denomination,
-        life_challenge: profile.life_challenge,
-        spiritual_maturity: profile.spiritual_maturity
+        current_challenge: profile.current_challenge,
+        spiritual_level: profile.spiritual_level
       })
     } as Request;
 

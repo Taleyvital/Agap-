@@ -7,21 +7,6 @@ import { Card } from "@/components/ui/Card";
 import { VerseImageCard } from "@/components/ui/VerseImageCard";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
-const PLANS = [
-  {
-    title: "Évangiles",
-    gradient: "from-indigo-700 via-purple-700 to-slate-900",
-  },
-  {
-    title: "Psaumes",
-    gradient: "from-emerald-700 via-teal-700 to-slate-900",
-  },
-  {
-    title: "Lettres de Paul",
-    gradient: "from-amber-700 via-orange-700 to-slate-900",
-  },
-];
-
 // Collection de versets pour le verset journalier
 const DAILY_VERSES = [
   { text: "Je suis le cep, vous êtes les sarments. Celui qui demeure en moi et en qui je demeure porte beaucoup de fruit, car sans moi vous ne pouvez rien faire.", reference: "Jean 15:5" },
@@ -180,29 +165,29 @@ export default async function HomePage() {
         <section className="mt-10">
           <div className="flex items-center justify-between">
             <p className="ui-label text-text-tertiary">PLANS DE LECTURE</p>
-            <Link
-              href="/bible"
-              className="font-sans text-xs uppercase tracking-wider text-accent"
-            >
-              VOIR TOUT
-            </Link>
           </div>
-          <div className="mt-4 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {PLANS.map((p) => (
-              <div
-                key={p.title}
-                className="relative h-28 min-w-[140px] overflow-hidden rounded-xl"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${p.gradient}`} />
+          <Link href="/reading-plan">
+            <Card className="mt-4">
+              <div className="relative h-32 overflow-hidden rounded-xl bg-gradient-to-br from-indigo-700 via-purple-700 to-slate-900">
                 <div className="absolute inset-0 [background:radial-gradient(140px_100px_at_20%_20%,rgba(255,255,255,0.28),transparent_65%)]" />
                 <div className="absolute inset-0 [background:radial-gradient(160px_120px_at_80%_70%,rgba(0,0,0,0.35),transparent_60%)]" />
                 <div className="absolute inset-0 bg-black/25" />
-                <span className="absolute bottom-2 left-2 font-serif text-sm italic text-white">
-                  {p.title}
-                </span>
+                <div className="relative flex h-full flex-col justify-between p-4">
+                  <div>
+                    <p className="font-serif text-lg italic text-white">
+                      Mon Plan de Lecture
+                    </p>
+                    <p className="mt-1 font-sans text-sm text-white/80">
+                      Personnalisé selon votre profil
+                    </p>
+                  </div>
+                  <span className="font-sans text-xs uppercase tracking-wider text-white/60">
+                    14 jours de réflexion →
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
+            </Card>
+          </Link>
         </section>
 
         {/* Floating Chat Button (Dove) */}
