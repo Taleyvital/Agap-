@@ -93,7 +93,7 @@ export default function SplashPage() {
           {/* Logo SVG */}
           <div className="relative w-32 h-32">
             <Image
-              src="/icons/kudob01.svg"
+              src="/icons/Kudob01.svg"
               alt="AGAPE"
               fill
               className="object-contain"
