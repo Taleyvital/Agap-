@@ -106,23 +106,22 @@ export default function ReadingPlanPage() {
   // Day detail modal
   if (selectedDay) {
     return (
-      <AnimatePresence>
+      <>
         <motion.div
-          key="day-modal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
           onClick={() => setSelectedDay(null)}
+        />
+        <motion.div
+          className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] rounded-t-3xl bg-bg-primary shadow-2xl"
+          style={{ y, opacity, scale }}
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
-          <motion.div
-            className="absolute inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl bg-bg-primary shadow-2xl"
-            style={{ y, opacity, scale }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          >
             {/* Drag Handle with Header */}
             <motion.div
               className="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-md px-5 pt-3 pb-4 cursor-grab active:cursor-grabbing"
@@ -222,29 +221,28 @@ export default function ReadingPlanPage() {
             </button>
           </div>
           </motion.div>
-        </motion.div>
-      </AnimatePresence>
-    );
+        
+    </>
+  );
   }
 
   return (
-    <AnimatePresence>
+    <>
       <motion.div
-        key="reading-plan-sheet"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
         onClick={() => router.back()}
+      />
+      <motion.div
+        className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] rounded-t-3xl bg-bg-primary shadow-2xl"
+        style={{ y, opacity, scale }}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
-        <motion.div
-          className="absolute inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl bg-bg-primary shadow-2xl"
-          style={{ y, opacity, scale }}
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        >
           {/* Drag Handle - only this area is draggable */}
           <motion.div
             className="flex flex-col items-center px-5 pt-3 pb-2 cursor-grab active:cursor-grabbing"
@@ -412,7 +410,7 @@ export default function ReadingPlanPage() {
         )}
           </div>
         </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      
+    </>
   );
 }
