@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import type { VerseBackground } from '@/lib/verseImage'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 interface VerseImageCardProps {
   verseText: string
@@ -20,6 +21,7 @@ export function VerseImageCard({
   const [background, setBackground] = useState<VerseBackground | null>(null)
   const [loading, setLoading] = useState(true)
   const [shared, setShared] = useState(false)
+  const [fontSize, setFontSize] = useState(18) // default size
 
   useEffect(() => {
     let cancelled = false
@@ -44,6 +46,25 @@ export function VerseImageCard({
     void fetchBackground()
     return () => { cancelled = true }
   }, [verseText])
+
+  // Load verse font size from Supabase profile
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient()
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('verse_font_size')
+        .eq('id', user.id)
+        .single()
+
+      if (data?.verse_font_size) {
+        setFontSize(data.verse_font_size)
+      }
+    })()
+  }, [])
 
   const handleShare = async () => {
     const shareText = `"${verseText}" — ${reference}\n\nPartagé depuis AGAPE 🕊️`
@@ -163,9 +184,10 @@ export function VerseImageCard({
 
         {/* Verse text */}
         <p
-          className={`font-serif italic leading-relaxed text-white drop-shadow-lg ${
-            isFullscreen ? 'text-2xl' : 'text-lg'
-          }`}
+          className="font-serif italic leading-relaxed text-white drop-shadow-lg"
+          style={{
+            fontSize: isFullscreen ? `${fontSize + 4}px` : `${fontSize}px`,
+          }}
         >
           &ldquo;{verseText}&rdquo;
         </p>

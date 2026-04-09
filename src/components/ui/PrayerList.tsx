@@ -95,7 +95,7 @@ export function PrayerList() {
               <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-text-tertiary">
                 En cours
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence mode="popLayout">
                   {activePrayers.map((prayer) => (
                     <motion.div
@@ -104,27 +104,45 @@ export function PrayerList() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-separator bg-bg-secondary p-4 transition-colors hover:bg-bg-tertiary"
+                      className="group relative overflow-hidden rounded-2xl border border-separator bg-gradient-to-br from-bg-secondary to-bg-tertiary p-5 transition-all hover:border-accent/30 hover:shadow-lg hover:shadow-accent/10"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-xl">
-                        <HandHeart className="h-5 w-5 text-accent" aria-hidden />
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-xl">
+                          <HandHeart className="h-6 w-6 text-accent" aria-hidden />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-serif text-lg font-semibold text-text-primary leading-tight">
+                            {prayer.titre}
+                          </p>
+                          {prayer.note_initiale && (
+                            <p className="mt-2 font-sans text-sm text-text-secondary line-clamp-2">
+                              {prayer.note_initiale}
+                            </p>
+                          )}
+                          <p className="mt-3 text-[10px] uppercase tracking-wider text-text-tertiary">
+                            Depuis le {new Date(prayer.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-text-primary">{prayer.titre}</p>
-                        <p className="text-[10px] text-text-tertiary">
-                          Depuis le {new Date(prayer.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
-                        </p>
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                          <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">
+                            En prière
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPrayer(prayer);
+                            setAnswerSheetOpen(true);
+                          }}
+                          className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-accent-light active:scale-95"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          Exaucée
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedPrayer(prayer);
-                          setAnswerSheetOpen(true);
-                        }}
-                        className="flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-accent transition-colors hover:bg-accent hover:text-white"
-                      >
-                        Exaucée ✓
-                      </button>
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -138,34 +156,43 @@ export function PrayerList() {
               <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-text-tertiary">
                 Exaucées 🎉
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence mode="popLayout">
                   {answeredPrayers.map((prayer) => (
                     <motion.div
                       key={prayer.id}
                       layoutId={prayer.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="group relative flex flex-col gap-3 rounded-2xl border border-separator bg-bg-nav/40 p-4 backdrop-blur-sm"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="group relative overflow-hidden rounded-2xl border border-green-500/30 bg-gradient-to-br from-green-500/10 to-bg-secondary p-5 transition-all hover:border-green-500/50"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-xl">
-                          <Check className="h-5 w-5 text-green-600" aria-hidden />
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-500/20 text-xl">
+                          <Check className="h-6 w-6 text-green-600" aria-hidden />
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-text-secondary line-through decoration-text-tertiary/40">{prayer.titre}</p>
-                          <p className="text-[10px] text-text-tertiary">
-                            Exaucée le {new Date(prayer.date_exaucement!).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-serif text-lg font-semibold text-text-primary leading-tight">
+                            {prayer.titre}
+                          </p>
+                          {prayer.temoignage && (
+                            <p className="mt-2 font-serif text-sm italic text-text-secondary line-clamp-2 leading-relaxed">
+                              &ldquo;{prayer.temoignage}&rdquo;
+                            </p>
+                          )}
+                          <p className="mt-3 text-[10px] uppercase tracking-wider text-green-600 font-semibold">
+                            Exaucée le {new Date(prayer.date_exaucement!).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
                           </p>
                         </div>
                       </div>
-                      {prayer.temoignage && (
-                        <div className="mt-1 flex flex-col gap-2 rounded-xl bg-bg-tertiary/50 p-3 italic">
-                          <p className="font-serif text-sm italic leading-relaxed text-text-secondary line-clamp-2">
-                             &ldquo;{prayer.temoignage}&rdquo;
-                          </p>
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🎉</span>
+                          <span className="text-[10px] uppercase tracking-wider text-green-600 font-semibold">
+                            Dieu a répondu
+                          </span>
                         </div>
-                      )}
+                      </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>

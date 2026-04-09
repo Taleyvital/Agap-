@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { ChevronLeft, ChevronRight, BookOpen, Palette, StickyNote, Pencil, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +12,7 @@ import {
   getChapter,
 } from "@/lib/bible";
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 // Livres de l'Ancien Testament (bookid 1–39) et Nouveau Testament (40–66)
 const AT_MAX_ID = 39;
@@ -24,7 +25,7 @@ function stripHtml(html: string) {
 
 // Abréviations courtes pour les pills de livres
 
-export default function BiblePage() {
+function BiblePageContent() {
   // ── State ──────────────────────────────────
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [translation, setTranslation] = useState(DEFAULT_TRANSLATION);
@@ -41,6 +42,7 @@ export default function BiblePage() {
   const [testamentFilter, setTestamentFilter] = useState<"AT" | "NT">("NT");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [fontSize, setFontSize] = useState(16); // px
+  const [verseBold, setVerseBold] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
   const [verseNotes, setVerseNotes] = useState<Record<string, string>>({});
@@ -52,6 +54,7 @@ export default function BiblePage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [verseToShare, setVerseToShare] = useState<{verse: number; text: string} | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const openShareModal = (v: number, text: string) => {
     setVerseToShare({ verse: v, text });
@@ -102,6 +105,43 @@ export default function BiblePage() {
     }, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  // ── Load verse settings from Supabase profile ─────────────
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("verse_font_size, verse_bold")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        if (data.verse_font_size) setFontSize(data.verse_font_size);
+        if (data.verse_bold !== null) setVerseBold(data.verse_bold);
+      }
+    })();
+  }, []);
+
+  // ── Save verse settings to Supabase ─────────────────────
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from("profiles")
+        .update({
+          verse_font_size: fontSize,
+          verse_bold: verseBold,
+        })
+        .eq("id", user.id);
+    })();
+  }, [fontSize, verseBold]);
 
   // ── Save to localStorage ─────────────────────
   useEffect(() => {
@@ -198,6 +238,26 @@ export default function BiblePage() {
       .catch(() => setBooks([]))
       .finally(() => setBooksLoading(false));
   }, [translation]);
+
+  // ── Handle URL parameters for direct navigation ─────────────────────
+  useEffect(() => {
+    const bookParam = searchParams.get("book");
+    const chapterParam = searchParams.get("chapter");
+
+    if (bookParam && chapterParam && books.length > 0) {
+      const bookId = Number(bookParam);
+      const chapterNum = Number(chapterParam);
+      const book = books.find(b => b.bookid === bookId);
+
+      if (book && chapterNum > 0 && chapterNum <= book.chapters) {
+        setBookId(bookId);
+        setChapter(chapterNum);
+        setView("verses");
+        // Clear URL params without navigation
+        router.replace("/bible", { scroll: false });
+      }
+    }
+  }, [books, searchParams, router]);
 
   // ── Load chapter ───────────────────────────
   const loadChapter = useCallback(async (trans: string, bid: number, ch: number) => {
@@ -443,11 +503,35 @@ export default function BiblePage() {
                         className="flex-1 h-1 appearance-none rounded-full bg-bg-tertiary accent-accent cursor-pointer"
                         aria-label="Taille de la police"
                       />
-                      <span className="font-serif text-base text-text-tertiary select-none">A</span>
+                      <span
+                        className="font-serif text-text-tertiary select-none transition-all duration-200"
+                        style={{ fontSize: `${fontSize}px` }}
+                      >
+                        A
+                      </span>
                     </div>
                     <p className="mt-1.5 text-center font-sans text-[10px] text-text-tertiary">
                       {fontSize}px
                     </p>
+
+                    {/* Bold toggle */}
+                    <div className="mt-4 flex items-center justify-between rounded-xl border border-separator bg-bg-tertiary px-4 py-3">
+                      <span className="font-sans text-xs text-text-primary">Texte en gras</span>
+                      <button
+                        type="button"
+                        onClick={() => setVerseBold(!verseBold)}
+                        className={`relative h-6 w-11 rounded-full transition-colors ${
+                          verseBold ? "bg-accent" : "bg-separator"
+                        }`}
+                        aria-label="Activer le texte en gras"
+                      >
+                        <span
+                          className={`absolute left-0.5 top-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                            verseBold ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -616,7 +700,7 @@ export default function BiblePage() {
                               {row.verse}
                             </span>
                             <span
-                              className="font-serif text-text-primary"
+                              className={`font-serif text-text-primary ${verseBold ? "font-bold" : ""}`}
                               style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
                             >
                               {stripHtml(row.text)}
@@ -896,5 +980,13 @@ export default function BiblePage() {
       </AnimatePresence>
 
     </AppShell>
+  );
+}
+
+export default function BiblePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BiblePageContent />
+    </Suspense>
   );
 }

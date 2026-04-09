@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -33,6 +33,8 @@ interface Profile {
   anonymous_name: string | null;
   created_at: string | null;
   avatar_url: string | null;
+  verse_font_size: number | null;
+  verse_bold: boolean | null;
 }
 
 
@@ -41,9 +43,9 @@ const MENU_SECTIONS = [
     title: "Mes contenus",
     items: [
       { href: "/profile/posts", label: "Mes Publications", Icon: FileText },
-      { href: "/bible", label: "Versets sauvegardés", Icon: BookOpen },
-      { href: "/chat", label: "Historique AGAPE Chat", Icon: MessageCircle },
-      { href: "/prayer", label: "Journal de prière", Icon: Flame },
+      { href: "/profile/saved-verses", label: "Versets sauvegardés", Icon: BookOpen },
+      { href: "/profile/chat-history", label: "Historique AGAPE Chat", Icon: MessageCircle },
+      { href: "/profile/prayer-journal", label: "Journal de prière", Icon: Flame },
     ],
   },
   {
@@ -62,15 +64,18 @@ function stagger(i: number) {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [initial, setInitial] = useState("A");
-  const [since, setSince] = useState("");
-  const [answeredCount, setAnsweredCount] = useState(0);
-  const [themeSheetOpen, setThemeSheetOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [answeredCount, setAnsweredCount] = useState(0);
+  const [initial, setInitial] = useState("");
+  const [since, setSince] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [themeSheetOpen, setThemeSheetOpen] = useState(false);
+  const [verseFontSize, setVerseFontSize] = useState(16);
+  const [verseBold, setVerseBold] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
@@ -81,14 +86,17 @@ export default function ProfilePage() {
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setUser(user);
       const { data } = await supabase
         .from("profiles")
-        .select("first_name, anonymous_name, created_at, avatar_url")
+        .select("first_name, anonymous_name, created_at, avatar_url, verse_font_size, verse_bold")
         .eq("id", user.id)
         .single();
       if (data) {
         setProfile(data);
         setInitial((data.first_name ?? data.anonymous_name ?? "A").charAt(0).toUpperCase());
+        setVerseFontSize(data.verse_font_size ?? 16);
+        setVerseBold(data.verse_bold ?? false);
         if (data.created_at) {
           setSince(
             new Date(data.created_at).toLocaleDateString("fr-FR", {
@@ -119,13 +127,11 @@ export default function ProfilePage() {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     try {
       setUploading(true);
       const supabase = createSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
 
       // 1. Upload file
       const fileExt = file.name.split(".").pop();
@@ -160,6 +166,27 @@ export default function ProfilePage() {
       setUploading(false);
     }
   };
+
+  const supabase = createSupabaseBrowserClient();
+  const saveVerseSettings = useCallback(async () => {
+    if (!user) return;
+    try {
+      await supabase
+        .from("profiles")
+        .update({
+          verse_font_size: verseFontSize,
+          verse_bold: verseBold,
+        })
+        .eq("id", user.id);
+    } catch (error) {
+      console.error("Error saving verse settings:", error);
+    }
+  }, [supabase, user, verseFontSize, verseBold]);
+
+  useEffect(() => {
+    saveVerseSettings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verseFontSize, verseBold]);
 
   return (
     <AppShell>
@@ -422,9 +449,58 @@ export default function ProfilePage() {
                   })}
                 </div>
               </div>
-              
-              <div className="mt-8 mb-4">
-                {/* Additional settings could go here */}
+
+              {/* Verse reading settings */}
+              <div className="mt-8">
+                <p className="mb-4 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
+                  Lecture des versets
+                </p>
+
+                {/* Font size */}
+                <div className="mb-4">
+                  <p className="mb-2 font-sans text-xs text-text-secondary">Taille de police</p>
+                  <div className="flex items-center gap-3">
+                    <span className="font-serif text-xs text-text-tertiary select-none">A</span>
+                    <input
+                      type="range"
+                      min={13}
+                      max={22}
+                      step={1}
+                      value={verseFontSize}
+                      onChange={(e) => setVerseFontSize(Number(e.target.value))}
+                      className="flex-1 h-1 appearance-none rounded-full bg-bg-tertiary accent-accent cursor-pointer"
+                      aria-label="Taille de la police des versets"
+                    />
+                    <span
+                      className="font-serif text-text-tertiary select-none transition-all duration-200"
+                      style={{ fontSize: `${verseFontSize}px` }}
+                    >
+                      A
+                    </span>
+                  </div>
+                  <p className="mt-1 text-center font-sans text-[10px] text-text-tertiary">
+                    {verseFontSize}px
+                  </p>
+                </div>
+
+                {/* Bold toggle */}
+                <div className="flex items-center justify-between rounded-xl border border-separator bg-bg-tertiary px-4 py-3">
+                  <span className="font-sans text-sm text-text-primary">Texte en gras</span>
+                  <button
+                    type="button"
+                    onClick={() => setVerseBold(!verseBold)}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      verseBold ? "bg-accent" : "bg-separator"
+                    }`}
+                    aria-label="Activer le texte en gras"
+                  >
+                    <span
+                      className={`absolute left-0.5 top-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                        verseBold ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
             </motion.div>
           </>

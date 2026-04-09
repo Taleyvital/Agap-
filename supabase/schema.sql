@@ -11,6 +11,8 @@ create table if not exists public.profiles (
   current_challenge text not null,
   anonymous_name text,
   avatar_url text,
+  verse_font_size int default 16,
+  verse_bold boolean default false,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
