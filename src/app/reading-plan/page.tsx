@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, CheckCircle, Circle, Sparkles, Calendar, Target, X } from "lucide-react";
-import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 interface ReadingDay {
