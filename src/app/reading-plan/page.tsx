@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, CheckCircle, Circle, Sparkles, Calendar, Target, X, ChevronLeft } from "lucide-react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
-import { AppShell } from "@/components/layout/AppShell";
+import { BookOpen, CheckCircle, Circle, Sparkles, Calendar, Target, X } from "lucide-react";
+import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 interface ReadingDay {
@@ -77,78 +76,95 @@ export default function ReadingPlanPage() {
 
   if (loading) {
     return (
-      <AppShell>
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-            <p className="text-sm text-text-secondary">Chargement du plan...</p>
-          </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="text-center">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <p className="text-sm text-text-secondary">Chargement du plan...</p>
         </div>
-      </AppShell>
+      </div>
     );
   }
 
   if (!plan) {
     return (
-      <AppShell>
-        <div className="px-5 pt-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-5">
+        <div className="w-full max-w-md rounded-2xl bg-bg-secondary p-6">
+          <p className="text-center text-text-secondary">
+            Impossible de charger le plan de lecture. Veuillez réessayer.
+          </p>
           <button
             onClick={() => router.back()}
-            className="mb-6 flex items-center gap-2 text-sm text-text-secondary"
+            className="mt-4 w-full rounded-xl bg-accent py-3 font-sans text-sm font-medium text-white"
           >
-            <ChevronLeft className="h-4 w-4" />
-            Retour
+            Fermer
           </button>
-          <div className="rounded-2xl bg-bg-secondary p-6">
-            <p className="text-center text-text-secondary">
-              Impossible de charger le plan de lecture. Veuillez réessayer.
-            </p>
-          </div>
         </div>
-      </AppShell>
+      </div>
     );
   }
 
   // Day detail modal
   if (selectedDay) {
     return (
-      <AppShell>
-        <motion.div 
-          className="min-h-screen bg-bg-primary"
-          style={{ y, opacity, scale }}
-          drag="y"
-          dragConstraints={{ top: 0, bottom: 0 }}
-          dragElastic={0.2}
-          onDragEnd={(_, info) => {
-            if (info.offset.y > 100 || info.velocity.y > 500) {
-              setTimeout(() => {
-                setSelectedDay(null);
-                y.set(0);
-              }, 200);
-            } else {
-              y.set(0);
-            }
-          }}
+      <AnimatePresence>
+        <motion.div
+          key="day-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+          onClick={() => setSelectedDay(null)}
         >
-          {/* Dismiss Handle */}
-          <div className="sticky top-0 z-10 flex flex-col items-center bg-bg-primary/80 px-5 pt-3 pb-4 backdrop-blur-md">
-            <div className="mb-3 flex h-1 w-12 items-center justify-center rounded-full bg-text-tertiary/30">
-              <div className="h-full w-full rounded-full bg-text-tertiary/50" />
-            </div>
-            <div className="flex w-full items-center justify-between">
-              <button
-                onClick={() => setSelectedDay(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-tertiary text-text-secondary transition-colors hover:text-text-primary"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <p className="font-sans text-xs text-accent">Jour {selectedDay.day}</p>
-              <div className="w-8" />
-            </div>
-          </div>
-          
-          {/* Content */}
-          <div className="px-5 pb-28">
+          <motion.div
+            className="absolute inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl bg-bg-primary shadow-2xl"
+            style={{ y, opacity, scale }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          >
+            {/* Drag Handle with Header */}
+            <motion.div
+              className="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-md px-5 pt-3 pb-4 cursor-grab active:cursor-grabbing"
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.2}
+              dragPropagation={false}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  setTimeout(() => {
+                    setSelectedDay(null);
+                    y.set(0);
+                  }, 200);
+                } else {
+                  y.set(0);
+                }
+              }}
+              onPointerDown={() => {}}
+            >
+              <div className="flex flex-col items-center">
+                <div className="mb-3 flex h-1 w-12 items-center justify-center rounded-full bg-text-tertiary/30">
+                  <div className="h-full w-full rounded-full bg-text-tertiary/50" />
+                </div>
+              </div>
+              <div className="flex w-full items-center justify-between">
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-tertiary text-text-secondary transition-colors hover:text-text-primary"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <p className="font-sans text-xs text-accent">Jour {selectedDay.day}</p>
+                <div className="w-8" />
+              </div>
+            </motion.div>
+
+            {/* Scrollable Content */}
+            <div
+              className="overflow-y-auto px-5 pb-28"
+              style={{ maxHeight: "calc(90vh - 100px)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="mb-6 flex items-center gap-3">
               <div 
                 onClick={() => toggleComplete(selectedDay.day)}
@@ -205,36 +221,60 @@ export default function ReadingPlanPage() {
               Lire le passage
             </button>
           </div>
+          </motion.div>
         </motion.div>
-      </AppShell>
+      </AnimatePresence>
     );
   }
 
   return (
-    <AppShell>
-      <motion.div 
-        className="min-h-screen bg-bg-primary px-5 pt-6 pb-28"
-        style={{ y, opacity, scale }}
-        drag="y"
-        dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={0.2}
-        onDragEnd={(_, info) => {
-          if (info.offset.y > 150 || info.velocity.y > 800) {
-            setTimeout(() => {
-              router.back();
-            }, 200);
-          } else {
-            y.set(0);
-          }
-        }}
+    <AnimatePresence>
+      <motion.div
+        key="reading-plan-sheet"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+        onClick={() => router.back()}
       >
-        {/* Interactive Dismissal Handle */}
-        <div className="mb-4 flex flex-col items-center">
-          <div className="flex h-1 w-12 items-center justify-center rounded-full bg-text-tertiary/30">
-            <div className="h-full w-full rounded-full bg-text-tertiary/50" />
-          </div>
-          <p className="mt-2 font-sans text-xs text-text-tertiary">Glissez vers le bas pour fermer</p>
-        </div>
+        <motion.div
+          className="absolute inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl bg-bg-primary shadow-2xl"
+          style={{ y, opacity, scale }}
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        >
+          {/* Drag Handle - only this area is draggable */}
+          <motion.div
+            className="flex flex-col items-center px-5 pt-3 pb-2 cursor-grab active:cursor-grabbing"
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.2}
+            dragPropagation={false}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 150 || info.velocity.y > 800) {
+                setTimeout(() => {
+                  router.back();
+                }, 200);
+              } else {
+                y.set(0);
+              }
+            }}
+            onPointerDown={() => {}}
+          >
+            <div className="flex h-1 w-12 items-center justify-center rounded-full bg-text-tertiary/30">
+              <div className="h-full w-full rounded-full bg-text-tertiary/50" />
+            </div>
+            <p className="mt-2 font-sans text-xs text-text-tertiary">Glissez vers le bas pour fermer</p>
+          </motion.div>
+
+          {/* Scrollable Content */}
+          <div
+            className="overflow-y-auto px-5 pb-28"
+            style={{ maxHeight: "calc(90vh - 60px)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
 
         {/* Main Hero Card */}
         <motion.div
@@ -370,7 +410,9 @@ export default function ReadingPlanPage() {
             </button>
           </motion.div>
         )}
+          </div>
+        </motion.div>
       </motion.div>
-    </AppShell>
+    </AnimatePresence>
   );
 }
