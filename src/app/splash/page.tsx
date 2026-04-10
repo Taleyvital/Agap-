@@ -44,11 +44,9 @@ export default function SplashPage() {
     checkSessionAndRedirect();
   }, [router]);
 
-  if (!mounted) return null;
-
   return (
-    <main className="fixed inset-0 z-50 overflow-hidden">
-      {/* Fond radial dégradé Sacred Modernist */}
+    <main className="fixed inset-0 z-50 overflow-hidden bg-[#1a0f3d]">
+      {/* Fond radial dégradé constant pour éviter l'écran noir avant hydratation */}
       <div 
         className="absolute inset-0"
         style={{
@@ -56,8 +54,8 @@ export default function SplashPage() {
         }}
       />
 
-      {/* Contenu principal */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
+      {!mounted ? null : (
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
         {/* Logo avec animation breathe */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -123,7 +121,8 @@ export default function SplashPage() {
         >
           {inspirationalPhrases[currentPhrase]}
         </motion.p>
-      </div>
+        </div>
+      )}
     </main>
   );
 }

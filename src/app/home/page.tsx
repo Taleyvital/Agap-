@@ -162,27 +162,32 @@ export default async function HomePage() {
         </div>
         </FadeUp>
 
+        {/* Reading Plans Section */}
         <section className="mt-10">
           <div className="flex items-center justify-between">
             <p className="ui-label text-text-tertiary">PLANS DE LECTURE</p>
           </div>
           <Link href="/reading-plan">
             <Card className="mt-4">
-              <div className="relative h-32 overflow-hidden rounded-xl bg-gradient-to-br from-indigo-700 via-purple-700 to-slate-900">
-                <div className="absolute inset-0 [background:radial-gradient(140px_100px_at_20%_20%,rgba(255,255,255,0.28),transparent_65%)]" />
+              <div className="relative h-32 overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1830] via-[#7B6FD4]/30 to-[#141414] border border-[#7B6FD4]/35">
+                <div className="absolute inset-0 [background:radial-gradient(140px_100px_at_20%_20%,rgba(123,111,212,0.28),transparent_65%)]" />
                 <div className="absolute inset-0 [background:radial-gradient(160px_120px_at_80%_70%,rgba(0,0,0,0.35),transparent_60%)]" />
                 <div className="absolute inset-0 bg-black/25" />
                 <div className="relative flex h-full flex-col justify-between p-4">
                   <div>
+                    <div className="inline-flex items-center gap-2 mb-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#7B6FD4] animate-pulse" />
+                      <span className="text-[10px] uppercase tracking-widest text-[#7B6FD4]">Parcours personnalisé</span>
+                    </div>
                     <p className="font-serif text-lg italic text-white">
                       Mon Plan de Lecture
                     </p>
                     <p className="mt-1 font-sans text-sm text-white/80">
-                      Personnalisé selon votre profil
+                      Généré par l&apos;IA selon ton profil
                     </p>
                   </div>
                   <span className="font-sans text-xs uppercase tracking-wider text-white/60">
-                    14 jours de réflexion →
+                    Explorer les parcours →
                   </span>
                 </div>
               </div>

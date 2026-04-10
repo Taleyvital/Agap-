@@ -33,13 +33,26 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  // Optimization: Skip auth check for public routes and splash
+  const publicPaths = ["/splash", "/onboarding", "/login", "/api/"];
+  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
+
+  if (!isPublicPath) {
+    await supabase.auth.getUser();
+  }
 
   return supabaseResponse;
 }
 
 export const config = {
   matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public assets (svg, png, etc.)
+     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
