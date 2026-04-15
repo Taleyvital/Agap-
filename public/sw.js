@@ -1,12 +1,10 @@
-const CACHE_NAME = 'agape-v2';
+const CACHE_NAME = 'agape-v3';
 const STATIC_ASSETS = [
-  '/',
-  '/home',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
 
-// Install: Cache static assets
+// Install: Cache only static icons
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -38,7 +36,16 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Strategy: Cache First for static assets
+  // Strategy: Network First for HTML pages (navigation)
+  // Never serve stale HTML — auth state must always be fresh
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request).catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Strategy: Cache First for static assets (immutable files)
   if (url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff|woff2)$/)) {
     event.respondWith(
       caches.match(request).then((response) => {
@@ -56,33 +63,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy: Network First for API calls
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          return caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, response.clone());
-            return response;
-          });
-        })
-        .catch(() => {
-          return caches.match(request);
-        })
-    );
-    return;
-  }
-
-  // Strategy: Stale While Revalidate for pages
+  // Strategy: Network First for everything else (API, etc.)
   event.respondWith(
-    caches.match(request).then((response) => {
-      const fetchPromise = fetch(request).then((networkResponse) => {
+    fetch(request)
+      .then((response) => {
         return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, networkResponse.clone());
-          return networkResponse;
+          cache.put(request, response.clone());
+          return response;
         });
-      });
-      return response || fetchPromise;
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });

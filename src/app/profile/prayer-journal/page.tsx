@@ -29,7 +29,7 @@ export default function PrayerJournalPage() {
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/onboarding");
+        router.push("/login");
         return;
       }
 

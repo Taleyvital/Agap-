@@ -54,7 +54,7 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/onboarding");
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -62,9 +62,9 @@ export default async function HomePage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!profile) redirect("/onboarding");
+  // if (!profile) redirect("/onboarding"); // module onboarding désactivé temporairement
 
-  const initial = profile.first_name?.charAt(0).toUpperCase() ?? "A";
+  const initial = profile?.first_name?.charAt(0).toUpperCase() ?? "A";
   
   // Get the daily verse
   const dailyVerse = getDailyVerse();

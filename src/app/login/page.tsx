@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type Mode = "login" | "signup";
@@ -106,19 +107,8 @@ export default function LoginPage() {
         <div className="w-full max-w-[360px]">
           {/* Logo */}
           <div className="flex flex-col items-center">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-full"
-              style={{ background: "#2D1F6E" }}
-            >
-              <svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
-                <path
-                  d="M17 6 C17 6 8 10 8 18 C8 22 11 25 14 26 L14 28 L17 26 L20 28 L20 26 C23 25 26 22 26 18 C26 10 17 6 17 6Z"
-                  fill="white"
-                  opacity="0.9"
-                />
-                <path d="M17 6 L22 10 L26 8 L23 14 C22 12 20 10 17 6Z" fill="white" />
-                <circle cx="14.5" cy="16" r="1.5" fill="#2D1F6E" />
-              </svg>
+            <div className="relative h-16 w-16">
+              <Image src="/icons/Kudob01.svg" alt="AGAPE" fill className="object-contain" priority />
             </div>
 
             <h1

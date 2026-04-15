@@ -57,7 +57,7 @@ export default function ReadingPlanPage() {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-          router.push("/onboarding");
+          router.push("/login");
         }
       } catch (error) {
         console.error("Error checking auth:", error);
