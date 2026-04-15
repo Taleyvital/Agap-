@@ -62,9 +62,9 @@ export default async function HomePage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  // if (!profile) redirect("/onboarding"); // module onboarding désactivé temporairement
+  if (!profile) redirect("/onboarding");
 
-  const initial = profile?.first_name?.charAt(0).toUpperCase() ?? "A";
+  const initial = profile.first_name?.charAt(0).toUpperCase() ?? "A";
   
   // Get the daily verse
   const dailyVerse = getDailyVerse();

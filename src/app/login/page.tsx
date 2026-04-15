@@ -65,11 +65,12 @@ export default function LoginPage() {
           const { error } = await supabase.auth.signUp({ email: email.trim(), password });
           if (error) throw error;
         }
+        router.replace("/onboarding");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
+        router.replace("/home");
       }
-      router.replace("/home");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Une erreur est survenue.";
       setErrors({ general: msg });
