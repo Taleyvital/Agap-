@@ -696,8 +696,11 @@ function BiblePageContent() {
                           onPointerLeave={onVersePointerUp}
                         >
                           <p className="flex gap-3 leading-[1.9]">
-                            <span className="min-w-[1.5rem] shrink-0 font-sans text-xs text-text-tertiary pt-1">
+                            <span className="relative min-w-[1.5rem] shrink-0 font-sans text-xs text-text-tertiary pt-1">
                               {row.verse}
+                              {verseNotes[getVerseKey(bookId!, chapter!, row.verse)] && (
+                                <span className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full bg-accent" />
+                              )}
                             </span>
                             <span
                               className={`font-serif text-text-primary ${verseBold ? "font-bold" : ""}`}
