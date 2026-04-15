@@ -122,7 +122,7 @@ export default function ProfilePage() {
   const signOut = async () => {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
-    router.replace("/onboarding");
+    router.replace("/login");
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

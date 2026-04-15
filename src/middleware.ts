@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   );
 
   const pathname = request.nextUrl.pathname;
-  const publicPaths = ["/", "/splash", "/onboarding", "/login", "/auth/", "/api/"];
+  const publicPaths = ["/", "/splash", "/onboarding", "/login", "/forgot-password", "/auth/", "/api/"];
   const isPublicPath = publicPaths.some((path) =>
     path === "/" ? pathname === "/" : pathname.startsWith(path),
   );
