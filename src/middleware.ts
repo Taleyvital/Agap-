@@ -33,12 +33,19 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // Optimization: Skip auth check for public routes and splash
-  const publicPaths = ["/splash", "/onboarding", "/login", "/api/"];
-  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
+  const pathname = request.nextUrl.pathname;
+  const publicPaths = ["/", "/splash", "/onboarding", "/login", "/auth/", "/api/"];
+  const isPublicPath = publicPaths.some((path) =>
+    path === "/" ? pathname === "/" : pathname.startsWith(path),
+  );
 
   if (!isPublicPath) {
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   return supabaseResponse;

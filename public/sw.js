@@ -1,4 +1,4 @@
-const CACHE_NAME = 'agape-v1';
+const CACHE_NAME = 'agape-v2';
 const STATIC_ASSETS = [
   '/',
   '/home',

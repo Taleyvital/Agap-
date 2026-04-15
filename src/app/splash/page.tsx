@@ -33,10 +33,10 @@ export default function SplashPage() {
 
       // Attendre 2.5s pour laisser l'animation jouer
       setTimeout(() => {
-        if (session) {
+        if (session && !session.user.is_anonymous) {
           router.push("/home");
         } else {
-          router.push("/onboarding");
+          router.push("/login");
         }
       }, 2500);
     };
