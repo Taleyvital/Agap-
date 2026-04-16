@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Copy, Share2, Check } from "lucide-react";
+import { X, Copy, Share2, Check, ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 // ── Props ─────────────────────────────────────────────────────
@@ -56,12 +56,33 @@ function GrainOverlay() {
   );
 }
 
+// ── 15 Unsplash background images ─────────────────────────────
+const BACKGROUND_IMAGES = [
+  { id: 1, url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80", thumb: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=60", name: "Montagnes" },
+  { id: 2, url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80", thumb: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=60", name: "Sunset" },
+  { id: 3, url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&q=60", name: "Nature" },
+  { id: 4, url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=60", name: "Forêt" },
+  { id: 5, url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80", thumb: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=200&q=60", name: "Lac" },
+  { id: 6, url: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=800&q=80", thumb: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=200&q=60", name: "Cascade" },
+  { id: 7, url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80", thumb: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=200&q=60", name: "Brume" },
+  { id: 8, url: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=200&q=60", name: "Étoiles" },
+  { id: 9, url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80", thumb: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=200&q=60", name: "Océan" },
+  { id: 10, url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=200&q=60", name: "Prairie" },
+  { id: 11, url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80", thumb: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=60", name: "Neige" },
+  { id: 12, url: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80", thumb: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=200&q=60", name: "Désert" },
+  { id: 13, url: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&q=80", thumb: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=200&q=60", name: "Aurore" },
+  { id: 14, url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80", thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200&q=60", name: "Yosemite" },
+  { id: 15, url: "https://images.unsplash.com/photo-1418065460487-3e41a6c84af5?w=800&q=80", thumb: "https://images.unsplash.com/photo-1418065460487-3e41a6c84af5?w=200&q=60", name: "Aube" },
+];
+
 // ── Main component ────────────────────────────────────────────
 export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, backgroundImage }: VerseFullCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [selectedBg, setSelectedBg] = useState<string | null>(null);
 
   // Split reference into two lines like the screenshot: "PSAUME" / "28:7"
   const bookUpper = book.toUpperCase();
@@ -135,10 +156,10 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
           style={{ background: "#0a0a0a" }}
         >
           {/* ── Background Image ── */}
-          {backgroundImage && (
+          {(selectedBg || backgroundImage) && (
             <div className="absolute inset-0 z-0">
               <Image
-                src={backgroundImage}
+                src={selectedBg || backgroundImage || ""}
                 alt="Background"
                 fill
                 className={`object-cover transition-opacity duration-1000 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -148,7 +169,7 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
               {/* Dark overlay for text readability */}
               <div 
                 className="absolute inset-0"
-                style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)' }}
+                style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)' }}
               />
             </div>
           )}
@@ -195,7 +216,7 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
             style={{
               flex: 1,
               position: "relative",
-              background: backgroundImage ? "transparent" : "#0a0a0a",
+              background: (selectedBg || backgroundImage) ? "transparent" : "#0a0a0a",
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",
@@ -296,7 +317,29 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
               }}
             >
               {copied ? <Check size={15} /> : <Copy size={15} />}
-              {copied ? "Copié !" : "Copier le verset"}
+              {copied ? "Copié !" : "Copier"}
+            </button>
+
+            {/* Background Image Picker Button */}
+            <button
+              type="button"
+              onClick={() => setShowImagePicker(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+                color: "#777777",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                transition: "color 0.2s",
+                padding: "8px 12px",
+              }}
+            >
+              <ImageIcon size={16} />
+              Fond
             </button>
 
             {/* Share */}
@@ -328,6 +371,88 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
               {sharing ? "…" : "Partager"}
             </button>
           </div>
+
+          {/* ── Image Picker Modal ── */}
+          <AnimatePresence>
+            {showImagePicker && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[250] bg-black/80"
+                  onClick={() => setShowImagePicker(false)}
+                />
+                
+                {/* Modal */}
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                  className="fixed inset-x-0 bottom-0 z-[260] mx-auto max-w-[430px] rounded-t-3xl bg-bg-secondary border-t border-x border-separator"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
+                          FOND D&apos;ÉCRAN
+                        </p>
+                        <p className="font-serif text-lg text-text-primary mt-0.5">
+                          Choisir une image
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowImagePicker(false)}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-bg-tertiary text-text-secondary hover:text-text-primary"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    {/* Grid of images */}
+                    <div className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pb-4">
+                      {/* Option: None (solid black) */}
+                      <button
+                        onClick={() => { setSelectedBg(null); setShowImagePicker(false); }}
+                        className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                          !selectedBg ? 'border-accent' : 'border-transparent hover:border-accent/50'
+                        }`}
+                      >
+                        <div className="absolute inset-0 bg-[#0a0a0a] flex items-center justify-center">
+                          <span className="text-white/50 text-xs">Aucun</span>
+                        </div>
+                      </button>
+
+                      {BACKGROUND_IMAGES.map((img) => (
+                        <button
+                          key={img.id}
+                          onClick={() => { setSelectedBg(img.url); setShowImagePicker(false); }}
+                          className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                            selectedBg === img.url ? 'border-accent' : 'border-transparent hover:border-accent/50'
+                          }`}
+                        >
+                          <Image
+                            src={img.thumb}
+                            alt={img.name}
+                            fill
+                            className="object-cover"
+                            sizes="120px"
+                          />
+                          {selectedBg === img.url && (
+                            <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">
+                              <Check className="w-6 h-6 text-accent" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
