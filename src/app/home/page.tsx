@@ -8,7 +8,6 @@ import { FadeUp } from "@/components/home/HomeMotion";
 import { Card } from "@/components/ui/Card";
 import { VerseImageCard } from "@/components/ui/VerseImageCard";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
-import { DailyImageCard } from "@/components/ui/DailyImageCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect } from "react";
 
@@ -80,6 +79,7 @@ export default function HomePage() {
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [profile, setProfile] = useState<{ first_name: string | null; anonymous_name: string | null } | null>(null);
   const [isVerseModalOpen, setIsVerseModalOpen] = useState(false);
+  const [dailyImage, setDailyImage] = useState<string | null>(null);
   
   // Get the daily verse
   const dailyVerse = getDailyVerse();
@@ -110,7 +110,20 @@ export default function HomePage() {
       setProfile(profileData);
     };
     
+    // Fetch daily image
+    const fetchDailyImage = async () => {
+      try {
+        const res = await fetch('/api/daily-image')
+        if (!res.ok) throw new Error('fetch failed')
+        const data = await res.json()
+        if (data.url) setDailyImage(data.url)
+      } catch (error) {
+        console.error('Failed to fetch daily image:', error)
+      }
+    }
+    
     void checkAuth();
+    void fetchDailyImage();
   }, []);
   
   if (!user || !profile) {
@@ -155,13 +168,6 @@ export default function HomePage() {
               variant="home"
             />
           </button>
-        </section>
-        </FadeUp>
-
-        {/* Image du jour */}
-        <FadeUp delay={0.03}>
-        <section className="mt-4">
-          <DailyImageCard />
         </section>
         </FadeUp>
 
@@ -275,6 +281,7 @@ export default function HomePage() {
           text={dailyVerse.text}
           isOpen={isVerseModalOpen}
           onClose={() => setIsVerseModalOpen(false)}
+          backgroundImage={dailyImage || undefined}
         />
       </div>
     </AppShell>

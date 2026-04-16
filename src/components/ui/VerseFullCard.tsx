@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Copy, Share2, Check } from "lucide-react";
+import Image from "next/image";
 
 // ── Props ─────────────────────────────────────────────────────
 export interface VerseFullCardProps {
@@ -14,6 +15,8 @@ export interface VerseFullCardProps {
   text: string;
   isOpen: boolean;
   onClose: () => void;
+  /** Optional background image URL (e.g., daily image) */
+  backgroundImage?: string;
 }
 
 // ── Grain overlay via CSS (no external file needed) ──────────
@@ -54,10 +57,11 @@ function GrainOverlay() {
 }
 
 // ── Main component ────────────────────────────────────────────
-export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose }: VerseFullCardProps) {
+export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, backgroundImage }: VerseFullCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Split reference into two lines like the screenshot: "PSAUME" / "28:7"
   const bookUpper = book.toUpperCase();
@@ -130,6 +134,24 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose }: V
           className="fixed inset-0 z-[200] flex flex-col overflow-hidden"
           style={{ background: "#0a0a0a" }}
         >
+          {/* ── Background Image ── */}
+          {backgroundImage && (
+            <div className="absolute inset-0 z-0">
+              <Image
+                src={backgroundImage}
+                alt="Background"
+                fill
+                className={`object-cover transition-opacity duration-1000 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={() => setImageLoaded(true)}
+                priority
+              />
+              {/* Dark overlay for text readability */}
+              <div 
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)' }}
+              />
+            </div>
+          )}
           {/* ── Grain ── */}
           <GrainOverlay />
 
@@ -173,7 +195,7 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose }: V
             style={{
               flex: 1,
               position: "relative",
-              background: "#0a0a0a",
+              background: backgroundImage ? "transparent" : "#0a0a0a",
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",
