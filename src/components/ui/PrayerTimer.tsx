@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useXPToast } from "@/components/providers/XPToastProvider";
+import type { XPResult } from "@/lib/xp-shared";
 
 const DURATIONS = [5, 10, 15, 30] as const;
 
@@ -29,6 +31,11 @@ const AMBIANCES = [
 ] as const;
 
 export function PrayerTimer() {
+  const { showXPToast } = useXPToast();
+  // Keep showXPToast stable in setInterval closures
+  const showXPToastRef = useRef(showXPToast);
+  useEffect(() => { showXPToastRef.current = showXPToast; }, [showXPToast]);
+
   const [minutes, setMinutes] = useState(10);
   const [remaining, setRemaining] = useState(10 * 60);
   const [running, setRunning] = useState(false);
@@ -73,7 +80,11 @@ export function PrayerTimer() {
               ambiance: ambianceRef.current,
               completed: true,
             }),
-          });
+          }).then(async (res) => {
+            if (!res.ok) return;
+            const data = (await res.json()) as { ok: boolean; xp?: XPResult };
+            if (data.xp) showXPToastRef.current(data.xp);
+          }).catch(() => undefined);
           return 0;
         }
         return r - 1;

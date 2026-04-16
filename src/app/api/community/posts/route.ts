@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import { moderateCommunityPost } from "@/lib/groq";
+import { awardXP } from "@/lib/xp";
 
 // GET - Récupérer les posts de l'utilisateur connecté
 export async function GET(request: Request) {
@@ -148,5 +149,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ id: data.id });
+  const xp = await awardXP(user.id, "COMMUNITY_POST_PUBLISHED");
+
+  return NextResponse.json({ id: data.id, xp });
 }

@@ -20,6 +20,7 @@ import {
   Settings,
   Shield,
   Sun,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -42,6 +43,7 @@ const MENU_SECTIONS = [
   {
     title: "Mes contenus",
     items: [
+      { href: "/dashboard", label: "Ma progression", Icon: Zap },
       { href: "/profile/posts", label: "Mes Publications", Icon: FileText },
       { href: "/profile/saved-verses", label: "Versets sauvegardés", Icon: BookOpen },
       { href: "/profile/chat-history", label: "Historique AGAPE Chat", Icon: MessageCircle },

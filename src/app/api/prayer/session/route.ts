@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { awardXP } from "@/lib/xp";
 
 export async function POST(request: Request) {
   const supabase = createSupabaseServerClient();
@@ -27,5 +28,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true });
+  // Award XP only for completed sessions
+  let xp = null;
+  if (body.completed) {
+    xp = await awardXP(user.id, "PRAYER_TIMER_COMPLETED");
+  }
+
+  return NextResponse.json({ ok: true, xp });
 }

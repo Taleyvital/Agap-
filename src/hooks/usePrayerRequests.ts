@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { PrayerRequest } from "@/lib/types";
 import { useAuth } from "./useAuth";
+import { triggerXP, useXPToast } from "@/components/providers/XPToastProvider";
 
 export function usePrayerRequests() {
   const { user } = useAuth();
   const [prayers, setPrayers] = useState<PrayerRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createSupabaseBrowserClient();
+  const { showXPToast } = useXPToast();
 
   const fetchPrayers = useCallback(async () => {
     if (!user) {
@@ -94,6 +96,8 @@ export function usePrayerRequests() {
         content: `🙏 TÉMOIGNAGE : ${data.titre}\n\n${temoignage}`,
       });
     }
+
+    void triggerXP("PRAYER_ANSWERED_LOGGED", showXPToast);
 
     return data;
   };

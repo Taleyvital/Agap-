@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { X, Share2, CheckCircle } from "lucide-react";
+import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 
 interface Question {
   id: number;
@@ -52,6 +53,7 @@ const mockDayReading: DayReading = {
 
 export default function DayReadingPage() {
   const router = useRouter();
+  const { showXPToast } = useXPToast();
   const [dayReading] = useState<DayReading>(mockDayReading);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isCompleted, setIsCompleted] = useState(false);
@@ -65,7 +67,7 @@ export default function DayReadingPage() {
 
   const handleComplete = () => {
     setIsCompleted(true);
-    // In a real app, save to backend here
+    void triggerXP("LECTURE_DAY_COMPLETED", showXPToast);
     setTimeout(() => {
       router.push("/reading-plan/1");
     }, 1000);

@@ -6,6 +6,8 @@ import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as Imag
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useXPToast } from "@/components/providers/XPToastProvider";
+import type { XPResult } from "@/lib/xp-shared";
 
 type Filter = "all" | "prayer" | "testimony";
 
@@ -48,6 +50,7 @@ interface SupabasePostRow {
 const MOCK_POSTS: Post[] = [];
 
 export default function CommunityPage() {
+  const { showXPToast } = useXPToast();
   const [filter, setFilter] = useState<Filter>("all");
   const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
   const [composer, setComposer] = useState(false);
@@ -176,8 +179,9 @@ export default function CommunityPage() {
       console.log("API response status:", res.status);
       
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { id?: string; xp?: XPResult };
         console.log("Post created:", data);
+        if (data.xp) showXPToast(data.xp);
         setDraft("");
         removeImage();
         setComposer(false);

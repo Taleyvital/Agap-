@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
+import { awardXP } from "@/lib/xp";
 
 export async function POST(request: Request) {
   try {
@@ -21,7 +22,6 @@ export async function POST(request: Request) {
     }
 
     if (action === "remove") {
-      // Remove amen (deletes all matches if duplicates got created)
       const { error } = await supabase
         .from("community_amens")
         .delete()
@@ -30,12 +30,24 @@ export async function POST(request: Request) {
       if (error) throw error;
       return NextResponse.json({ action: "removed" });
     } else {
-      // Add amen
       const { error } = await supabase
         .from("community_amens")
         .insert({ post_id: postId, user_id: user.id });
 
       if (error) throw error;
+
+      // Award XP to the post owner (not the person giving the amen)
+      const serviceClient = createSupabaseServiceClient();
+      const { data: post } = await serviceClient
+        .from("community_posts")
+        .select("user_id")
+        .eq("id", postId)
+        .maybeSingle();
+
+      if (post?.user_id && post.user_id !== user.id) {
+        await awardXP(post.user_id, "COMMUNITY_AMEN_RECEIVED");
+      }
+
       return NextResponse.json({ action: "added" });
     }
   } catch (error: unknown) {

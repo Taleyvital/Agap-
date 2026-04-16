@@ -15,6 +15,7 @@ import {
 } from "@/lib/bible";
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 
 // Livres de l'Ancien Testament (bookid 1–39) et Nouveau Testament (40–66)
 const AT_MAX_ID = 39;
@@ -26,6 +27,8 @@ function stripHtml(html: string) {
 }
 
 function BiblePageContent() {
+  const { showXPToast } = useXPToast();
+
   // ── State ──────────────────────────────────
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [translation, setTranslation] = useState(DEFAULT_TRANSLATION);
@@ -213,7 +216,11 @@ function BiblePageContent() {
   const saveNote = () => {
     if (longPressVerse !== null && bookId !== null && chapter !== null) {
       const key = getVerseKey(bookId, chapter, longPressVerse);
+      const isNewNote = !verseNotes[key] && noteInput.trim().length > 0;
       setVerseNotes((prev) => ({ ...prev, [key]: noteInput }));
+      if (isNewNote) {
+        void triggerXP("VERSE_ANNOTATED", showXPToast);
+      }
     }
     setSheetOpen(false);
     setNoteInput("");
