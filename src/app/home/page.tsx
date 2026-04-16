@@ -1,11 +1,15 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Bell, Bird } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { FadeUp } from "@/components/home/HomeMotion";
 import { Card } from "@/components/ui/Card";
 import { VerseImageCard } from "@/components/ui/VerseImageCard";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { VerseFullCard } from "@/components/ui/VerseFullCard";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useEffect } from "react";
 
 // Collection de versets pour le verset journalier
 const DAILY_VERSES = [
@@ -49,25 +53,70 @@ function getDailyVerse() {
   return DAILY_VERSES[index];
 }
 
-export default async function HomePage() {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+// Fonction pour parser la référence biblique (ex: "Jean 15:5" ou "2 Corinthiens 5:17")
+function parseReference(reference: string): { book: string; chapter: number; verse: number } {
+  // Supprimer les plages (ex: "1-2" devient juste "1")
+  const cleanRef = reference.replace(/-\d+$/, "");
+  
+  // Regex pour matcher: "Livre Chapitre:Verset" ou "Nombre Livre Chapitre:Verset"
+  const match = cleanRef.match(/^(?:(\d)\s+)?([^\d]+)\s+(\d+):(\d+)$/);
+  
+  if (match) {
+    const [, number, bookName, chapter, verse] = match;
+    const book = number ? `${number} ${bookName.trim()}` : bookName.trim();
+    return {
+      book,
+      chapter: parseInt(chapter, 10),
+      verse: parseInt(verse, 10),
+    };
+  }
+  
+  // Fallback si le parsing échoue
+  return { book: reference, chapter: 1, verse: 1 };
+}
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("first_name, anonymous_name")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile) redirect("/onboarding");
-
-  const initial = profile.first_name?.charAt(0).toUpperCase() ?? "A";
+export default function HomePage() {
+  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [profile, setProfile] = useState<{ first_name: string | null; anonymous_name: string | null } | null>(null);
+  const [isVerseModalOpen, setIsVerseModalOpen] = useState(false);
   
   // Get the daily verse
   const dailyVerse = getDailyVerse();
+  const parsedRef = parseReference(dailyVerse.reference);
+  
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    
+    const checkAuth = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        window.location.href = "/login";
+        return;
+      }
+      setUser(authUser);
+      
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("first_name, anonymous_name")
+        .eq("id", authUser.id)
+        .maybeSingle();
+      
+      if (!profileData) {
+        window.location.href = "/onboarding";
+        return;
+      }
+      
+      setProfile(profileData);
+    };
+    
+    void checkAuth();
+  }, []);
+  
+  if (!user || !profile) {
+    return null; // ou un loader
+  }
+
+  const initial = profile.first_name?.charAt(0).toUpperCase() ?? "A";
 
   return (
     <AppShell>
@@ -94,11 +143,17 @@ export default async function HomePage() {
 
         <FadeUp>
         <section className="mt-8">
-          <VerseImageCard
-            verseText={dailyVerse.text}
-            reference={dailyVerse.reference}
-            variant="home"
-          />
+          <button
+            onClick={() => setIsVerseModalOpen(true)}
+            className="w-full text-left cursor-pointer"
+            aria-label="Ouvrir le verset en plein écran"
+          >
+            <VerseImageCard
+              verseText={dailyVerse.text}
+              reference={dailyVerse.reference}
+              variant="home"
+            />
+          </button>
         </section>
         </FadeUp>
 
@@ -203,6 +258,16 @@ export default async function HomePage() {
         >
           <Bird className="h-6 w-6" strokeWidth={2.2} />
         </Link>
+
+        {/* Verse Full Screen Modal */}
+        <VerseFullCard
+          book={parsedRef.book}
+          chapter={parsedRef.chapter}
+          verse={parsedRef.verse}
+          text={dailyVerse.text}
+          isOpen={isVerseModalOpen}
+          onClose={() => setIsVerseModalOpen(false)}
+        />
       </div>
     </AppShell>
   );
