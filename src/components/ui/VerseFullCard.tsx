@@ -155,39 +155,6 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
           className="fixed inset-0 z-[200] flex flex-col overflow-hidden"
           style={{ background: "#0a0a0a" }}
         >
-          {/* ── Background Image ── */}
-          {(selectedBg || backgroundImage) && (
-            <div className="absolute inset-0 z-0">
-              <Image
-                src={selectedBg || backgroundImage || ""}
-                alt="Background"
-                fill
-                className={`object-cover transition-opacity duration-1000 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                onLoad={() => setImageLoaded(true)}
-                priority
-              />
-              {/* Dark overlay for text readability */}
-              <div 
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)' }}
-              />
-            </div>
-          )}
-          {/* ── Grain ── */}
-          <GrainOverlay />
-
-          {/* ── Diffuse light — top-right haze ── */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(ellipse 75% 50% at 88% 6%, rgba(255,255,255,0.05) 0%, transparent 65%)",
-              pointerEvents: "none",
-            }}
-          />
-
           {/* ── Close ── */}
           <button
             type="button"
@@ -216,15 +183,51 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
             style={{
               flex: 1,
               position: "relative",
-              background: (selectedBg || backgroundImage) ? "transparent" : "#0a0a0a",
+              background: "#0a0a0a",
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",
               paddingBottom: "14vh",
               paddingLeft: 28,
               paddingRight: 28,
+              overflow: "hidden",
             }}
           >
+            {/* ── Background Image (inside capture zone for sharing) ── */}
+            {(selectedBg || backgroundImage) && (
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src={selectedBg || backgroundImage || ""}
+                  alt="Background"
+                  fill
+                  className={`object-cover transition-opacity duration-1000 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  onLoad={() => setImageLoaded(true)}
+                  priority
+                />
+                {/* Dark overlay for text readability */}
+                <div 
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)' }}
+                />
+              </div>
+            )}
+
+            {/* ── Grain ── */}
+            <GrainOverlay />
+
+            {/* ── Diffuse light — top-right haze ── */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "radial-gradient(ellipse 75% 50% at 88% 6%, rgba(255,255,255,0.05) 0%, transparent 65%)",
+                pointerEvents: "none",
+                zIndex: 1,
+              }}
+            />
+
             {/* Grain duplicated inside capture zone so png looks right */}
             <div
               aria-hidden="true"
@@ -234,16 +237,7 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
                 filter: "url(#vc-noise)",
                 opacity: 0.5,
                 pointerEvents: "none",
-              }}
-            />
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "radial-gradient(ellipse 75% 50% at 88% 6%, rgba(255,255,255,0.05) 0%, transparent 65%)",
-                pointerEvents: "none",
+                zIndex: 1,
               }}
             />
 
@@ -259,6 +253,7 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
                 textTransform: "uppercase",
                 marginBottom: "1.2rem",
                 position: "relative",
+                zIndex: 2,
               }}
             >
               <span style={{ display: "block" }}>{bookUpper}</span>
@@ -278,6 +273,7 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
                 textAlign: "justify",
                 maxWidth: "85%",
                 position: "relative",
+                zIndex: 2,
               }}
             >
               {text}
