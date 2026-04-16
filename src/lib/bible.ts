@@ -1,14 +1,16 @@
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
 
-export const DEFAULT_TRANSLATION = "NBS";
+export const DEFAULT_TRANSLATION = "FRLSG";
 
 // Only translations verified to work with the bolls.life API
 export const TRANSLATIONS: { language: string; items: { slug: string; label: string }[] }[] = [
   {
     language: "Français",
     items: [
+      { slug: "FRLSG", label: "Louis Segond 1910" },
       { slug: "NBS", label: "Nouvelle Bible Segond" },
       { slug: "BDS", label: "Bible du Semeur" },
+      { slug: "FRDBY", label: "Darby (1885)" },
     ],
   },
   {
