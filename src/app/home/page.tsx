@@ -8,6 +8,7 @@ import { FadeUp } from "@/components/home/HomeMotion";
 import { Card } from "@/components/ui/Card";
 import { VerseImageCard } from "@/components/ui/VerseImageCard";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
+import { DailyImageCard } from "@/components/ui/DailyImageCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect } from "react";
 
@@ -154,6 +155,13 @@ export default function HomePage() {
               variant="home"
             />
           </button>
+        </section>
+        </FadeUp>
+
+        {/* Image du jour */}
+        <FadeUp delay={0.03}>
+        <section className="mt-4">
+          <DailyImageCard />
         </section>
         </FadeUp>
 
