@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { LEVELS, getLevelForXP, getNextLevel } from "@/lib/xp-shared";
-import type { XPResult } from "@/lib/xp-shared";
 
 // ── Types ────────────────────────────────────────────────────
 interface LevelRow {
