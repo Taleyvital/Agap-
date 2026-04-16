@@ -49,11 +49,10 @@ function formatDateTime(iso: string) {
   return date.toLocaleDateString("fr-FR", { weekday: "long" }) + `, ${time}`;
 }
 
-// ── Tree illustration ────────────────────────────────────────
+// ── Tree illustration (colours fixed — pure design art) ──────
 function TreeIllustration() {
   return (
     <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
-      {/* Outer glow */}
       <div
         className="absolute inset-0 rounded-full"
         style={{
@@ -61,48 +60,38 @@ function TreeIllustration() {
             "radial-gradient(circle at 50% 52%, rgba(90,75,200,0.55) 0%, rgba(55,45,140,0.35) 30%, rgba(20,20,45,0) 68%)",
         }}
       />
-      {/* Inner halo ring */}
       <div
         className="absolute rounded-full"
         style={{
-          width: 170,
-          height: 170,
-          top: "50%",
-          left: "50%",
+          width: 170, height: 170,
+          top: "50%", left: "50%",
           transform: "translate(-50%, -50%)",
           background:
             "radial-gradient(circle at 50% 48%, rgba(100,85,220,0.4) 0%, rgba(60,50,160,0.2) 50%, transparent 75%)",
         }}
       />
       <svg width="130" height="148" viewBox="0 0 130 148" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Trunk */}
         <rect x="57" y="108" width="16" height="32" rx="5" fill="#2A2360" />
-        {/* Canopy base layer */}
         <ellipse cx="65" cy="82" rx="42" ry="36" fill="#252060" />
-        {/* Side lobes */}
         <circle cx="28" cy="80" r="24" fill="#252060" />
         <circle cx="102" cy="80" r="22" fill="#252060" />
-        {/* Mid layer */}
         <ellipse cx="65" cy="72" rx="36" ry="32" fill="#302880" />
         <circle cx="32" cy="74" r="20" fill="#302878" />
         <circle cx="98" cy="74" r="18" fill="#302878" />
-        {/* Top layer */}
         <ellipse cx="65" cy="62" rx="30" ry="28" fill="#3D3598" />
         <circle cx="40" cy="65" r="18" fill="#3A3290" />
         <circle cx="90" cy="65" r="16" fill="#3A3290" />
         <circle cx="65" cy="48" r="22" fill="#4840A8" />
-        {/* Highlight core */}
         <circle cx="65" cy="52" r="16" fill="#5850BC" opacity="0.7" />
         <circle cx="58" cy="46" r="10" fill="#6A60CC" opacity="0.5" />
-        {/* Stars */}
         <circle cx="52" cy="52" r="1.8" fill="white" opacity="0.9" />
         <circle cx="72" cy="44" r="1.2" fill="white" opacity="0.8" />
         <circle cx="82" cy="58" r="1.5" fill="white" opacity="0.7" />
-        <circle cx="44" cy="68" r="1" fill="white" opacity="0.6" />
+        <circle cx="44" cy="68" r="1"   fill="white" opacity="0.6" />
         <circle cx="88" cy="70" r="1.2" fill="white" opacity="0.65" />
-        <circle cx="60" cy="38" r="1" fill="white" opacity="0.75" />
-        <circle cx="75" cy="68" r="1" fill="white" opacity="0.5" />
-        <circle cx="35" cy="76" r="1" fill="white" opacity="0.5" />
+        <circle cx="60" cy="38" r="1"   fill="white" opacity="0.75" />
+        <circle cx="75" cy="68" r="1"   fill="white" opacity="0.5" />
+        <circle cx="35" cy="76" r="1"   fill="white" opacity="0.5" />
         <circle cx="94" cy="78" r="0.8" fill="white" opacity="0.55" />
       </svg>
     </div>
@@ -142,17 +131,13 @@ export default function DashboardPage() {
     })();
   }, [router]);
 
-  // ── Derived values ────────────────────────────────────────
   const totalXP = levelRow?.total_xp ?? 0;
   const { level: currentLevel, name: currentLevelName } = getLevelForXP(totalXP);
   const nextLevelData = getNextLevel(currentLevel);
   const currentLevelData = LEVELS.find((l) => l.level === currentLevel)!;
 
   const progressPct = nextLevelData
-    ? Math.min(
-        100,
-        ((totalXP - currentLevelData.minXP) / (nextLevelData.minXP - currentLevelData.minXP)) * 100,
-      )
+    ? Math.min(100, ((totalXP - currentLevelData.minXP) / (nextLevelData.minXP - currentLevelData.minXP)) * 100)
     : 100;
 
   const xpToNext = nextLevelData ? nextLevelData.minXP - totalXP : 0;
@@ -161,10 +146,7 @@ export default function DashboardPage() {
     return (
       <AppShell>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div
-            className="w-5 h-5 rounded-full border-2 animate-spin"
-            style={{ borderColor: "#7B6FD4", borderTopColor: "transparent" }}
-          />
+          <div className="w-5 h-5 rounded-full border-2 animate-spin border-accent border-t-transparent" />
         </div>
       </AppShell>
     );
@@ -176,22 +158,10 @@ export default function DashboardPage() {
 
         {/* ── Header ── */}
         <div className="px-4 pt-5 pb-0">
-          <h1
-            style={{ fontFamily: "var(--font-serif)", color: "#E8E8E8", fontSize: 26 }}
-            className="font-normal leading-tight"
-          >
+          <h1 className="font-serif font-normal text-text-primary leading-tight" style={{ fontSize: 26 }}>
             Ma progression
           </h1>
-          <p
-            style={{
-              fontFamily: "var(--font-sans)",
-              color: "#666666",
-              fontSize: 11,
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-            }}
-            className="mt-1"
-          >
+          <p className="mt-1 font-sans text-text-secondary uppercase tracking-widest" style={{ fontSize: 11 }}>
             Ton chemin spirituel
           </p>
         </div>
@@ -206,47 +176,28 @@ export default function DashboardPage() {
           <TreeIllustration />
 
           <p
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontStyle: "italic",
-              color: "#E8E8E8",
-              fontSize: 36,
-              lineHeight: 1,
-            }}
-            className="mt-1"
+            className="mt-1 font-serif text-text-primary"
+            style={{ fontStyle: "italic", fontSize: 36, lineHeight: 1 }}
           >
             {currentLevelName}
           </p>
 
-          {/* Progress bar */}
           <div
-            className="mt-3 rounded-full overflow-hidden"
-            style={{ width: 160, height: 2, background: "rgba(123,111,212,0.2)" }}
+            className="mt-3 rounded-full overflow-hidden bg-accent/20"
+            style={{ width: 160, height: 2 }}
           >
             <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${progressPct}%`, background: "#7B6FD4" }}
+              className="h-full rounded-full bg-accent transition-all duration-700"
+              style={{ width: `${progressPct}%` }}
             />
           </div>
 
           {nextLevelData ? (
-            <p
-              style={{
-                fontFamily: "var(--font-sans)",
-                color: "#7B6FD4",
-                fontSize: 11,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-              }}
-              className="mt-2"
-            >
+            <p className="mt-2 font-sans text-accent uppercase tracking-widest" style={{ fontSize: 11 }}>
               {xpToNext.toLocaleString("fr-FR")} XP pour atteindre {nextLevelData.name}
             </p>
           ) : (
-            <p
-              style={{ fontFamily: "var(--font-sans)", color: "#7B6FD4", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em" }}
-              className="mt-2"
-            >
+            <p className="mt-2 font-sans text-accent uppercase tracking-widest" style={{ fontSize: 11 }}>
               Niveau maximum atteint
             </p>
           )}
@@ -255,35 +206,26 @@ export default function DashboardPage() {
         {/* ── 4 metric cards ── */}
         <div className="grid grid-cols-2 gap-3 px-4 mb-5">
           {[
-            { label: "XP Total",        value: totalXP.toLocaleString("fr-FR") },
-            { label: "Niveau",          value: String(currentLevel) },
-            { label: "Streak",          value: `${levelRow?.current_streak ?? 0} jours` },
-            { label: "Record",          value: `${levelRow?.longest_streak ?? 0} jours` },
+            { label: "XP Total", value: totalXP.toLocaleString("fr-FR") },
+            { label: "Niveau",   value: String(currentLevel) },
+            { label: "Streak",   value: `${levelRow?.current_streak ?? 0} jours` },
+            { label: "Record",   value: `${levelRow?.longest_streak ?? 0} jours` },
           ].map((card, i) => (
             <motion.div
               key={card.label}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.05 * i }}
-              className="p-4"
-              style={{ background: "#1c1c1c", border: "0.5px solid #2a2a2a", borderRadius: 16 }}
+              className="p-4 bg-bg-secondary rounded-2xl"
+              style={{ border: "0.5px solid rgb(var(--separator))" }}
             >
               <p
-                style={{
-                  fontFamily: "var(--font-sans)",
-                  color: "#666666",
-                  fontSize: 10,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                }}
-                className="mb-2"
+                className="mb-2 font-sans text-text-secondary uppercase"
+                style={{ fontSize: 10, letterSpacing: "0.12em" }}
               >
                 {card.label}
               </p>
-              <p
-                style={{ fontFamily: "var(--font-serif)", color: "#E8E8E8", fontSize: 24, lineHeight: 1.15 }}
-                className="font-normal"
-              >
+              <p className="font-serif font-normal text-text-primary" style={{ fontSize: 24, lineHeight: 1.15 }}>
                 {card.value}
               </p>
             </motion.div>
@@ -293,14 +235,8 @@ export default function DashboardPage() {
         {/* ── Activité récente ── */}
         <div className="px-4 mb-5">
           <p
-            style={{
-              fontFamily: "var(--font-sans)",
-              color: "#666666",
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-            }}
-            className="mb-3"
+            className="mb-3 font-sans text-text-secondary uppercase"
+            style={{ fontSize: 10, letterSpacing: "0.12em" }}
           >
             Activité récente
           </p>
@@ -308,13 +244,11 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.18 }}
-            style={{ background: "#1c1c1c", border: "0.5px solid #2a2a2a", borderRadius: 16, overflow: "hidden" }}
+            className="bg-bg-secondary rounded-2xl overflow-hidden"
+            style={{ border: "0.5px solid rgb(var(--separator))" }}
           >
             {recentXP.length === 0 ? (
-              <p
-                style={{ fontFamily: "var(--font-sans)", color: "#666666", fontSize: 13 }}
-                className="px-4 py-5"
-              >
+              <p className="px-4 py-5 font-sans text-text-secondary" style={{ fontSize: 13 }}>
                 Aucune activité pour l&apos;instant. Commence par lire la Bible ou prier !
               </p>
             ) : (
@@ -326,29 +260,20 @@ export default function DashboardPage() {
                     <div
                       key={row.id}
                       className="flex items-center gap-3 px-4 py-3.5"
-                      style={idx > 0 ? { borderTop: "0.5px solid #2a2a2a" } : undefined}
+                      style={idx > 0 ? { borderTop: "0.5px solid rgb(var(--separator))" } : undefined}
                     >
-                      <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: "rgba(123,111,212,0.12)" }}
-                      >
-                        <Icon size={16} style={{ color: "#7B6FD4" }} />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10">
+                        <Icon size={16} className="text-accent" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p
-                          style={{ fontFamily: "var(--font-sans)", color: "#E8E8E8", fontSize: 13 }}
-                          className="truncate"
-                        >
+                        <p className="truncate font-sans text-text-primary" style={{ fontSize: 13 }}>
                           {meta.label}
                         </p>
-                        <p style={{ fontFamily: "var(--font-sans)", color: "#666666", fontSize: 11 }} className="mt-0.5">
+                        <p className="mt-0.5 font-sans text-text-secondary" style={{ fontSize: 11 }}>
                           {formatDateTime(row.created_at)}
                         </p>
                       </div>
-                      <span
-                        style={{ fontFamily: "var(--font-sans)", color: "#7B6FD4", fontSize: 13, fontWeight: 500 }}
-                        className="shrink-0"
-                      >
+                      <span className="shrink-0 font-sans text-accent font-medium" style={{ fontSize: 13 }}>
                         +{row.xp_earned} XP
                       </span>
                     </div>
@@ -362,14 +287,8 @@ export default function DashboardPage() {
         {/* ── Ton chemin ── */}
         <div className="px-4">
           <p
-            style={{
-              fontFamily: "var(--font-sans)",
-              color: "#666666",
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-            }}
-            className="mb-3"
+            className="mb-3 font-sans text-text-secondary uppercase"
+            style={{ fontSize: 10, letterSpacing: "0.12em" }}
           >
             Ton chemin
           </p>
@@ -377,7 +296,8 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.22 }}
-            style={{ background: "#1c1c1c", border: "0.5px solid #2a2a2a", borderRadius: 16, overflow: "hidden" }}
+            className="bg-bg-secondary rounded-2xl overflow-hidden"
+            style={{ border: "0.5px solid rgb(var(--separator))" }}
           >
             {LEVELS.map((lvl, idx) => {
               const reached = totalXP >= lvl.minXP;
@@ -387,56 +307,50 @@ export default function DashboardPage() {
                   key={lvl.level}
                   className="flex items-center gap-3 px-4 py-3.5"
                   style={{
-                    borderTop: idx > 0 ? "0.5px solid #2a2a2a" : undefined,
-                    borderLeft: isCurrent ? "2px solid #7B6FD4" : "2px solid transparent",
+                    borderTop: idx > 0 ? "0.5px solid rgb(var(--separator))" : undefined,
+                    borderLeft: isCurrent ? "2px solid rgb(var(--accent))" : "2px solid transparent",
                   }}
                 >
-                  {/* Indicator circle */}
                   <div
                     className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
                     style={{
-                      background: reached ? "#7B6FD4" : "#222222",
-                      border: reached ? "none" : "1.5px solid #333333",
+                      background: reached ? "rgb(var(--accent))" : "rgb(var(--bg-tertiary))",
+                      border: reached ? "none" : "1.5px solid rgb(var(--separator))",
                     }}
                   >
                     {reached && !isCurrent && <Check size={12} color="white" strokeWidth={2.5} />}
                     {isCurrent && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
 
-                  {/* Level name */}
                   <p
+                    className="flex-1 font-sans"
                     style={{
-                      fontFamily: "var(--font-sans)",
-                      color: isCurrent ? "#7B6FD4" : reached ? "#E8E8E8" : "#3a3a3a",
                       fontSize: 15,
+                      color: isCurrent
+                        ? "rgb(var(--accent))"
+                        : reached
+                        ? "rgb(var(--text-primary))"
+                        : "rgb(var(--text-tertiary))",
                     }}
-                    className="flex-1"
                   >
                     {lvl.name}
                   </p>
 
-                  {/* Right label */}
                   {isCurrent && (
                     <p
-                      style={{
-                        fontFamily: "var(--font-sans)",
-                        color: "#7B6FD4",
-                        fontSize: 11,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        fontWeight: 600,
-                      }}
+                      className="font-sans text-accent font-semibold uppercase"
+                      style={{ fontSize: 11, letterSpacing: "0.1em" }}
                     >
                       Niveau actuel
                     </p>
                   )}
                   {reached && !isCurrent && (
-                    <p style={{ fontFamily: "var(--font-sans)", color: "#666666", fontSize: 12 }}>
+                    <p className="font-sans text-text-secondary" style={{ fontSize: 12 }}>
                       Atteint
                     </p>
                   )}
                   {!reached && (
-                    <p style={{ fontFamily: "var(--font-sans)", color: "#3a3a3a", fontSize: 12 }}>
+                    <p className="font-sans text-text-tertiary" style={{ fontSize: 12 }}>
                       {lvl.minXP.toLocaleString("fr-FR")} XP
                     </p>
                   )}
