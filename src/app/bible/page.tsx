@@ -16,6 +16,7 @@ import {
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
+import { VerseFullCard } from "@/components/ui/VerseFullCard";
 
 // Livres de l'Ancien Testament (bookid 1–39) et Nouveau Testament (40–66)
 const AT_MAX_ID = 39;
@@ -56,6 +57,8 @@ function BiblePageContent() {
   const [verseToColor, setVerseToColor] = useState<number | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [verseToShare, setVerseToShare] = useState<{ verse: number; text: string } | null>(null);
+  const [verseCardOpen, setVerseCardOpen] = useState(false);
+  const [verseCardData, setVerseCardData] = useState<{ verse: number; text: string } | null>(null);
 
   // Translation + compare state
   const [translationSheetOpen, setTranslationSheetOpen] = useState(false);
@@ -351,7 +354,13 @@ function BiblePageContent() {
   // ── Long press ─────────────────────────────
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onVersePointerDown = (v: number) => {
-    pressTimerRef.current = setTimeout(() => { setLongPressVerse(v); setSheetOpen(true); }, 500);
+    pressTimerRef.current = setTimeout(() => {
+      const row = verses.find((r) => r.verse === v);
+      if (row) {
+        setVerseCardData({ verse: v, text: stripHtml(row.text) });
+        setVerseCardOpen(true);
+      }
+    }, 500);
   };
   const onVersePointerUp = () => { if (pressTimerRef.current) clearTimeout(pressTimerRef.current); };
 
@@ -413,6 +422,7 @@ function BiblePageContent() {
   );
 
   return (
+    <>
     <AppShell>
       <div className="flex flex-col" style={{ minHeight: "calc(100dvh - 68px)" }}>
 
@@ -1196,6 +1206,17 @@ function BiblePageContent() {
       </AnimatePresence>
 
     </AppShell>
+
+    {/* ── Verse Full Card (long-press) ── */}
+    <VerseFullCard
+      book={selectedBook?.name ?? ""}
+      chapter={chapter ?? 0}
+      verse={verseCardData?.verse ?? 0}
+      text={verseCardData?.text ?? ""}
+      isOpen={verseCardOpen}
+      onClose={() => setVerseCardOpen(false)}
+    />
+    </>
   );
 }
 

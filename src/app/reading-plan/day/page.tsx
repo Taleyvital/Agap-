@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { X, Share2, CheckCircle } from "lucide-react";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
+import { VerseFullCard } from "@/components/ui/VerseFullCard";
 
 interface Question {
   id: number;
@@ -57,6 +58,24 @@ export default function DayReadingPage() {
   const [dayReading] = useState<DayReading>(mockDayReading);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [verseCardOpen, setVerseCardOpen] = useState(false);
+
+  // Long-press on scripture block
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onScripturePointerDown = () => {
+    pressTimerRef.current = setTimeout(() => setVerseCardOpen(true), 500);
+  };
+  const onScripturePointerUp = () => {
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+  };
+
+  // Parse reference "Jean 14:27" → { book:"Jean", chapter:14, verse:27 }
+  const parseRef = (ref: string) => {
+    const match = ref.match(/^(.+?)\s+(\d+):(\d+)$/);
+    if (!match) return { book: ref, chapter: 1, verse: 1 };
+    return { book: match[1], chapter: parseInt(match[2]), verse: parseInt(match[3]) };
+  };
+  const parsedRef = parseRef(dayReading.scripture.reference);
 
   const handleAnswerChange = (questionId: number, value: string) => {
     setAnswers((prev) => ({
@@ -120,12 +139,15 @@ export default function DayReadingPage() {
           </h2>
         </motion.div>
 
-        {/* Editorial Verse Card */}
+        {/* Editorial Verse Card — long-press opens fullscreen */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-12 bg-[#1a1830] rounded-xl p-6 border-l-[3px] border-[#7B6FD4]"
+          className="mb-12 bg-[#1a1830] rounded-xl p-6 border-l-[3px] border-[#7B6FD4] cursor-pointer select-none"
+          onPointerDown={onScripturePointerDown}
+          onPointerUp={onScripturePointerUp}
+          onPointerLeave={onScripturePointerUp}
         >
           <p className="font-serif italic text-xl leading-relaxed text-[#E8E8E8] mb-4">
             « {dayReading.scripture.text} »
@@ -133,6 +155,9 @@ export default function DayReadingPage() {
           <span className="font-sans uppercase tracking-[0.2em] text-[11px] text-[#7B6FD4] font-bold">
             {dayReading.scripture.reference}
           </span>
+          <p className="mt-3 font-sans text-[10px] text-[#444444] uppercase tracking-widest">
+            Appui long pour afficher la carte
+          </p>
         </motion.section>
 
         {/* Meditation Section */}
@@ -233,6 +258,16 @@ export default function DayReadingPage() {
           </button>
         </div>
       </footer>
+
+      {/* ── Verse Full Card (long-press on scripture) ── */}
+      <VerseFullCard
+        book={parsedRef.book}
+        chapter={parsedRef.chapter}
+        verse={parsedRef.verse}
+        text={dayReading.scripture.text}
+        isOpen={verseCardOpen}
+        onClose={() => setVerseCardOpen(false)}
+      />
     </div>
   );
 }
