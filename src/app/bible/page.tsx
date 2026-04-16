@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
-import { ChevronLeft, ChevronRight, BookOpen, Palette, StickyNote, Pencil, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Palette, StickyNote, Pencil, Sparkles, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import {
   DEFAULT_TRANSLATION,
+  TRANSLATIONS,
   getBooks,
   getChapter,
 } from "@/lib/bible";
@@ -22,8 +23,6 @@ type ViewMode = "books" | "chapters" | "verses";
 function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ");
 }
-
-// Abréviations courtes pour les pills de livres
 
 function BiblePageContent() {
   // ── State ──────────────────────────────────
@@ -41,7 +40,7 @@ function BiblePageContent() {
   const [view, setView] = useState<ViewMode>("books");
   const [testamentFilter, setTestamentFilter] = useState<"AT" | "NT">("NT");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [fontSize, setFontSize] = useState(16); // px
+  const [fontSize, setFontSize] = useState(16);
   const [verseBold, setVerseBold] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +51,17 @@ function BiblePageContent() {
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [verseToColor, setVerseToColor] = useState<number | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [verseToShare, setVerseToShare] = useState<{verse: number; text: string} | null>(null);
+  const [verseToShare, setVerseToShare] = useState<{ verse: number; text: string } | null>(null);
+
+  // Translation + compare state
+  const [translationSheetOpen, setTranslationSheetOpen] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareTranslation, setCompareTranslation] = useState("KJV");
+  const [compareVerses, setCompareVerses] = useState<BibleVerseRow[]>([]);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareSheetOpen, setCompareSheetOpen] = useState(false);
+  const translationInitialized = useRef(false);
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -65,64 +74,55 @@ function BiblePageContent() {
     if (verseToShare && bookId && chapter && selectedBook) {
       const verseText = stripHtml(verseToShare.text);
       const encodedText = encodeURIComponent(verseText);
-      router.push(`/chat?verse=${bookId}-${chapter}-${verseToShare.verse}&text=${encodedText}&ref=${encodeURIComponent(selectedBook.name)}`);
+      router.push(
+        `/chat?verse=${bookId}-${chapter}-${verseToShare.verse}&text=${encodedText}&ref=${encodeURIComponent(selectedBook.name)}`,
+      );
     }
     setShareModalOpen(false);
   };
 
   const HIGHLIGHT_COLORS = [
-    { name: "Jaune", bg: "bg-yellow-400/30", border: "border-yellow-400/50", hex: "#FACC15" },
-    { name: "Vert", bg: "bg-green-400/30", border: "border-green-400/50", hex: "#4ADE80" },
-    { name: "Bleu", bg: "bg-blue-400/30", border: "border-blue-400/50", hex: "#60A5FA" },
-    { name: "Rose", bg: "bg-pink-400/30", border: "border-pink-400/50", hex: "#F472B6" },
-    { name: "Violet", bg: "bg-violet-400/30", border: "border-violet-400/50", hex: "#A78BFA" },
-    { name: "Orange", bg: "bg-orange-400/30", border: "border-orange-400/50", hex: "#FB923C" },
-    { name: "Rouge", bg: "bg-red-400/30", border: "border-red-400/50", hex: "#F87171" },
-    { name: "Gris", bg: "bg-gray-400/30", border: "border-gray-400/50", hex: "#9CA3AF" },
+    { name: "Jaune", hex: "#FACC15" },
+    { name: "Vert", hex: "#4ADE80" },
+    { name: "Bleu", hex: "#60A5FA" },
+    { name: "Rose", hex: "#F472B6" },
+    { name: "Violet", hex: "#A78BFA" },
+    { name: "Orange", hex: "#FB923C" },
+    { name: "Rouge", hex: "#F87171" },
+    { name: "Gris", hex: "#9CA3AF" },
   ];
 
   // ── Load data from localStorage ─────────────────────
   useEffect(() => {
     const savedColors = localStorage.getItem("bible-colors");
     if (savedColors) {
-      try {
-        setVerseColors(JSON.parse(savedColors));
-      } catch {
-        setVerseColors({});
-      }
+      try { setVerseColors(JSON.parse(savedColors)); } catch { setVerseColors({}); }
     }
     const savedNotes = localStorage.getItem("bible-notes");
     if (savedNotes) {
-      try {
-        setVerseNotes(JSON.parse(savedNotes));
-      } catch {
-        setVerseNotes({});
-      }
+      try { setVerseNotes(JSON.parse(savedNotes)); } catch { setVerseNotes({}); }
     }
-    // Mark as loaded after a short delay to ensure state is set
-    const timer = setTimeout(() => {
-      colorsLoadedRef.current = true;
-    }, 0);
+    const timer = setTimeout(() => { colorsLoadedRef.current = true; }, 0);
     return () => clearTimeout(timer);
   }, []);
 
-  // ── Load verse settings from Supabase profile ─────────────
+  // ── Load verse settings + preferred_translation from Supabase ─────────────
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       const { data } = await supabase
         .from("profiles")
-        .select("verse_font_size, verse_bold")
+        .select("verse_font_size, verse_bold, preferred_translation")
         .eq("id", user.id)
-        .single();
-
+        .maybeSingle();
       if (data) {
         if (data.verse_font_size) setFontSize(data.verse_font_size);
         if (data.verse_bold !== null) setVerseBold(data.verse_bold);
+        if (data.preferred_translation) setTranslation(data.preferred_translation);
       }
+      translationInitialized.current = true;
     })();
   }, []);
 
@@ -132,42 +132,54 @@ function BiblePageContent() {
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       await supabase
         .from("profiles")
-        .update({
-          verse_font_size: fontSize,
-          verse_bold: verseBold,
-        })
+        .update({ verse_font_size: fontSize, verse_bold: verseBold })
         .eq("id", user.id);
     })();
   }, [fontSize, verseBold]);
 
+  // ── Save preferred_translation (skip initial load) ───────────────────────
+  useEffect(() => {
+    if (!translationInitialized.current) return;
+    const supabase = createSupabaseBrowserClient();
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase
+        .from("profiles")
+        .update({ preferred_translation: translation })
+        .eq("id", user.id);
+    })();
+  }, [translation]);
+
   // ── Save to localStorage ─────────────────────
   useEffect(() => {
-    if (colorsLoadedRef.current) {
-      localStorage.setItem("bible-colors", JSON.stringify(verseColors));
-    }
+    if (colorsLoadedRef.current) localStorage.setItem("bible-colors", JSON.stringify(verseColors));
   }, [verseColors]);
 
   useEffect(() => {
-    if (colorsLoadedRef.current) {
-      localStorage.setItem("bible-notes", JSON.stringify(verseNotes));
-    }
+    if (colorsLoadedRef.current) localStorage.setItem("bible-notes", JSON.stringify(verseNotes));
   }, [verseNotes]);
+
+  // ── Load compare verses ─────────────────────
+  useEffect(() => {
+    if (!compareMode || bookId === null || chapter === null) {
+      setCompareVerses([]);
+      return;
+    }
+    setCompareLoading(true);
+    void getChapter(compareTranslation, bookId, chapter)
+      .then(setCompareVerses)
+      .catch(() => setCompareVerses([]))
+      .finally(() => setCompareLoading(false));
+  }, [compareMode, compareTranslation, bookId, chapter]);
 
   // ── Color handlers ─────────────────────
   const getVerseKey = (bid: number, ch: number, v: number) => `${bid}-${ch}-${v}`;
+  const getVerseColor = (bid: number, ch: number, v: number) => verseColors[getVerseKey(bid, ch, v)] || null;
 
-  const getVerseColor = (bid: number, ch: number, v: number) => {
-    const key = getVerseKey(bid, ch, v);
-    return verseColors[key] || null;
-  };
-
-  const openColorPicker = (v: number) => {
-    setVerseToColor(v);
-    setColorPickerOpen(true);
-  };
+  const openColorPicker = (v: number) => { setVerseToColor(v); setColorPickerOpen(true); };
 
   const applyColor = (colorHex: string) => {
     if (verseToColor !== null && bookId !== null && chapter !== null) {
@@ -181,11 +193,7 @@ function BiblePageContent() {
   const removeColor = () => {
     if (verseToColor !== null && bookId !== null && chapter !== null) {
       const key = getVerseKey(bookId, chapter, verseToColor);
-      setVerseColors((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
+      setVerseColors((prev) => { const next = { ...prev }; delete next[key]; return next; });
     }
     setColorPickerOpen(false);
     setVerseToColor(null);
@@ -243,17 +251,14 @@ function BiblePageContent() {
   useEffect(() => {
     const bookParam = searchParams.get("book");
     const chapterParam = searchParams.get("chapter");
-
     if (bookParam && chapterParam && books.length > 0) {
-      const bookId = Number(bookParam);
+      const bookIdParam = Number(bookParam);
       const chapterNum = Number(chapterParam);
-      const book = books.find(b => b.bookid === bookId);
-
+      const book = books.find((b) => b.bookid === bookIdParam);
       if (book && chapterNum > 0 && chapterNum <= book.chapters) {
-        setBookId(bookId);
+        setBookId(bookIdParam);
         setChapter(chapterNum);
         setView("verses");
-        // Clear URL params without navigation
         router.replace("/bible", { scroll: false });
       }
     }
@@ -305,12 +310,8 @@ function BiblePageContent() {
     if (chapter > 1) {
       setChapter(chapter - 1);
     } else {
-      // Go to previous book's last chapter
       const prevBook = books.find((b) => b.bookid === bookId - 1);
-      if (prevBook) {
-        setBookId(prevBook.bookid);
-        setChapter(prevBook.chapters);
-      }
+      if (prevBook) { setBookId(prevBook.bookid); setChapter(prevBook.chapters); }
     }
     setSelectedVerse(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -323,12 +324,8 @@ function BiblePageContent() {
     if (chapter < currentBook.chapters) {
       setChapter(chapter + 1);
     } else {
-      // Go to next book's first chapter
       const nextBook = books.find((b) => b.bookid === bookId + 1);
-      if (nextBook) {
-        setBookId(nextBook.bookid);
-        setChapter(1);
-      }
+      if (nextBook) { setBookId(nextBook.bookid); setChapter(1); }
     }
     setSelectedVerse(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -344,14 +341,9 @@ function BiblePageContent() {
   // ── Long press ─────────────────────────────
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onVersePointerDown = (v: number) => {
-    pressTimerRef.current = setTimeout(() => {
-      setLongPressVerse(v);
-      setSheetOpen(true);
-    }, 500);
+    pressTimerRef.current = setTimeout(() => { setLongPressVerse(v); setSheetOpen(true); }, 500);
   };
-  const onVersePointerUp = () => {
-    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-  };
+  const onVersePointerUp = () => { if (pressTimerRef.current) clearTimeout(pressTimerRef.current); };
 
   // ── Render helpers ─────────────────────────
   const chapterCount = selectedBook?.chapters ?? 0;
@@ -360,12 +352,63 @@ function BiblePageContent() {
       ? `${selectedBook?.name ?? ""} ${chapter}`
       : "";
 
+  // Shared translation sheet JSX (reused for primary + compare pickers)
+  const renderTranslationList = (
+    activeSlug: string,
+    disabledSlug: string | null,
+    onSelect: (slug: string) => void,
+  ) => (
+    <div className="px-4 pb-8 pt-2">
+      {TRANSLATIONS.map((group) => (
+        <div key={group.language} className="mt-4">
+          <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary mb-2 px-2">
+            {group.language}
+          </p>
+          <div className="rounded-xl overflow-hidden border border-separator">
+            {group.items.map((item, idx) => {
+              const isActive = activeSlug === item.slug;
+              const isDisabled = disabledSlug === item.slug;
+              return (
+                <button
+                  key={item.slug}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => onSelect(item.slug)}
+                  className={`w-full flex items-center justify-between px-4 py-3.5 transition-colors ${
+                    isDisabled
+                      ? "opacity-40 cursor-not-allowed"
+                      : isActive
+                      ? "bg-accent/10"
+                      : "hover:bg-bg-tertiary active:bg-bg-tertiary"
+                  } ${idx > 0 ? "border-t border-separator/50" : ""}`}
+                >
+                  <div className="flex flex-col items-start">
+                    <span
+                      className={`font-sans text-sm font-medium ${isActive && !isDisabled ? "text-accent" : "text-text-primary"}`}
+                    >
+                      {item.slug}
+                    </span>
+                    <span className="font-sans text-xs text-text-tertiary mt-0.5">{item.label}</span>
+                  </div>
+                  {isActive && !isDisabled && (
+                    <Check className="h-4 w-4 text-accent shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <AppShell>
       <div className="flex flex-col" style={{ minHeight: "calc(100dvh - 68px)" }}>
 
         {/* ══ STICKY HEADER ══════════════════════════════════ */}
         <header className="sticky top-0 z-20 bg-bg-primary/90 backdrop-blur-md px-4 pt-4 pb-3 border-b border-separator">
+          {/* Row 1: Navigation */}
           <div className="flex items-center gap-3">
             {/* Back button */}
             <AnimatePresence mode="wait">
@@ -407,12 +450,8 @@ function BiblePageContent() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                   >
-                    <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
-                      BIBLE
-                    </p>
-                    <p className="font-serif text-base text-text-primary leading-tight truncate">
-                      {selectedBook?.name}
-                    </p>
+                    <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">BIBLE</p>
+                    <p className="font-serif text-base text-text-primary leading-tight truncate">{selectedBook?.name}</p>
                   </motion.div>
                 )}
                 {view === "verses" && (
@@ -422,18 +461,14 @@ function BiblePageContent() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                   >
-                    <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
-                      {selectedBook?.name}
-                    </p>
-                    <p className="font-serif text-base text-text-primary leading-tight">
-                      {chapterTitle}
-                    </p>
+                    <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">{selectedBook?.name}</p>
+                    <p className="font-serif text-base text-text-primary leading-tight">{chapterTitle}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* ⋯ Settings button */}
+            {/* Settings button (font size + bold) */}
             <div ref={settingsRef} className="relative shrink-0">
               <button
                 type="button"
@@ -445,7 +480,6 @@ function BiblePageContent() {
                     : "border-separator bg-bg-secondary text-text-secondary hover:text-text-primary"
                 }`}
               >
-                {/* Three dots */}
                 <span className="flex items-center gap-[3px]">
                   <span className="block h-1 w-1 rounded-full bg-current" />
                   <span className="block h-1 w-1 rounded-full bg-current" />
@@ -453,7 +487,6 @@ function BiblePageContent() {
                 </span>
               </button>
 
-              {/* Dropdown panel */}
               <AnimatePresence>
                 {settingsOpen && (
                   <motion.div
@@ -463,30 +496,6 @@ function BiblePageContent() {
                     transition={{ duration: 0.15, ease: "easeOut" }}
                     className="absolute right-0 top-11 z-50 w-56 rounded-2xl border border-separator bg-bg-secondary/95 backdrop-blur-xl p-4 shadow-xl shadow-black/40"
                   >
-                    {/* Language */}
-                    <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary mb-2">
-                      Langue
-                    </p>
-                    <div className="flex gap-2 mb-4">
-                      {[
-                        { slug: "NBS", label: "FR" },
-                        { slug: "NKJV", label: "EN" },
-                      ].map((t) => (
-                        <button
-                          key={t.slug}
-                          type="button"
-                          onClick={() => { setTranslation(t.slug); setVerses([]); }}
-                          className={`flex-1 rounded-full py-2 font-sans text-xs font-semibold uppercase tracking-wider transition-all ${
-                            translation === t.slug
-                              ? "bg-accent text-white shadow-md shadow-accent/30"
-                              : "bg-bg-tertiary text-text-secondary hover:text-text-primary border border-separator"
-                          }`}
-                        >
-                          {t.label}
-                        </button>
-                      ))}
-                    </div>
-
                     {/* Font size */}
                     <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary mb-2">
                       Taille du texte
@@ -510,9 +519,7 @@ function BiblePageContent() {
                         A
                       </span>
                     </div>
-                    <p className="mt-1.5 text-center font-sans text-[10px] text-text-tertiary">
-                      {fontSize}px
-                    </p>
+                    <p className="mt-1.5 text-center font-sans text-[10px] text-text-tertiary">{fontSize}px</p>
 
                     {/* Bold toggle */}
                     <div className="mt-4 flex items-center justify-between rounded-xl border border-separator bg-bg-tertiary px-4 py-3">
@@ -536,6 +543,86 @@ function BiblePageContent() {
                 )}
               </AnimatePresence>
             </div>
+          </div>
+
+          {/* Row 2: Translation selector + Compare button */}
+          <div className="flex items-center gap-2 mt-2.5">
+            {/* Primary translation pill */}
+            <button
+              type="button"
+              onClick={() => setTranslationSheetOpen(true)}
+              style={{
+                background: "#1c1c1c",
+                border: "0.5px solid #2a2a2a",
+                borderRadius: "10px",
+                color: "#E8E8E8",
+                fontFamily: "var(--font-sans)",
+                fontSize: "13px",
+                padding: "5px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                cursor: "pointer",
+              }}
+            >
+              <span>{translation}</span>
+              <span style={{ color: "#666666", fontSize: "10px" }}>▾</span>
+            </button>
+
+            {/* Compare toggle button */}
+            <button
+              type="button"
+              onClick={() => {
+                setCompareMode((prev) => {
+                  if (prev) setCompareVerses([]);
+                  return !prev;
+                });
+              }}
+              style={{
+                background: compareMode ? "rgba(123,111,212,0.15)" : "#1c1c1c",
+                border: compareMode ? "0.5px solid rgba(123,111,212,0.5)" : "0.5px solid #2a2a2a",
+                borderRadius: "10px",
+                color: compareMode ? "#7B6FD4" : "#666666",
+                fontFamily: "var(--font-sans)",
+                fontSize: "12px",
+                padding: "5px 12px",
+                cursor: "pointer",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+              }}
+            >
+              Comparer
+            </button>
+
+            {/* Compare translation pill (visible only in compare mode) */}
+            <AnimatePresence>
+              {compareMode && (
+                <motion.button
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.18 }}
+                  type="button"
+                  onClick={() => setCompareSheetOpen(true)}
+                  style={{
+                    background: "#1c1c1c",
+                    border: "0.5px solid rgba(123,111,212,0.4)",
+                    borderRadius: "10px",
+                    color: "#7B6FD4",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "13px",
+                    padding: "5px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span>{compareTranslation}</span>
+                  <span style={{ fontSize: "10px" }}>▾</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </header>
 
@@ -575,10 +662,7 @@ function BiblePageContent() {
                 {booksLoading ? (
                   <div className="grid grid-cols-3 gap-2.5">
                     {Array.from({ length: 18 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-14 rounded-xl bg-bg-secondary animate-pulse"
-                      />
+                      <div key={i} className="h-14 rounded-xl bg-bg-secondary animate-pulse" />
                     ))}
                   </div>
                 ) : (
@@ -592,12 +676,9 @@ function BiblePageContent() {
                         className="flex flex-col items-center justify-center gap-1 rounded-xl border border-separator bg-bg-secondary px-2 py-3 text-center transition-colors hover:border-accent/40 hover:bg-bg-tertiary active:bg-bg-tertiary"
                       >
                         <span className="font-serif text-[13px] leading-tight text-text-primary">
-                          {/* Show full short name */}
                           {b.name.split(" ").slice(-1)[0]}
                         </span>
-                        <span className="font-sans text-[9px] text-text-tertiary">
-                          {b.chapters} ch.
-                        </span>
+                        <span className="font-sans text-[9px] text-text-tertiary">{b.chapters} ch.</span>
                       </motion.button>
                     ))}
                   </div>
@@ -615,7 +696,6 @@ function BiblePageContent() {
                 transition={{ duration: 0.22 }}
                 className="px-4 pt-5 pb-28"
               >
-                {/* Book info */}
                 <div className="mb-6 flex items-center gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/15 border border-accent/20">
                     <BookOpen className="h-5 w-5 text-accent" />
@@ -629,8 +709,6 @@ function BiblePageContent() {
                     </p>
                   </div>
                 </div>
-
-                {/* Chapter grid */}
                 <div className="grid grid-cols-5 gap-2.5">
                   {Array.from({ length: chapterCount }, (_, i) => i + 1).map((ch) => (
                     <motion.button
@@ -655,120 +733,200 @@ function BiblePageContent() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.22 }}
-                className="px-4 pt-5 pb-28"
+                className="pt-5 pb-28"
               >
-                {err && (
-                  <p className="text-center text-sm text-danger">{err}</p>
-                )}
-                {loading ? (
-                  <div className="space-y-5 mt-2">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="flex gap-3">
-                        <div className="mt-1 h-3 w-4 shrink-0 rounded bg-bg-tertiary animate-pulse" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-3.5 rounded bg-bg-tertiary animate-pulse" />
-                          <div className="h-3.5 w-4/5 rounded bg-bg-tertiary animate-pulse" />
+                {err && <p className="px-4 text-center text-sm text-danger">{err}</p>}
+
+                {compareMode ? (
+                  /* ── Compare mode: two columns ── */
+                  <div className="grid grid-cols-2 divide-x divide-separator/40">
+                    {/* Primary translation column */}
+                    <div className="px-3">
+                      <button
+                        type="button"
+                        onClick={() => setTranslationSheetOpen(true)}
+                        className="mb-3 flex items-center gap-1"
+                        style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                      >
+                        <span className="font-sans text-[10px] uppercase tracking-wider text-accent">{translation}</span>
+                        <span style={{ color: "#7B6FD4", fontSize: "9px" }}>▾</span>
+                      </button>
+                      {loading ? (
+                        <div className="space-y-3">
+                          {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="space-y-1">
+                              <div className="h-2.5 rounded bg-bg-tertiary animate-pulse" />
+                              <div className="h-2.5 w-4/5 rounded bg-bg-tertiary animate-pulse" />
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    ))}
+                      ) : (
+                        <div>
+                          {verses.map((row) => (
+                            <p
+                              key={row.pk}
+                              className="py-2.5 border-b border-separator/30 font-serif text-text-primary leading-relaxed"
+                              style={{ fontSize: "13px" }}
+                            >
+                              <span className="font-sans text-[10px] text-text-tertiary mr-1.5">{row.verse}</span>
+                              {stripHtml(row.text)}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Compare translation column */}
+                    <div className="px-3">
+                      <button
+                        type="button"
+                        onClick={() => setCompareSheetOpen(true)}
+                        className="mb-3 flex items-center gap-1"
+                        style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                      >
+                        <span className="font-sans text-[10px] uppercase tracking-wider text-accent">{compareTranslation}</span>
+                        <span style={{ color: "#7B6FD4", fontSize: "9px" }}>▾</span>
+                      </button>
+                      {compareLoading ? (
+                        <div className="space-y-3">
+                          {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="space-y-1">
+                              <div className="h-2.5 rounded bg-bg-tertiary animate-pulse" />
+                              <div className="h-2.5 w-4/5 rounded bg-bg-tertiary animate-pulse" />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div>
+                          {compareVerses.map((row) => (
+                            <p
+                              key={row.pk}
+                              className="py-2.5 border-b border-separator/30 font-serif text-text-primary leading-relaxed"
+                              style={{ fontSize: "13px" }}
+                            >
+                              <span className="font-sans text-[10px] text-text-tertiary mr-1.5">{row.verse}</span>
+                              {stripHtml(row.text)}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
-                  <div className="divide-y divide-separator/40">
-                    {verses.map((row) => {
-                      const active = selectedVerse === row.verse;
-                      const verseColor = getVerseColor(bookId!, chapter!, row.verse);
-                      const colorStyle = verseColor
-                        ? { backgroundColor: `${verseColor}20`, borderLeft: `3px solid ${verseColor}` }
-                        : undefined;
-                      return (
-                        <motion.div
-                          key={row.pk}
-                          layout
-                          className={`py-4 cursor-pointer transition-colors ${
-                            active ? "rounded-xl bg-bg-secondary px-3 -mx-3" : ""
-                          }`}
-                          style={colorStyle}
-                          onClick={() =>
-                            setSelectedVerse((v) => (v === row.verse ? null : row.verse))
-                          }
-                          onPointerDown={() => onVersePointerDown(row.verse)}
-                          onPointerUp={onVersePointerUp}
-                          onPointerLeave={onVersePointerUp}
-                        >
-                          <p className="flex gap-3 leading-[1.9]">
-                            <span className="relative min-w-[1.5rem] shrink-0 font-sans text-xs text-text-tertiary pt-1">
-                              {row.verse}
-                              {verseNotes[getVerseKey(bookId!, chapter!, row.verse)] && (
-                                <span className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full bg-accent" />
-                              )}
-                            </span>
-                            <span
-                              className={`font-serif text-text-primary ${verseBold ? "font-bold" : ""}`}
-                              style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
-                            >
-                              {stripHtml(row.text)}
-                            </span>
-                          </p>
-                          {active && (
+                  /* ── Normal mode ── */
+                  <div className="px-4">
+                    {loading ? (
+                      <div className="space-y-5 mt-2">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                          <div key={i} className="flex gap-3">
+                            <div className="mt-1 h-3 w-4 shrink-0 rounded bg-bg-tertiary animate-pulse" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-3.5 rounded bg-bg-tertiary animate-pulse" />
+                              <div className="h-3.5 w-4/5 rounded bg-bg-tertiary animate-pulse" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-separator/40">
+                        {verses.map((row) => {
+                          const active = selectedVerse === row.verse;
+                          const verseColor = getVerseColor(bookId!, chapter!, row.verse);
+                          const colorStyle = verseColor
+                            ? { backgroundColor: `${verseColor}20`, borderLeft: `3px solid ${verseColor}` }
+                            : undefined;
+                          return (
                             <motion.div
-                              initial={{ opacity: 0, y: 4 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mt-3 ml-[2.1rem] flex items-center gap-3 flex-wrap"
+                              key={row.pk}
+                              layout
+                              className={`py-4 cursor-pointer transition-colors ${
+                                active ? "rounded-xl bg-bg-secondary px-3 -mx-3" : ""
+                              }`}
+                              style={colorStyle}
+                              onClick={() =>
+                                setSelectedVerse((v) => (v === row.verse ? null : row.verse))
+                              }
+                              onPointerDown={() => onVersePointerDown(row.verse)}
+                              onPointerUp={onVersePointerUp}
+                              onPointerLeave={onVersePointerUp}
                             >
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openShareModal(row.verse, row.text);
-                                }}
-                                className="flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
-                                aria-label="Demander l'aide de l'IA"
-                              >
-                                <Sparkles className="h-3.5 w-3.5" />
-                                EXPLIQUER AVEC AGAPE →
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openColorPicker(row.verse);
-                                }}
-                                className={`flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider transition-colors ${
-                                  verseColors[getVerseKey(bookId!, chapter!, row.verse)]
-                                    ? "text-accent"
-                                    : "text-text-secondary hover:text-text-primary"
-                                }`}
-                                aria-label="Marquer le verset"
-                              >
-                                <Palette className="h-3.5 w-3.5" />
-                                {verseColors[getVerseKey(bookId!, chapter!, row.verse)] ? "MARQUÉ" : "MARQUER"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openNoteSheet(row.verse);
-                                }}
-                                className={`flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider transition-colors ${
-                                  verseNotes[getVerseKey(bookId!, chapter!, row.verse)]
-                                    ? "text-accent"
-                                    : "text-text-secondary hover:text-text-primary"
-                                }`}
-                                aria-label="Ajouter une note"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                                {verseNotes[getVerseKey(bookId!, chapter!, row.verse)] ? "NOTE" : "NOTER"}
-                              </button>
+                              <p className="flex gap-3 leading-[1.9]">
+                                <span className="relative min-w-[1.5rem] shrink-0 font-sans text-xs text-text-tertiary pt-1">
+                                  {row.verse}
+                                  {verseNotes[getVerseKey(bookId!, chapter!, row.verse)] && (
+                                    <span className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full bg-accent" />
+                                  )}
+                                </span>
+                                <span
+                                  className={`font-serif text-text-primary ${verseBold ? "font-bold" : ""}`}
+                                  style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
+                                >
+                                  {stripHtml(row.text)}
+                                </span>
+                              </p>
+                              {active && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 4 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="mt-3 ml-[2.1rem] flex items-center gap-3 flex-wrap"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openShareModal(row.verse, row.text);
+                                    }}
+                                    className="flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+                                    aria-label="Demander l'aide de l'IA"
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    EXPLIQUER AVEC AGAPE →
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openColorPicker(row.verse);
+                                    }}
+                                    className={`flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider transition-colors ${
+                                      verseColors[getVerseKey(bookId!, chapter!, row.verse)]
+                                        ? "text-accent"
+                                        : "text-text-secondary hover:text-text-primary"
+                                    }`}
+                                    aria-label="Marquer le verset"
+                                  >
+                                    <Palette className="h-3.5 w-3.5" />
+                                    {verseColors[getVerseKey(bookId!, chapter!, row.verse)] ? "MARQUÉ" : "MARQUER"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openNoteSheet(row.verse);
+                                    }}
+                                    className={`flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider transition-colors ${
+                                      verseNotes[getVerseKey(bookId!, chapter!, row.verse)]
+                                        ? "text-accent"
+                                        : "text-text-secondary hover:text-text-primary"
+                                    }`}
+                                    aria-label="Ajouter une note"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                    {verseNotes[getVerseKey(bookId!, chapter!, row.verse)] ? "NOTE" : "NOTER"}
+                                  </button>
+                                </motion.div>
+                              )}
                             </motion.div>
-                          )}
-                        </motion.div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
-                {/* ── Chapter navigation buttons ── */}
-                {!loading && !err && verses.length > 0 && (
-                  <div className="mt-8 flex items-center justify-between gap-3">
+
+                {/* Chapter navigation buttons (normal mode only) */}
+                {!loading && !err && verses.length > 0 && !compareMode && (
+                  <div className="mt-8 px-4 flex items-center justify-between gap-3">
                     <button
                       type="button"
                       onClick={goToPreviousChapter}
@@ -846,18 +1004,10 @@ function BiblePageContent() {
               </div>
 
               <div className="flex gap-3">
-                <Button
-                  variant="ghost"
-                  className="flex-1"
-                  onClick={() => setShareModalOpen(false)}
-                >
+                <Button variant="ghost" className="flex-1" onClick={() => setShareModalOpen(false)}>
                   Annuler
                 </Button>
-                <Button
-                  variant="primary"
-                  className="flex-1"
-                  onClick={confirmShare}
-                >
+                <Button variant="primary" className="flex-1" onClick={confirmShare}>
                   Je veux
                 </Button>
               </div>
@@ -901,10 +1051,7 @@ function BiblePageContent() {
                   style={{ backgroundColor: color.hex + "40" }}
                   aria-label={`Couleur ${color.name}`}
                 >
-                  <div
-                    className="w-full h-full rounded-lg"
-                    style={{ backgroundColor: color.hex }}
-                  />
+                  <div className="w-full h-full rounded-lg" style={{ backgroundColor: color.hex }} />
                 </button>
               ))}
             </div>
@@ -912,10 +1059,7 @@ function BiblePageContent() {
               <Button
                 variant="ghost"
                 className="flex-1"
-                onClick={() => {
-                  setColorPickerOpen(false);
-                  setVerseToColor(null);
-                }}
+                onClick={() => { setColorPickerOpen(false); setVerseToColor(null); }}
               >
                 Annuler
               </Button>
@@ -963,23 +1107,82 @@ function BiblePageContent() {
               <Button
                 variant="ghost"
                 className="flex-1"
-                onClick={() => {
-                  setSheetOpen(false);
-                  setNoteInput("");
-                }}
+                onClick={() => { setSheetOpen(false); setNoteInput(""); }}
               >
                 Annuler
               </Button>
-              <Button
-                variant="primary"
-                className="flex-1"
-                onClick={saveNote}
-              >
+              <Button variant="primary" className="flex-1" onClick={saveNote}>
                 Enregistrer
               </Button>
             </div>
           </motion.div>
         ) : null}
+      </AnimatePresence>
+
+      {/* ══ BOTTOM SHEET: Translation picker (primary) ════════════════════════ */}
+      <AnimatePresence>
+        {translationSheetOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[65] bg-black/50"
+              onClick={() => setTranslationSheetOpen(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-2xl border border-separator bg-bg-secondary"
+              style={{ maxHeight: "80vh", overflowY: "auto" }}
+            >
+              <div className="sticky top-0 bg-bg-secondary px-6 pt-5 pb-3 border-b border-separator/50">
+                <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">TRADUCTION</p>
+                <p className="font-serif text-lg text-text-primary mt-0.5">Choisir une traduction</p>
+              </div>
+              {renderTranslationList(translation, null, (slug) => {
+                setTranslation(slug);
+                setVerses([]);
+                setTranslationSheetOpen(false);
+              })}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ══ BOTTOM SHEET: Compare translation picker ════════════════════════ */}
+      <AnimatePresence>
+        {compareSheetOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[65] bg-black/50"
+              onClick={() => setCompareSheetOpen(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-2xl border border-separator bg-bg-secondary"
+              style={{ maxHeight: "80vh", overflowY: "auto" }}
+            >
+              <div className="sticky top-0 bg-bg-secondary px-6 pt-5 pb-3 border-b border-separator/50">
+                <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">COMPARAISON</p>
+                <p className="font-serif text-lg text-text-primary mt-0.5">Traduction à comparer</p>
+              </div>
+              {renderTranslationList(compareTranslation, translation, (slug) => {
+                setCompareTranslation(slug);
+                setCompareVerses([]);
+                setCompareSheetOpen(false);
+              })}
+            </motion.div>
+          </>
+        )}
       </AnimatePresence>
 
     </AppShell>
