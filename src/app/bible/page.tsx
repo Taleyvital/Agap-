@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import {
   DEFAULT_TRANSLATION,
   TRANSLATIONS,
+  TRANSLATION_OPTIONS,
   getBooks,
   getChapter,
 } from "@/lib/bible";
@@ -120,7 +121,9 @@ function BiblePageContent() {
       if (data) {
         if (data.verse_font_size) setFontSize(data.verse_font_size);
         if (data.verse_bold !== null) setVerseBold(data.verse_bold);
-        if (data.preferred_translation) setTranslation(data.preferred_translation);
+        if (data.preferred_translation && TRANSLATION_OPTIONS.some((t) => t.slug === data.preferred_translation)) {
+          setTranslation(data.preferred_translation);
+        }
       }
       translationInitialized.current = true;
     })();

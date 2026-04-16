@@ -1,18 +1,14 @@
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
 
-export const DEFAULT_TRANSLATION = "LSG";
+export const DEFAULT_TRANSLATION = "NBS";
 
+// Only translations verified to work with the bolls.life API
 export const TRANSLATIONS: { language: string; items: { slug: string; label: string }[] }[] = [
   {
     language: "Français",
     items: [
-      { slug: "LSG", label: "Louis Segond 1910" },
-      { slug: "NEG", label: "Nouvelle Édition de Genève" },
       { slug: "NBS", label: "Nouvelle Bible Segond" },
       { slug: "BDS", label: "Bible du Semeur" },
-      { slug: "PDV", label: "Parole de Vie" },
-      { slug: "S21", label: "Segond 21" },
-      { slug: "TOB", label: "Traduction Œcuménique" },
     ],
   },
   {
@@ -29,14 +25,13 @@ export const TRANSLATIONS: { language: string; items: { slug: string; label: str
   {
     language: "Português",
     items: [
-      { slug: "ARC", label: "Almeida Revista e Corrigida" },
-      { slug: "NVI-PT", label: "Nova Versão Internacional" },
+      { slug: "NTLH", label: "Nova Tradução na Linguagem de Hoje" },
     ],
   },
   {
     language: "Español",
     items: [
-      { slug: "RVR1960", label: "Reina Valera 1960" },
+      { slug: "RV1960", label: "Reina Valera 1960" },
       { slug: "NVI", label: "Nueva Versión Internacional" },
     ],
   },
