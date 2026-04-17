@@ -37,7 +37,7 @@ export default function SavedVersesPage() {
       let booksData: { bookid: number; name: string }[] = [];
       try {
         const { getBooks } = await import("@/lib/bible");
-        booksData = await getBooks("FRLSG");
+        booksData = await getBooks("NBS");
       } catch (e) {
         console.error("Failed to load books", e);
       }
@@ -83,7 +83,7 @@ export default function SavedVersesPage() {
       for (const [key, groupVerses] of Object.entries(chapterGroups)) {
         const [bookId, chapter] = key.split("-").map(Number);
         try {
-          const chapterData = await getChapter("FRLSG", bookId, chapter);
+          const chapterData = await getChapter("NBS", bookId, chapter);
           const bookInfo = booksData.find(b => b.bookid === bookId);
 
           for (const v of groupVerses) {
