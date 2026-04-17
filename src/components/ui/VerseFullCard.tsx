@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Copy, Share2, Check, ImageIcon } from "lucide-react";
 import Image from "next/image";
@@ -56,24 +56,77 @@ function GrainOverlay() {
   );
 }
 
-// ── 15 Unsplash background images ─────────────────────────────
-const BACKGROUND_IMAGES = [
-  { id: 1, url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80", thumb: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=60", name: "Montagnes" },
-  { id: 2, url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80", thumb: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=60", name: "Sunset" },
-  { id: 3, url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&q=60", name: "Nature" },
-  { id: 4, url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=60", name: "Forêt" },
-  { id: 5, url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80", thumb: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=200&q=60", name: "Lac" },
-  { id: 6, url: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=800&q=80", thumb: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=200&q=60", name: "Cascade" },
-  { id: 7, url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80", thumb: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=200&q=60", name: "Brume" },
-  { id: 8, url: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=200&q=60", name: "Étoiles" },
-  { id: 9, url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80", thumb: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=200&q=60", name: "Océan" },
-  { id: 10, url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=200&q=60", name: "Prairie" },
-  { id: 11, url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80", thumb: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=60", name: "Neige" },
-  { id: 12, url: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80", thumb: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=200&q=60", name: "Désert" },
-  { id: 13, url: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&q=80", thumb: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=200&q=60", name: "Aurore" },
-  { id: 14, url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80", thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200&q=60", name: "Yosemite" },
-  { id: 15, url: "https://images.unsplash.com/photo-1418065460487-3e41a6c84af5?w=800&q=80", thumb: "https://images.unsplash.com/photo-1418065460487-3e41a6c84af5?w=200&q=60", name: "Aube" },
+// ── Full pool of 45 nature/spiritual Unsplash images ─────────
+const IMAGE_POOL = [
+  { id: 1,  url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80", thumb: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=60", name: "Montagnes" },
+  { id: 2,  url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&q=60", name: "Nature" },
+  { id: 3,  url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=60", name: "Forêt" },
+  { id: 4,  url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80", thumb: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=200&q=60", name: "Lac" },
+  { id: 5,  url: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=800&q=80", thumb: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=200&q=60", name: "Cascade" },
+  { id: 6,  url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80", thumb: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=200&q=60", name: "Brume" },
+  { id: 7,  url: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=200&q=60", name: "Étoiles" },
+  { id: 8,  url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80", thumb: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=200&q=60", name: "Océan" },
+  { id: 9,  url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=200&q=60", name: "Prairie" },
+  { id: 10, url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80", thumb: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=60", name: "Neige" },
+  { id: 11, url: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80", thumb: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=200&q=60", name: "Désert" },
+  { id: 12, url: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&q=80", thumb: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=200&q=60", name: "Aurore" },
+  { id: 13, url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80", thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200&q=60", name: "Yosemite" },
+  { id: 14, url: "https://images.unsplash.com/photo-1418065460487-3e41a6c84af5?w=800&q=80", thumb: "https://images.unsplash.com/photo-1418065460487-3e41a6c84af5?w=200&q=60", name: "Aube" },
+  { id: 15, url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80", thumb: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200&q=60", name: "Lac de montagne" },
+  { id: 16, url: "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80", thumb: "https://images.unsplash.com/photo-1511497584788-876760111969?w=200&q=60", name: "Pins" },
+  { id: 17, url: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80", thumb: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=200&q=60", name: "Brouillard" },
+  { id: 18, url: "https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=800&q=80", thumb: "https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=200&q=60", name: "Lever du soleil" },
+  { id: 19, url: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80", thumb: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=200&q=60", name: "Collines" },
+  { id: 20, url: "https://images.unsplash.com/photo-1444628838545-ac4016a5418a?w=800&q=80", thumb: "https://images.unsplash.com/photo-1444628838545-ac4016a5418a?w=200&q=60", name: "Voie lactée" },
+  { id: 21, url: "https://images.unsplash.com/photo-1421789665209-c9b2a435e3dc?w=800&q=80", thumb: "https://images.unsplash.com/photo-1421789665209-c9b2a435e3dc?w=200&q=60", name: "Automne" },
+  { id: 22, url: "https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=800&q=80", thumb: "https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=200&q=60", name: "Rivière" },
+  { id: 23, url: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=800&q=80", thumb: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=200&q=60", name: "Alpes" },
+  { id: 24, url: "https://images.unsplash.com/photo-1540329957110-b11e19a3f85b?w=800&q=80", thumb: "https://images.unsplash.com/photo-1540329957110-b11e19a3f85b?w=200&q=60", name: "Ciel dramatique" },
+  { id: 25, url: "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&q=80", thumb: "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=200&q=60", name: "Dunes" },
+  { id: 26, url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80", thumb: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&q=60", name: "Plage" },
+  { id: 27, url: "https://images.unsplash.com/photo-1546587348-d12660c30c50?w=800&q=80", thumb: "https://images.unsplash.com/photo-1546587348-d12660c30c50?w=200&q=60", name: "Campagne" },
+  { id: 28, url: "https://images.unsplash.com/photo-1490682143684-14369e18dce8?w=800&q=80", thumb: "https://images.unsplash.com/photo-1490682143684-14369e18dce8?w=200&q=60", name: "Heure dorée" },
+  { id: 29, url: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80", thumb: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200&q=60", name: "Côte rocheuse" },
+  { id: 30, url: "https://images.unsplash.com/photo-1542401886-65d6c61db217?w=800&q=80", thumb: "https://images.unsplash.com/photo-1542401886-65d6c61db217?w=200&q=60", name: "Ciel étoilé" },
+  { id: 31, url: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80", thumb: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=200&q=60", name: "Glacier" },
+  { id: 32, url: "https://images.unsplash.com/photo-1434725039720-aaad6dd32dfe?w=800&q=80", thumb: "https://images.unsplash.com/photo-1434725039720-aaad6dd32dfe?w=200&q=60", name: "Fjord" },
+  { id: 33, url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80", thumb: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200&q=60", name: "Champs" },
+  { id: 34, url: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&q=80", thumb: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=200&q=60", name: "Arbres lumineux" },
+  { id: 35, url: "https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=800&q=80", thumb: "https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=200&q=60", name: "Vallée" },
+  { id: 36, url: "https://images.unsplash.com/photo-1516912481808-3406841bd33c?w=800&q=80", thumb: "https://images.unsplash.com/photo-1516912481808-3406841bd33c?w=200&q=60", name: "Aurore boréale" },
+  { id: 37, url: "https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=800&q=80", thumb: "https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=200&q=60", name: "Coucher de soleil" },
+  { id: 38, url: "https://images.unsplash.com/photo-1497449493050-aad1e7cad165?w=800&q=80", thumb: "https://images.unsplash.com/photo-1497449493050-aad1e7cad165?w=200&q=60", name: "Sentier" },
+  { id: 39, url: "https://images.unsplash.com/photo-1503264116251-35a269479413?w=800&q=80", thumb: "https://images.unsplash.com/photo-1503264116251-35a269479413?w=200&q=60", name: "Mer nuageuse" },
+  { id: 40, url: "https://images.unsplash.com/photo-1491466424936-e304919aada7?w=800&q=80", thumb: "https://images.unsplash.com/photo-1491466424936-e304919aada7?w=200&q=60", name: "Reflet" },
+  { id: 41, url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80", thumb: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&q=60", name: "Sommet" },
+  { id: 42, url: "https://images.unsplash.com/photo-1510797215324-95aa89f43c33?w=800&q=80", thumb: "https://images.unsplash.com/photo-1510797215324-95aa89f43c33?w=200&q=60", name: "Soleil couchant" },
+  { id: 43, url: "https://images.unsplash.com/photo-1446329813274-7c9036bd9a1f?w=800&q=80", thumb: "https://images.unsplash.com/photo-1446329813274-7c9036bd9a1f?w=200&q=60", name: "Forêt brumeuse" },
+  { id: 44, url: "https://images.unsplash.com/photo-1458668383970-8ddd3927deed?w=800&q=80", thumb: "https://images.unsplash.com/photo-1458668383970-8ddd3927deed?w=200&q=60", name: "Alpes suisses" },
+  { id: 45, url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80", thumb: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=200&q=60", name: "Ciel rose" },
 ];
+
+// ── Seeded PRNG (mulberry32) — deterministic daily shuffle ────
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Returns 15 images chosen deterministically for today's date. */
+function getDailyImages(count = 15) {
+  const daysSinceEpoch = Math.floor(Date.now() / 86_400_000);
+  const rand = mulberry32(daysSinceEpoch);
+  // Fisher-Yates shuffle on a copy
+  const pool = [...IMAGE_POOL];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count);
+}
 
 // ── Main component ────────────────────────────────────────────
 export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, backgroundImage }: VerseFullCardProps) {
@@ -83,6 +136,9 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [selectedBg, setSelectedBg] = useState<string | null>(null);
+
+  // 15 images change every day (seeded by today's date)
+  const dailyImages = useMemo(() => getDailyImages(15), []);
 
   // Split reference into two lines like the screenshot: "PSAUME" / "28:7"
   const bookUpper = book.toUpperCase();
@@ -421,7 +477,7 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
                         </div>
                       </button>
 
-                      {BACKGROUND_IMAGES.map((img) => (
+                      {dailyImages.map((img) => (
                         <button
                           key={img.id}
                           onClick={() => { setSelectedBg(img.url); setShowImagePicker(false); }}
