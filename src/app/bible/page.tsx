@@ -39,6 +39,7 @@ function BiblePageContent() {
   const [loading, setLoading] = useState(false);
   const [booksLoading, setBooksLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [booksErr, setBooksErr] = useState(false);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [longPressVerse, setLongPressVerse] = useState<number | null>(null);
@@ -254,9 +255,10 @@ function BiblePageContent() {
   // ── Load books ─────────────────────────────
   useEffect(() => {
     setBooksLoading(true);
+    setBooksErr(false);
     void getBooks(translation)
-      .then(setBooks)
-      .catch(() => setBooks([]))
+      .then((data) => { setBooks(data); setBooksErr(data.length === 0); })
+      .catch(() => { setBooks([]); setBooksErr(true); })
       .finally(() => setBooksLoading(false));
   }, [translation]);
 
@@ -684,6 +686,26 @@ function BiblePageContent() {
                     {Array.from({ length: 18 }).map((_, i) => (
                       <div key={i} className="h-14 rounded-xl bg-bg-secondary animate-pulse" />
                     ))}
+                  </div>
+                ) : booksErr ? (
+                  <div className="flex flex-col items-center gap-4 py-16 text-center">
+                    <p className="font-sans text-text-secondary text-sm leading-relaxed">
+                      Le serveur Bible est temporairement indisponible.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBooksLoading(true);
+                        setBooksErr(false);
+                        void getBooks(translation)
+                          .then((data) => { setBooks(data); setBooksErr(data.length === 0); })
+                          .catch(() => { setBooks([]); setBooksErr(true); })
+                          .finally(() => setBooksLoading(false));
+                      }}
+                      className="rounded-full border border-separator bg-bg-secondary px-5 py-2.5 font-sans text-xs uppercase tracking-widest text-text-primary hover:bg-bg-tertiary transition-colors"
+                    >
+                      Réessayer
+                    </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-2.5">
