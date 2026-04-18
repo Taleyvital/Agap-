@@ -18,7 +18,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { BiblicalObjectSheet } from "@/components/ui/BiblicalObjectSheet";
-import { detectObjectsInText, type BiblicalObject } from "@/lib/biblicalObjects";
+import { annotateText, type BiblicalObject } from "@/lib/biblicalObjects";
 import { useLanguage } from "@/lib/i18n";
 
 // Livres de l'Ancien Testament (bookid 1–39) et Nouveau Testament (40–66)
@@ -75,7 +75,6 @@ function BiblePageContent() {
   const [verseCardData, setVerseCardData] = useState<{ verse: number; text: string } | null>(null);
   const [objectSheetOpen, setObjectSheetOpen] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState<BiblicalObject[]>([]);
-  const [objectsForVerse, setObjectsForVerse] = useState<Record<number, BiblicalObject[]>>({});
 
   // Translation + compare state
   const [translationSheetOpen, setTranslationSheetOpen] = useState(false);
@@ -944,14 +943,9 @@ function BiblePageContent() {
                                 active ? "rounded-xl bg-bg-secondary px-3 -mx-3" : ""
                               }`}
                               style={colorStyle}
-                              onClick={() => {
-                                const next = selectedVerse === row.verse ? null : row.verse;
-                                setSelectedVerse(next);
-                                if (next !== null && !objectsForVerse[next]) {
-                                  const found = detectObjectsInText(stripHtml(row.text), language as "fr" | "en" | "pt" | "es");
-                                  setObjectsForVerse((prev) => ({ ...prev, [next]: found }));
-                                }
-                              }}
+                              onClick={() =>
+                                setSelectedVerse((v) => (v === row.verse ? null : row.verse))
+                              }
                               onPointerDown={() => onVersePointerDown(row.verse)}
                               onPointerUp={onVersePointerUp}
                               onPointerLeave={onVersePointerUp}
@@ -967,7 +961,23 @@ function BiblePageContent() {
                                   className={`text-text-primary ${verseBold ? "font-bold" : ""}`}
                                   style={{ fontSize: `${fontSize}px`, lineHeight: 1.85, fontFamily, letterSpacing: `${letterSpacing}em` }}
                                 >
-                                  {stripHtml(row.text)}
+                                  {annotateText(stripHtml(row.text), language as "fr" | "en" | "pt" | "es").map((seg, i) =>
+                                    seg.object ? (
+                                      <span
+                                        key={i}
+                                        className="border-b border-dotted border-[#7B6FD4] text-[#c4b5ff] cursor-pointer active:opacity-70"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDetectedObjects([seg.object!]);
+                                          setObjectSheetOpen(true);
+                                        }}
+                                      >
+                                        {seg.text}
+                                      </span>
+                                    ) : (
+                                      <span key={i}>{seg.text}</span>
+                                    )
+                                  )}
                                 </span>
                               </p>
                               {active && (
@@ -1020,22 +1030,6 @@ function BiblePageContent() {
                                     <Pencil className="h-3.5 w-3.5" />
                                     {verseNotes[getVerseKey(bookId!, chapter!, row.verse)] ? "NOTE" : "NOTER"}
                                   </button>
-                                  {/* EXPLORER — shown when biblical objects detected in verse */}
-                                  {(objectsForVerse[row.verse]?.length ?? 0) > 0 && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDetectedObjects(objectsForVerse[row.verse] ?? []);
-                                        setObjectSheetOpen(true);
-                                      }}
-                                      className="flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider text-text-secondary hover:text-accent transition-colors"
-                                      aria-label="Explorer les objets bibliques"
-                                    >
-                                      <span className="text-sm leading-none">🔍</span>
-                                      EXPLORER
-                                    </button>
-                                  )}
                                 </motion.div>
                               )}
                             </motion.div>
@@ -1319,7 +1313,7 @@ function BiblePageContent() {
       onClose={() => setVerseCardOpen(false)}
     />
 
-    {/* ── Biblical Object Sheet (tap EXPLORER) ── */}
+    {/* ── Biblical Object Sheet (tap highlighted word) ── */}
     <BiblicalObjectSheet
       objects={detectedObjects}
       isOpen={objectSheetOpen}

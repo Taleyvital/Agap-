@@ -19,42 +19,62 @@ export interface BiblicalObject {
   description: { fr: string; en: string; pt: string; es: string };
 }
 
-const objects = rawData as BiblicalObject[];
-
-/** Strips diacritics and lowercases a string for fuzzy matching */
-function normalize(str: string): string {
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+export interface TextSegment {
+  text: string;
+  object: BiblicalObject | null;
 }
 
-/** Detects biblical objects mentioned in a verse text */
-export function detectObjectsInText(
+const objects = rawData as BiblicalObject[];
+
+/** Unicode-aware letter test (covers Latin extended / accented chars) */
+const LETTER = /[a-zA-ZÀ-ÖØ-öø-ÿ]/;
+
+/**
+ * Annotates a verse text, returning segments where each segment is either
+ * plain text (object: null) or a matched biblical object word.
+ */
+export function annotateText(
   text: string,
   language: "fr" | "en" | "pt" | "es" = "fr",
-): BiblicalObject[] {
-  const normalizedText = normalize(text);
-  const found: BiblicalObject[] = [];
-  const seen = new Set<string>();
+): TextSegment[] {
+  const found: Array<{ start: number; end: number; object: BiblicalObject }> = [];
 
   for (const obj of objects) {
-    if (seen.has(obj.key)) continue;
     const aliases: string[] = obj.names[language] ?? obj.names.fr;
-    const matched = aliases.some((alias) => {
-      const norm = normalize(alias);
-      // Escape special regex chars in alias, then match as whole word
-      const escaped = norm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(`\\b${escaped}\\b`, "i");
-      return regex.test(normalizedText);
-    });
-    if (matched) {
-      found.push(obj);
-      seen.add(obj.key);
+    for (const alias of aliases) {
+      const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escaped, "gi");
+      let m: RegExpExecArray | null;
+      while ((m = regex.exec(text)) !== null) {
+        const start = m.index;
+        const end = start + m[0].length;
+        // Unicode-aware word boundary check
+        const before = start > 0 ? text[start - 1] : "";
+        const after = end < text.length ? text[end] : "";
+        if (LETTER.test(before) || LETTER.test(after)) continue;
+        // Skip overlapping matches
+        if (found.some((f) => f.start < end && f.end > start)) continue;
+        found.push({ start, end, object: obj });
+      }
     }
   }
 
-  return found;
+  found.sort((a, b) => a.start - b.start);
+
+  const segments: TextSegment[] = [];
+  let cursor = 0;
+  for (const f of found) {
+    if (f.start > cursor) {
+      segments.push({ text: text.slice(cursor, f.start), object: null });
+    }
+    segments.push({ text: text.slice(f.start, f.end), object: f.object });
+    cursor = f.end;
+  }
+  if (cursor < text.length) {
+    segments.push({ text: text.slice(cursor), object: null });
+  }
+
+  return segments.length > 0 ? segments : [{ text, object: null }];
 }
 
 /** Category label for display */
@@ -73,7 +93,7 @@ export const CATEGORY_LABELS: Record<
   place: { fr: "Lieu", en: "Place", pt: "Lugar", es: "Lugar" },
 };
 
-/** Category icon emoji (no dependency needed) */
+/** Category icon emoji */
 export const CATEGORY_ICONS: Record<ObjectCategory, string> = {
   weapon: "⚔️",
   tool: "🔨",
