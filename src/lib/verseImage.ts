@@ -1,8 +1,9 @@
 import Groq from 'groq-sdk'
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
+// Lazy init — avoids build-time crash when GROQ_API_KEY is absent
+function getGroq() {
+  return new Groq({ apiKey: process.env.GROQ_API_KEY })
+}
 
 // Explicitly reference to ensure env var is included in serverless bundle
 const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY
@@ -31,7 +32,7 @@ export const detectVerseTheme = async (
   verseText: string,
 ): Promise<string> => {
   try {
-    const response = await groq.chat.completions.create({
+    const response = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         {
