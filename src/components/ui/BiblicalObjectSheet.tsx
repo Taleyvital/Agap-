@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { BiblicalObject } from "@/lib/biblicalObjects";
@@ -13,6 +13,21 @@ interface BiblicalObjectSheetProps {
   language?: "fr" | "en" | "pt" | "es";
 }
 
+/** Fetch Wikipedia thumbnail for an article title */
+async function fetchWikiThumbnail(title: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,
+      { headers: { Accept: "application/json" } },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { thumbnail?: { source: string } };
+    return data.thumbnail?.source ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function BiblicalObjectSheet({
   objects,
   isOpen,
@@ -20,12 +35,32 @@ export function BiblicalObjectSheet({
   language = "fr",
 }: BiblicalObjectSheetProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [imgLoading, setImgLoading] = useState(true);
+
   const current = objects[selectedIndex] ?? null;
 
-  // Reset selection when opened with new objects
-  const handleOpen = () => {
+  // Fetch Wikipedia thumbnail whenever the selected object changes
+  useEffect(() => {
+    if (!isOpen || !current) return;
+    setImgSrc(null);
+    setImgLoading(true);
+
+    if (current.wikipedia_en) {
+      fetchWikiThumbnail(current.wikipedia_en).then((url) => {
+        setImgSrc(url ?? current.image_url ?? null);
+        setImgLoading(false);
+      });
+    } else {
+      setImgSrc(current.image_url ?? null);
+      setImgLoading(false);
+    }
+  }, [isOpen, current?.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset selection when new objects arrive
+  useEffect(() => {
     setSelectedIndex(0);
-  };
+  }, [objects]);
 
   if (!current) return null;
 
@@ -35,7 +70,7 @@ export function BiblicalObjectSheet({
   const displayName = current.names[language]?.[0] ?? current.names.fr[0];
 
   return (
-    <AnimatePresence onExitComplete={handleOpen}>
+    <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -74,7 +109,7 @@ export function BiblicalObjectSheet({
               <X className="w-4 h-4" />
             </button>
 
-            {/* Multi-object selector — only shown when more than 1 object */}
+            {/* Multi-object selector */}
             {objects.length > 1 && (
               <div className="flex gap-2 px-4 pt-2 pb-3 overflow-x-auto scrollbar-none">
                 {objects.map((obj, idx) => {
@@ -100,26 +135,30 @@ export function BiblicalObjectSheet({
             )}
 
             <div className="overflow-y-auto" style={{ maxHeight: "calc(88vh - 80px)" }}>
-              {/* Image — external Wikimedia URL, next/image not used intentionally */}
-              <div className="relative h-52 w-full overflow-hidden bg-[#1a1a1a]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={current.image_url}
-                  alt={displayName}
-                  className="w-full h-full object-cover opacity-80"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    target.style.display = "none";
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.style.background =
-                        "linear-gradient(135deg, #1a1830 0%, #2a2040 100%)";
-                    }
-                  }}
-                />
+              {/* Image area */}
+              <div className="relative h-52 w-full overflow-hidden bg-[#1a1830]">
+                {imgLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-[#7B6FD4] border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+                {imgSrc && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={imgSrc}
+                    alt={displayName}
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoading ? "opacity-0" : "opacity-85"}`}
+                    onLoad={() => setImgLoading(false)}
+                    onError={() => {
+                      setImgSrc(null);
+                      setImgLoading(false);
+                    }}
+                  />
+                )}
+                {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
 
-                {/* Category badge over image */}
+                {/* Category badge */}
                 <div className="absolute bottom-3 left-4">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#141414]/80 backdrop-blur-sm border border-[#7B6FD4]/30 font-sans text-[10px] uppercase tracking-[0.15em] text-[#7B6FD4]">
                     {categoryIcon} {categoryLabel}
@@ -128,13 +167,10 @@ export function BiblicalObjectSheet({
               </div>
 
               {/* Content */}
-              <div className="px-5 pt-4 pb-8">
-                {/* Title */}
+              <div className="px-5 pt-4 pb-10">
                 <h2 className="font-serif italic text-2xl text-[#E8E8E8] capitalize mb-1">
                   {displayName}
                 </h2>
-
-                {/* Description */}
                 <p className="font-sans text-[14px] text-[#c9c4d4] leading-relaxed mt-3">
                   {description}
                 </p>
