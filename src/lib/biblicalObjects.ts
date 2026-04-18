@@ -16,7 +16,7 @@ export interface BiblicalObject {
   names: { fr: string[]; en: string[]; pt: string[]; es: string[] };
   category: ObjectCategory;
   image_url: string;
-  wikipedia_en?: string;
+  wikipedia_en?: string | string[];
   description: { fr: string; en: string; pt: string; es: string };
 }
 

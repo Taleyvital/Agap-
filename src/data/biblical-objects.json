@@ -34,7 +34,11 @@
       "pt": "Uma lâmina de ferro forjado de dois gumes com cerca de 60 cm de comprimento. O gladius romano era curto para combate corpo a corpo. Preservado em muitos museus arqueológicos hoje.",
       "es": "Una hoja de hierro forjado de doble filo de unos 60 cm de longitud. El gladius romano era corto para el combate cuerpo a cuerpo. Conservado en muchos museos arqueológicos hoy."
     },
-    "wikipedia_en": "Gladius"
+    "wikipedia_en": [
+      "Gladius",
+      "Khopesh",
+      "Sword"
+    ]
   },
   {
     "key": "lance",
@@ -74,7 +78,7 @@
       "pt": "A lança era a arma mais comum na antiguidade: um longo cabo de madeira com uma ponta de bronze ou ferro. Os soldados romanos usavam o pilum.",
       "es": "La lanza era el arma más común en la antigüedad: un largo mástil de madera con una punta de bronce o hierro. Los soldados romanos usaban el pilum."
     },
-    "wikipedia_en": "Pilum"
+    "wikipedia_en": "Spear"
   },
   {
     "key": "arc",
@@ -583,7 +587,11 @@
       "pt": "O cordeiro era o animal central na economia e religião de Israel.",
       "es": "El cordero era el animal central en la economía y religión de Israel."
     },
-    "wikipedia_en": "Sheep"
+    "wikipedia_en": [
+      "Sheep",
+      "Shepherd",
+      "Lamb and mutton"
+    ]
   },
   {
     "key": "colombe",
@@ -664,7 +672,10 @@
       "pt": "A Vipera palaestinae é uma das cobras mais perigosas do Oriente Próximo.",
       "es": "La Vipera palaestinae es una de las serpientes más peligrosas del Oriente Próximo."
     },
-    "wikipedia_en": "Vipera palaestinae"
+    "wikipedia_en": [
+      "Vipera palaestinae",
+      "Serpent (symbolism)"
+    ]
   },
   {
     "key": "lion",
@@ -700,7 +711,10 @@
       "pt": "O leão asiático habitava o Oriente Próximo até o século XIX. Simboliza força e realeza na Bíblia.",
       "es": "El león asiático habitaba el Oriente Próximo hasta el siglo XIX. Simboliza fuerza y realeza en la Biblia."
     },
-    "wikipedia_en": "Lion"
+    "wikipedia_en": [
+      "Asiatic lion",
+      "Lion"
+    ]
   },
   {
     "key": "chameau",
@@ -970,7 +984,11 @@
       "pt": "A oliveira é a árvore simbólica da Terra Santa. Algumas oliveiras do Jardim do Getsêmani têm mais de 2.000 anos.",
       "es": "El olivo es el árbol simbólico de la Tierra Santa. Algunos olivos del Jardín de Getsemaní tienen más de 2.000 años."
     },
-    "wikipedia_en": "Olive"
+    "wikipedia_en": [
+      "Olive",
+      "Mount of Olives",
+      "Olive oil"
+    ]
   },
   {
     "key": "figuier",
@@ -1055,7 +1073,11 @@
       "pt": "A videira cultivada era uma das culturas fundamentais da Palestina antiga.",
       "es": "La vid cultivada era uno de los cultivos fundamentales de la antigua Palestina."
     },
-    "wikipedia_en": "Common grape vine"
+    "wikipedia_en": [
+      "Common grape vine",
+      "Vineyard",
+      "Grape"
+    ]
   },
   {
     "key": "palmier",
@@ -1140,7 +1162,11 @@
       "pt": "O trigo era o cereal principal da Palestina antiga.",
       "es": "El trigo era el cereal principal de la antigua Palestina."
     },
-    "wikipedia_en": "Common wheat"
+    "wikipedia_en": [
+      "Common wheat",
+      "Harvest",
+      "Wheat"
+    ]
   },
   {
     "key": "orge",
@@ -1264,7 +1290,11 @@
       "pt": "O pão bíblico era principalmente um bolo achatado feito de farinha de cevada ou trigo.",
       "es": "El pan bíblico era principalmente una torta plana hecha de harina de cebada o trigo."
     },
-    "wikipedia_en": "Matzo"
+    "wikipedia_en": [
+      "Bread",
+      "Flatbread",
+      "Pita bread"
+    ]
   },
   {
     "key": "huile",
@@ -1362,7 +1392,11 @@
       "pt": "O vinho era a bebida principal do mundo mediterrâneo antigo.",
       "es": "El vino era la bebida principal del mundo mediterráneo antiguo."
     },
-    "wikipedia_en": "Wine"
+    "wikipedia_en": [
+      "Wine",
+      "Red wine",
+      "Ancient wine production and trade"
+    ]
   },
   {
     "key": "temple",
@@ -1396,7 +1430,11 @@
       "pt": "O Segundo Templo de Jerusalém foi reconstruído por Herodes. Destruído pelos romanos em 70 d.C., restando apenas o Muro Ocidental.",
       "es": "El Segundo Templo de Jerusalén fue reconstruido por Herodes. Destruido por los romanos en 70 d.C., quedando solo el Muro Occidental."
     },
-    "wikipedia_en": "Temple in Jerusalem"
+    "wikipedia_en": [
+      "Second Temple",
+      "Herod's Temple",
+      "Temple Mount"
+    ]
   },
   {
     "key": "autel",
@@ -1526,7 +1564,13 @@
       "pt": "Jerusalém, capital de Davi (~1000 a.C.), é a cidade mais citada na Bíblia.",
       "es": "Jerusalén, capital de David (~1000 a.C.), es la ciudad más citada en la Biblia."
     },
-    "wikipedia_en": "Jerusalem"
+    "wikipedia_en": [
+      "Jerusalem",
+      "Western Wall",
+      "Temple Mount",
+      "Church of the Holy Sepulchre",
+      "Jerusalem Old City"
+    ]
   },
   {
     "key": "jourdain",
@@ -1558,7 +1602,11 @@
       "pt": "O Rio Jordão é o rio sagrado de Israel. João Batista batizou Jesus aqui.",
       "es": "El Río Jordán es el río sagrado de Israel. Juan el Bautista bautizó a Jesús aquí."
     },
-    "wikipedia_en": "Jordan River"
+    "wikipedia_en": [
+      "Jordan River",
+      "Qasr al-Yahud",
+      "Dead Sea"
+    ]
   },
   {
     "key": "galilee",
@@ -1650,7 +1698,13 @@
       "pt": "O Egito antigo é a grande potência que domina o contexto bíblico por milênios.",
       "es": "El Egipto antiguo es la gran potencia que domina el contexto bíblico durante milenios."
     },
-    "wikipedia_en": "Ancient Egypt"
+    "wikipedia_en": [
+      "Ancient Egypt",
+      "Giza pyramid complex",
+      "Nile",
+      "Luxor",
+      "Ancient Egyptian religion"
+    ]
   },
   {
     "key": "sinai",

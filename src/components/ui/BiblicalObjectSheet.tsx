@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { BiblicalObject } from "@/lib/biblicalObjects";
@@ -13,7 +13,6 @@ interface BiblicalObjectSheetProps {
   language?: "fr" | "en" | "pt" | "es";
 }
 
-/** Fetch Wikipedia thumbnail for an article title */
 async function fetchWikiThumbnail(title: string): Promise<string | null> {
   try {
     const res = await fetch(
@@ -35,32 +34,57 @@ export function BiblicalObjectSheet({
   language = "fr",
 }: BiblicalObjectSheetProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<string[]>([]);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const [imgLoading, setImgLoading] = useState(true);
+  const touchStartX = useRef<number | null>(null);
 
   const current = objects[selectedIndex] ?? null;
 
-  // Fetch Wikipedia thumbnail whenever the selected object changes
+  // Fetch all gallery images when object changes
   useEffect(() => {
     if (!isOpen || !current) return;
-    setImgSrc(null);
+    setGallery([]);
+    setGalleryIndex(0);
     setImgLoading(true);
 
-    if (current.wikipedia_en) {
-      fetchWikiThumbnail(current.wikipedia_en).then((url) => {
-        setImgSrc(url ?? current.image_url ?? null);
-        setImgLoading(false);
-      });
-    } else {
-      setImgSrc(current.image_url ?? null);
+    const titles: string[] = current.wikipedia_en
+      ? Array.isArray(current.wikipedia_en)
+        ? current.wikipedia_en
+        : [current.wikipedia_en]
+      : [];
+
+    if (titles.length === 0) {
+      if (current.image_url) setGallery([current.image_url]);
       setImgLoading(false);
+      return;
     }
+
+    // Fetch all thumbnails in parallel, keep the ones that succeed
+    Promise.all(titles.map(fetchWikiThumbnail)).then((results) => {
+      const valid = results.filter((url): url is string => url !== null);
+      setGallery(valid.length > 0 ? valid : (current.image_url ? [current.image_url] : []));
+      setImgLoading(false);
+    });
   }, [isOpen, current?.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset selection when new objects arrive
+  // Reset object selection when new objects arrive
   useEffect(() => {
     setSelectedIndex(0);
   }, [objects]);
+
+  // Swipe handlers
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0 && galleryIndex < gallery.length - 1) setGalleryIndex((i) => i + 1);
+    if (dx > 0 && galleryIndex > 0) setGalleryIndex((i) => i - 1);
+  };
 
   if (!current) return null;
 
@@ -68,6 +92,7 @@ export function BiblicalObjectSheet({
   const categoryIcon = CATEGORY_ICONS[current.category];
   const description = current.description[language];
   const displayName = current.names[language]?.[0] ?? current.names.fr[0];
+  const currentImg = gallery[galleryIndex] ?? null;
 
   return (
     <AnimatePresence>
@@ -94,12 +119,12 @@ export function BiblicalObjectSheet({
             className="fixed inset-x-0 bottom-0 z-[90] mx-auto max-w-[430px] rounded-t-3xl bg-[#141414] overflow-hidden"
             style={{ maxHeight: "88vh" }}
           >
-            {/* Handle bar */}
+            {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-[#333]" />
             </div>
 
-            {/* Close button */}
+            {/* Close */}
             <button
               type="button"
               onClick={onClose}
@@ -112,51 +137,80 @@ export function BiblicalObjectSheet({
             {/* Multi-object selector */}
             {objects.length > 1 && (
               <div className="flex gap-2 px-4 pt-2 pb-3 overflow-x-auto scrollbar-none">
-                {objects.map((obj, idx) => {
-                  const label = obj.names[language]?.[0] ?? obj.names.fr[0];
-                  const icon = CATEGORY_ICONS[obj.category];
-                  return (
-                    <button
-                      key={obj.key}
-                      type="button"
-                      onClick={() => setSelectedIndex(idx)}
-                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-[11px] uppercase tracking-widest transition-all ${
-                        idx === selectedIndex
-                          ? "bg-[#7B6FD4] text-white"
-                          : "bg-[#1c1c1c] text-[#666] border border-[#2a2a2a] hover:border-[#7B6FD4]/40 hover:text-[#E8E8E8]"
-                      }`}
-                    >
-                      <span>{icon}</span>
-                      <span>{label}</span>
-                    </button>
-                  );
-                })}
+                {objects.map((obj, idx) => (
+                  <button
+                    key={obj.key}
+                    type="button"
+                    onClick={() => setSelectedIndex(idx)}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-[11px] uppercase tracking-widest transition-all ${
+                      idx === selectedIndex
+                        ? "bg-[#7B6FD4] text-white"
+                        : "bg-[#1c1c1c] text-[#666] border border-[#2a2a2a]"
+                    }`}
+                  >
+                    <span>{CATEGORY_ICONS[obj.category]}</span>
+                    <span>{obj.names[language]?.[0] ?? obj.names.fr[0]}</span>
+                  </button>
+                ))}
               </div>
             )}
 
             <div className="overflow-y-auto" style={{ maxHeight: "calc(88vh - 80px)" }}>
-              {/* Image area */}
-              <div className="relative h-52 w-full overflow-hidden bg-[#1a1830]">
+
+              {/* ── Image Gallery ── */}
+              <div
+                className="relative h-56 w-full overflow-hidden bg-[#1a1830] select-none"
+                onTouchStart={onTouchStart}
+                onTouchEnd={onTouchEnd}
+              >
+                {/* Loading spinner */}
                 {imgLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
                     <div className="w-8 h-8 border-2 border-[#7B6FD4] border-t-transparent rounded-full animate-spin" />
                   </div>
                 )}
-                {imgSrc && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={imgSrc}
-                    alt={displayName}
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoading ? "opacity-0" : "opacity-85"}`}
-                    onLoad={() => setImgLoading(false)}
-                    onError={() => {
-                      setImgSrc(null);
-                      setImgLoading(false);
-                    }}
-                  />
+
+                {/* Image */}
+                <AnimatePresence mode="wait">
+                  {currentImg && (
+                    <motion.div
+                      key={currentImg}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={currentImg}
+                        alt={displayName}
+                        className="w-full h-full object-cover opacity-85"
+                        onLoad={() => setImgLoading(false)}
+                        onError={() => setImgLoading(false)}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent pointer-events-none" />
+
+                {/* Dot indicators (gallery count > 1) */}
+                {gallery.length > 1 && (
+                  <div className="absolute bottom-10 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+                    {gallery.map((_, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-full transition-all ${
+                          i === galleryIndex
+                            ? "w-4 h-1.5 bg-[#7B6FD4]"
+                            : "w-1.5 h-1.5 bg-white/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
                 )}
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
 
                 {/* Category badge */}
                 <div className="absolute bottom-3 left-4">
@@ -164,6 +218,15 @@ export function BiblicalObjectSheet({
                     {categoryIcon} {categoryLabel}
                   </span>
                 </div>
+
+                {/* Swipe hint (only shown for gallery) */}
+                {gallery.length > 1 && (
+                  <div className="absolute bottom-3 right-4">
+                    <span className="font-sans text-[9px] uppercase tracking-widest text-white/30">
+                      ← swipe →
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Content */}
