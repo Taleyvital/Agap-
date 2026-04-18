@@ -100,8 +100,9 @@ export function BiblicalObjectSheet({
             )}
 
             <div className="overflow-y-auto" style={{ maxHeight: "calc(88vh - 80px)" }}>
-              {/* Image */}
+              {/* Image — external Wikimedia URL, next/image not used intentionally */}
               <div className="relative h-52 w-full overflow-hidden bg-[#1a1a1a]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={current.image_url}
                   alt={displayName}

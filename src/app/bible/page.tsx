@@ -1318,6 +1318,14 @@ function BiblePageContent() {
       isOpen={verseCardOpen}
       onClose={() => setVerseCardOpen(false)}
     />
+
+    {/* ── Biblical Object Sheet (tap EXPLORER) ── */}
+    <BiblicalObjectSheet
+      objects={detectedObjects}
+      isOpen={objectSheetOpen}
+      onClose={() => setObjectSheetOpen(false)}
+      language={language as "fr" | "en" | "pt" | "es"}
+    />
     </>
   );
 }
