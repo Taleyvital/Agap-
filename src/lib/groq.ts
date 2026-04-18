@@ -2,9 +2,10 @@ import Groq from "groq-sdk";
 import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import type { UserProfile } from "@/lib/types";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+// Lazy init — avoids build-time crash when GROQ_API_KEY is absent
+function getGroq() {
+  return new Groq({ apiKey: process.env.GROQ_API_KEY });
+}
 
 export interface ChatHistoryMessage {
   role: "user" | "assistant";
@@ -37,7 +38,7 @@ Format verset :
     content: m.content,
   }));
 
-  const response = await groq.chat.completions.create({
+  const response = await getGroq().chat.completions.create({
     model: "llama-3.3-70b-versatile",
     messages: [
       { role: "system", content: systemPrompt },
@@ -60,7 +61,7 @@ export const moderateCommunityPost = async (text: string): Promise<{
   reason?: string;
 }> => {
   try {
-    const response = await groq.chat.completions.create({
+    const response = await getGroq().chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         {
