@@ -6,6 +6,7 @@ import { ArrowLeft, Heart, MessageSquare, MoreVertical, Trash2, User } from "luc
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import Image from "next/image";
+import { useLanguage } from "@/lib/i18n";
 
 interface Post {
   id: string;
@@ -36,6 +37,7 @@ interface PostsResponse {
 }
 
 export default function MyPostsPage() {
+  const { t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteMenuOpen, setDeleteMenuOpen] = useState<string | null>(null);
@@ -83,11 +85,11 @@ export default function MyPostsPage() {
       if (res.ok) {
         setPosts(posts.filter((p) => p.id !== postId));
       } else {
-        alert("Erreur lors de la suppression");
+        alert(t("posts_delete_error"));
       }
     } catch (err) {
       console.error("Error deleting post:", err);
-      alert("Erreur lors de la suppression");
+      alert(t("posts_delete_error"));
     } finally {
       setDeleting(null);
       setDeleteMenuOpen(null);
@@ -105,7 +107,7 @@ export default function MyPostsPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="font-serif text-xl italic text-text-primary">Mes Publications</h1>
+          <h1 className="font-serif text-xl italic text-text-primary">{t("posts_title")}</h1>
         </header>
 
         {/* Posts List */}
@@ -120,16 +122,16 @@ export default function MyPostsPage() {
                 <MessageSquare className="h-10 w-10 text-text-tertiary" />
               </div>
               <p className="mt-6 font-serif text-lg italic text-text-primary">
-                Aucune publication
+                {t("posts_empty_title")}
               </p>
               <p className="mt-2 px-8 font-sans text-sm text-text-secondary">
-                Partage ton premier témoignage ou ta première prière avec la communauté
+                {t("posts_empty_desc")}
               </p>
               <Link
                 href="/community"
                 className="mt-6 rounded-full bg-accent px-6 py-3 font-sans text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-accent-light"
               >
-                Aller à la Communauté
+                {t("posts_empty_cta")}
               </Link>
             </div>
           ) : (
@@ -205,7 +207,7 @@ export default function MyPostsPage() {
                                   ) : (
                                     <Trash2 className="h-4 w-4" />
                                   )}
-                                  Supprimer
+                                  {t("common_delete")}
                                 </button>
                               </motion.div>
                               {/* Backdrop to close menu */}

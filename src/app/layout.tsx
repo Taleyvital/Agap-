@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { XPToastProvider } from "@/components/providers/XPToastProvider";
+import { LanguageProvider } from "@/lib/i18n";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -52,7 +53,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} min-h-screen font-sans antialiased`}
       >
-        <ThemeProvider><XPToastProvider>{children}</XPToastProvider></ThemeProvider>
+        <ThemeProvider><LanguageProvider><XPToastProvider>{children}</XPToastProvider></LanguageProvider></ThemeProvider>
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {

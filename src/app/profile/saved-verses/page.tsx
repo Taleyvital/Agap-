@@ -9,6 +9,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getChapter } from "@/lib/bible";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { BibleVerseRow } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 interface SavedVerse {
   bookId: number;
@@ -21,6 +22,7 @@ interface SavedVerse {
 
 export default function SavedVersesPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [savedVerses, setSavedVerses] = useState<SavedVerse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -115,7 +117,7 @@ export default function SavedVersesPage() {
   };
 
   const clearAll = () => {
-    if (confirm("Voulez-vous vraiment supprimer tous les versets marqués ?")) {
+    if (confirm(t("saved_verses_clear_confirm"))) {
       localStorage.removeItem("bible-colors");
       setSavedVerses([]);
     }
@@ -134,7 +136,7 @@ export default function SavedVersesPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <h1 className="font-serif text-xl text-text-primary">Versets marqués</h1>
+          <h1 className="font-serif text-xl text-text-primary">{t("saved_verses_title")}</h1>
         </header>
 
         {/* Content */}
@@ -147,15 +149,15 @@ export default function SavedVersesPage() {
         ) : savedVerses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <BookOpen className="h-12 w-12 text-text-tertiary mb-4" />
-            <p className="font-serif text-lg text-text-secondary">Aucun verset marqué</p>
+            <p className="font-serif text-lg text-text-secondary">{t("saved_verses_empty_title")}</p>
             <p className="mt-2 font-sans text-sm text-text-tertiary">
-              Marquez des versets dans la Bible pour les retrouver ici
+              {t("saved_verses_empty_desc")}
             </p>
             <Link
               href="/bible"
               className="mt-6 rounded-full bg-accent px-6 py-3 font-sans text-xs uppercase tracking-wider text-white"
             >
-              Aller à la Bible
+              {t("saved_verses_empty_cta")}
             </Link>
           </div>
         ) : (
@@ -168,7 +170,7 @@ export default function SavedVersesPage() {
                 className="mb-4 flex items-center gap-2 text-xs text-danger hover:text-danger/80 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Tout effacer
+                {t("common_clear_all")}
               </button>
             )}
 
@@ -192,7 +194,7 @@ export default function SavedVersesPage() {
                       type="button"
                       onClick={() => removeVerse(verse.bookId, verse.chapter, verse.verse)}
                       className="absolute top-3 right-3 p-1 text-text-tertiary hover:text-danger transition-colors"
-                      aria-label="Supprimer"
+                      aria-label={t("common_delete")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

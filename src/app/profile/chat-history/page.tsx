@@ -6,6 +6,7 @@ import { ChevronLeft, MessageCircle, Trash2, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
 
 interface ChatMessage {
   id: string;
@@ -16,6 +17,7 @@ interface ChatMessage {
 
 export default function ChatHistoryPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,7 @@ export default function ChatHistoryPage() {
   };
 
   const clearAll = async () => {
-    if (!confirm("Voulez-vous vraiment supprimer tout l'historique de chat ?")) return;
+    if (!confirm(t("chat_history_clear_all_confirm"))) return;
 
     const supabase = createSupabaseBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -97,15 +99,10 @@ export default function ChatHistoryPage() {
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-      return "Aujourd'hui";
-    } else if (diffDays === 1) {
-      return "Hier";
-    } else if (diffDays < 7) {
-      return `Il y a ${diffDays} jours`;
-    } else {
-      return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-    }
+    if (diffDays === 0) return t("common_today");
+    if (diffDays === 1) return t("common_yesterday");
+    if (diffDays < 7) return t("common_days_ago").replace("{n}", String(diffDays));
+    return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
   };
 
   return (
@@ -121,7 +118,7 @@ export default function ChatHistoryPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <h1 className="font-serif text-xl text-text-primary">Historique AGAPE Chat</h1>
+          <h1 className="font-serif text-xl text-text-primary">{t("chat_history_title")}</h1>
         </header>
 
         {/* Search bar */}
@@ -129,7 +126,7 @@ export default function ChatHistoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
           <input
             type="text"
-            placeholder="Rechercher dans les messages..."
+            placeholder={t("chat_history_search_placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl border border-separator bg-bg-secondary pl-10 pr-4 py-3 font-sans text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
@@ -160,31 +157,31 @@ export default function ChatHistoryPage() {
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <MessageCircle className="h-12 w-12 text-text-tertiary mb-4" />
-            <p className="font-serif text-lg text-text-secondary">Aucune conversation</p>
+            <p className="font-serif text-lg text-text-secondary">{t("chat_history_empty_title")}</p>
             <p className="mt-2 font-sans text-sm text-text-tertiary">
-              Commencez une conversation avec AGAPE Chat
+              {t("chat_history_empty_desc")}
             </p>
             <button
               type="button"
               onClick={() => router.push("/chat")}
               className="mt-6 rounded-full bg-accent px-6 py-3 font-sans text-xs uppercase tracking-wider text-white"
             >
-              Ouvrir AGAPE Chat
+              {t("chat_history_empty_cta")}
             </button>
           </div>
         ) : filteredMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Search className="h-12 w-12 text-text-tertiary mb-4" />
-            <p className="font-serif text-lg text-text-secondary">Aucun résultat</p>
+            <p className="font-serif text-lg text-text-secondary">{t("chat_history_no_results_title")}</p>
             <p className="mt-2 font-sans text-sm text-text-tertiary">
-              Aucun message ne correspond à votre recherche
+              {t("chat_history_no_results_desc")}
             </p>
             <button
               type="button"
               onClick={() => setSearchQuery("")}
               className="mt-6 rounded-full border border-separator bg-bg-secondary px-6 py-3 font-sans text-xs uppercase tracking-wider text-text-primary"
             >
-              Effacer la recherche
+              {t("chat_history_clear_search")}
             </button>
           </div>
         ) : (
@@ -204,7 +201,7 @@ export default function ChatHistoryPage() {
                 className="mb-4 flex items-center gap-2 text-xs text-danger hover:text-danger/80 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Tout effacer
+                {t("common_clear_all")}
               </button>
             )}
 
@@ -228,7 +225,7 @@ export default function ChatHistoryPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-sans text-[10px] uppercase tracking-wider text-text-tertiary">
-                            {message.role === "user" ? "Vous" : "AGAPE"}
+                            {message.role === "user" ? t("chat_history_you") : t("chat_history_agape")}
                           </span>
                           <span className="text-[10px] text-text-tertiary">
                             {formatDate(message.created_at)}

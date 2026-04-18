@@ -6,6 +6,7 @@ import { ChevronLeft, Flame, Check, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
 
 interface PrayerRequest {
   id: string;
@@ -21,6 +22,7 @@ interface PrayerRequest {
 
 export default function PrayerJournalPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [prayers, setPrayers] = useState<PrayerRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +52,7 @@ export default function PrayerJournalPage() {
   }, [router]);
 
   const deletePrayer = async (id: string) => {
-    if (!confirm("Voulez-vous vraiment supprimer cette requête de prière ?")) return;
+    if (!confirm(t("prayer_journal_delete_confirm"))) return;
 
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase
@@ -84,10 +86,8 @@ export default function PrayerJournalPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-  };
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
   return (
     <AppShell>
@@ -102,7 +102,7 @@ export default function PrayerJournalPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <h1 className="font-serif text-xl text-text-primary">Journal de prière</h1>
+          <h1 className="font-serif text-xl text-text-primary">{t("prayer_journal_title")}</h1>
         </header>
 
         {/* Stats */}
@@ -113,7 +113,7 @@ export default function PrayerJournalPage() {
                 {prayers.length}
               </span>
               <span className="mt-0.5 px-1 text-center font-sans text-[9px] uppercase tracking-wider text-text-tertiary leading-tight">
-                Requêtes
+                {t("prayer_journal_requests")}
               </span>
             </div>
             <div className="flex flex-1 flex-col items-center py-4">
@@ -122,7 +122,7 @@ export default function PrayerJournalPage() {
                 {prayers.filter(p => p.exaucee).length}
               </span>
               <span className="mt-0.5 px-1 text-center font-sans text-[9px] uppercase tracking-wider text-text-tertiary leading-tight">
-                Exaucées
+                {t("prayer_journal_answered")}
               </span>
             </div>
           </div>
@@ -138,16 +138,16 @@ export default function PrayerJournalPage() {
         ) : prayers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Flame className="h-12 w-12 text-text-tertiary mb-4" />
-            <p className="font-serif text-lg text-text-secondary">Aucune requête</p>
+            <p className="font-serif text-lg text-text-secondary">{t("prayer_journal_empty_title")}</p>
             <p className="mt-2 font-sans text-sm text-text-tertiary">
-              Commencez à noter vos sujets de prière
+              {t("prayer_journal_empty_desc")}
             </p>
             <button
               type="button"
               onClick={() => router.push("/prayer?tab=prayers")}
               className="mt-6 rounded-full bg-accent px-6 py-3 font-sans text-xs uppercase tracking-wider text-white"
             >
-              Ouvrir le journal
+              {t("prayer_journal_empty_cta")}
             </button>
           </div>
         ) : (
@@ -190,7 +190,7 @@ export default function PrayerJournalPage() {
                       {prayer.temoignage && (
                         <div className="mt-3 rounded-xl bg-bg-tertiary/50 p-3">
                           <p className="font-sans text-[10px] uppercase tracking-wider text-text-tertiary mb-1">
-                            Témoignage
+                            {t("prayer_journal_testimony")}
                           </p>
                           <p className="font-serif text-sm italic text-text-secondary line-clamp-2 leading-relaxed">
                             &ldquo;{prayer.temoignage}&rdquo;
@@ -201,8 +201,8 @@ export default function PrayerJournalPage() {
                         prayer.exaucee ? "text-green-600 font-semibold" : "text-text-tertiary"
                       }`}>
                         {prayer.exaucee && prayer.date_exaucement
-                          ? `Exaucée le ${formatDate(prayer.date_exaucement)}`
-                          : `Depuis le ${formatDate(prayer.created_at)}`
+                          ? `${t("prayer_journal_answered_on")} ${formatDate(prayer.date_exaucement)}`
+                          : `${t("prayer_journal_since")} ${formatDate(prayer.created_at)}`
                         }
                       </p>
                     </div>
@@ -213,14 +213,14 @@ export default function PrayerJournalPage() {
                         <>
                           <span className="text-lg">🎉</span>
                           <span className="text-[10px] uppercase tracking-wider text-green-600 font-semibold">
-                            Dieu a répondu
+                            {t("prayer_journal_god_answered")}
                           </span>
                         </>
                       ) : (
                         <>
                           <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
                           <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">
-                            En prière
+                            {t("prayer_journal_in_prayer")}
                           </span>
                         </>
                       )}
@@ -237,7 +237,7 @@ export default function PrayerJournalPage() {
                         aria-label={prayer.exaucee ? "Marquer comme non exaucé" : "Marquer comme exaucé"}
                       >
                         <Check className="h-3.5 w-3.5" />
-                        {prayer.exaucee ? "Annuler" : "Exaucée"}
+                        {prayer.exaucee ? t("common_cancel") : t("prayer_journal_mark_answered")}
                       </button>
                       <button
                         type="button"

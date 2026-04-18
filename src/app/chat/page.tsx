@@ -10,6 +10,7 @@ import { ChatBubble } from "@/components/ui/ChatBubble";
 import { VerseCard } from "@/components/ui/VerseCard";
 import { parseAgapeReply } from "@/lib/chat-parse";
 import type { ChatHistoryMessage } from "@/lib/groq";
+import { useLanguage } from "@/lib/i18n";
 
 interface UiMessage {
   id: string;
@@ -18,25 +19,20 @@ interface UiMessage {
   time: string;
 }
 
-const SUGGESTIONS = [
-  "PRIER AVEC MOI",
-  "UN VERSET SUR LA PAIX",
-  "COMMENT LÂCHER PRISE",
-];
-
-function timeLabel() {
+function timeLabel(t: (key: import("@/lib/i18n").TranslationKey) => string) {
   const h = new Date().getHours();
-  if (h < 12) return { line: "Commence ta journée.", tag: "MATIN" as const };
-  if (h < 18) return { line: "Prends un moment.", tag: "JOURNÉE" as const };
-  return { line: "Apaise ton esprit.", tag: "SOIR" as const };
+  if (h < 12) return { line: t("chat_morning_line"), tag: t("chat_morning_tag") };
+  if (h < 18) return { line: t("chat_afternoon_line"), tag: t("chat_afternoon_tag") };
+  return { line: t("chat_evening_line"), tag: t("chat_evening_tag") };
 }
 
 export default function ChatPageWrapper() {
+  const { t } = useLanguage();
   return (
     <Suspense fallback={
       <AppShell>
         <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
-          <p className="text-text-tertiary">Chargement...</p>
+          <p className="text-text-tertiary">{t("common_loading")}</p>
         </div>
       </AppShell>
     }>
@@ -46,25 +42,25 @@ export default function ChatPageWrapper() {
 }
 
 function ChatPage() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const verseParam = searchParams.get("verse");
   const textParam = searchParams.get("text");
   const refParam = searchParams.get("ref");
-  
+
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<UiMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      content:
-        "Je suis là avec toi. Parle-moi de ce qui occupe ton cœur aujourd'hui.",
+      content: t("chat_welcome"),
       time: formatTime(new Date()),
     },
   ]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasSentInitialVerse = useRef<string | null>(null);
-  const { line, tag } = timeLabel();
+  const { line, tag } = timeLabel(t);
 
   const scrollToEnd = useCallback(() => {
     scrollRef.current?.scrollTo({
@@ -116,8 +112,7 @@ function ChatPage() {
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content:
-            "Je n'ai pas pu répondre pour le moment. Réessaie dans un instant.",
+          content: t("chat_error_reply"),
           time: formatTime(new Date()),
         },
       ]);
@@ -156,7 +151,7 @@ function ChatPage() {
               A
             </div>
             <span className="font-sans text-xs font-semibold uppercase tracking-[0.15em] text-text-primary">
-              AGAPE CHAT
+              {t("chat_label")}
             </span>
           </div>
           <Link href="/home" className="sr-only">
@@ -180,7 +175,7 @@ function ChatPage() {
             {line}
           </p>
           <p className="ui-label mt-3 text-text-tertiary">
-            RÉFLEXION DU {tag}
+            {t("chat_reflection")} {tag}
           </p>
         </motion.section>
 
@@ -213,6 +208,7 @@ function ChatPage() {
                   <p className="text-[10px] text-text-tertiary">
                     AGAPE • {m.time}
                   </p>
+
                 </>
               ) : (
                 <>
@@ -222,7 +218,7 @@ function ChatPage() {
                     </ChatBubble>
                   </div>
                   <p className="text-right text-[10px] text-text-tertiary">
-                    Toi • {m.time}
+                    {t("chat_you")} • {m.time}
                   </p>
                 </>
               )}
@@ -230,13 +226,13 @@ function ChatPage() {
           ))}
           {loading ? (
             <p className="text-center text-xs text-text-tertiary">
-              AGAPE écrit…
+              {t("chat_typing")}
             </p>
           ) : null}
         </div>
 
         <div className="sticky bottom-0 -mx-1 flex gap-2 overflow-x-auto pb-2 pt-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {SUGGESTIONS.map((s) => (
+          {[t("chat_suggest_pray"), t("chat_suggest_peace"), t("chat_suggest_release")].map((s) => (
             <button
               key={s}
               type="button"
@@ -258,7 +254,7 @@ function ChatPage() {
           </button>
           <input
             className="min-w-0 flex-1 bg-transparent font-sans text-sm text-text-primary outline-none placeholder:text-text-tertiary"
-            placeholder="Écris un message…"
+            placeholder={t("chat_placeholder")}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {

@@ -8,14 +8,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useXPToast } from "@/components/providers/XPToastProvider";
 import type { XPResult } from "@/lib/xp-shared";
+import { useLanguage } from "@/lib/i18n";
 
 type Filter = "all" | "prayer" | "testimony";
-
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "TOUT" },
-  { id: "prayer", label: "PRIÈRES" },
-  { id: "testimony", label: "TÉMOIGNAGES" },
-];
 
 interface Post {
   id: string;
@@ -51,7 +46,14 @@ const MOCK_POSTS: Post[] = [];
 
 export default function CommunityPage() {
   const { showXPToast } = useXPToast();
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<Filter>("all");
+
+  const FILTERS: { id: Filter; label: string }[] = [
+    { id: "all", label: t("community_filter_all") },
+    { id: "prayer", label: t("community_filter_prayer") },
+    { id: "testimony", label: t("community_filter_testimony") },
+  ];
   const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
   const [composer, setComposer] = useState(false);
   const [draft, setDraft] = useState("");
@@ -103,9 +105,9 @@ export default function CommunityPage() {
 
             return {
               id: String(row.id),
-              author: row.anonymous_name || "Fidèle du chemin",
+              author: row.anonymous_name || t("community_default_author"),
               avatar: "",
-              category: row.category === "prayer" ? "PRIÈRE" : "TÉMOIGNAGE",
+              category: row.category === "prayer" ? t("community_category_prayer") : t("community_category_testimony"),
               time: created,
               content: String(row.content ?? ""),
               image: row.image_url ? String(row.image_url) : undefined,
@@ -190,8 +192,8 @@ export default function CommunityPage() {
             id: data.id || Date.now().toString(),
             author: "Toi",
             avatar: "",
-            category: composerCategory === "prayer" ? "PRIÈRE" : "TÉMOIGNAGE",
-            time: "À L'INSTANT",
+            category: composerCategory === "prayer" ? t("community_category_prayer") : t("community_category_testimony"),
+            time: t("community_just_now"),
             content: text,
             image: uploadedImageUrl || undefined,
             amens: 0,
@@ -203,11 +205,11 @@ export default function CommunityPage() {
       } else {
         const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
         console.error("Failed to create post:", errorData);
-        alert("Erreur lors de la publication: " + (errorData.error || "Une erreur s'est produite"));
+        alert(t("community_post_error") + ": " + (errorData.error || t("common_error")));
       }
     } catch (err) {
       console.error("Submit error:", err);
-      alert("Erreur lors de la publication: " + (err instanceof Error ? err.message : "Une erreur s'est produite"));
+      alert(t("community_post_error") + ": " + (err instanceof Error ? err.message : t("common_error")));
     } finally {
       setSubmitting(false);
     }
@@ -255,11 +257,11 @@ export default function CommunityPage() {
         setDeleteMenuOpen(null);
       } else {
         const errorData = await res.json().catch(() => ({ error: "Erreur inconnue" }));
-        alert("Erreur lors de la suppression: " + (errorData.error || "Une erreur s'est produite"));
+        alert(t("community_delete_error") + ": " + (errorData.error || t("common_error")));
       }
     } catch (err) {
       console.error("Error deleting post:", err);
-      alert("Erreur lors de la suppression");
+      alert(t("community_delete_error"));
     } finally {
       setDeleting(null);
     }
@@ -269,9 +271,9 @@ export default function CommunityPage() {
     ? posts
     : posts.filter((p) =>
         filter === "prayer"
-          ? p.category?.toUpperCase().includes("PRIÈRE")
+          ? p.category === t("community_category_prayer")
           : filter === "testimony"
-            ? p.category?.toUpperCase().includes("TÉMOIGNAGE")
+            ? p.category === t("community_category_testimony")
             : true
       );
 
@@ -285,7 +287,7 @@ export default function CommunityPage() {
             <div className="h-9 w-9 flex items-center justify-center rounded-full bg-bg-tertiary border border-separator">
               <User className="h-5 w-5 text-text-primary" />
             </div>
-            <h1 className="font-serif text-2xl font-semibold text-accent">Communauté</h1>
+            <h1 className="font-serif text-2xl font-semibold text-accent">{t("community_title")}</h1>
           </div>
           <button type="button" className="text-accent" aria-label="Notifications">
             <Bell className="h-5 w-5 fill-accent" />
@@ -293,7 +295,7 @@ export default function CommunityPage() {
         </header>
         
         <p className="mt-6 px-5 font-sans text-[10px] uppercase tracking-[0.2em] text-text-secondary">
-          CONNEXIONS FIDÈLES DANS LA LUMIÈRE
+          {t("community_subtitle")}
         </p>
 
         {/* FILTERS */}
@@ -403,7 +405,7 @@ export default function CommunityPage() {
                                     ) : (
                                       <Trash2 className="h-4 w-4" />
                                     )}
-                                    Supprimer
+                                                    {t("common_delete")}
                                   </button>
                                 </motion.div>
                                 {/* Backdrop to close menu */}
@@ -498,21 +500,21 @@ export default function CommunityPage() {
               className="w-full max-w-[430px] rounded-3xl bg-bg-secondary p-5 shadow-2xl"
             >
               <div className="flex items-center justify-between">
-                <p className="ui-label font-bold text-text-tertiary uppercase tracking-widest">NOUVEAU POST</p>
+                <p className="ui-label font-bold text-text-tertiary uppercase tracking-widest">{t("community_new_post")}</p>
                 <div className="flex bg-bg-tertiary rounded-full p-1 gap-1">
                   <button 
                     type="button"
                     onClick={() => setComposerCategory("testimony")}
                     className={`px-3 py-1.5 rounded-full font-sans text-[10px] font-bold uppercase tracking-wider transition-all ${composerCategory === 'testimony' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-secondary'}`}
                   >
-                    Témoignage
+                    {t("community_tab_testimony")}
                   </button>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setComposerCategory("prayer")}
                     className={`px-3 py-1.5 rounded-full font-sans text-[10px] font-bold uppercase tracking-wider transition-all ${composerCategory === 'prayer' ? 'bg-accent text-white shadow-sm' : 'text-text-tertiary hover:text-text-secondary'}`}
                   >
-                    Prière
+                    {t("community_tab_prayer")}
                   </button>
                 </div>
               </div>
@@ -523,7 +525,7 @@ export default function CommunityPage() {
                   rows={imagePreview ? 3 : 5}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
-                  placeholder="Partage de l'encouragement avec la communauté..."
+                  placeholder={t("community_placeholder")}
                   autoFocus
                 />
                 
@@ -573,7 +575,7 @@ export default function CommunityPage() {
                     }}
                     className="rounded-full px-5 py-2.5 font-sans text-[11px] font-bold uppercase tracking-widest text-text-secondary hover:text-text-primary"
                   >
-                    Annuler
+                    {t("common_cancel")}
                   </button>
                   <button
                     type="button"
@@ -581,7 +583,7 @@ export default function CommunityPage() {
                     onClick={() => void submit()}
                     className="rounded-full bg-accent px-6 py-2.5 font-sans text-[11px] font-bold uppercase tracking-widest text-white disabled:opacity-50"
                   >
-                    {submitting ? "..." : "Publier"}
+                    {submitting ? "…" : t("common_publish")}
                   </button>
                 </div>
               </div>

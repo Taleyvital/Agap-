@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, Check, Star } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
 
 interface Day {
   id: number;
@@ -62,6 +63,7 @@ const mockPlan: ReadingPlan = {
 export default function ReadingPlanDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { t } = useLanguage();
   const [plan, setPlan] = useState<ReadingPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const currentDayRef = useRef<HTMLDivElement>(null);
@@ -120,13 +122,13 @@ export default function ReadingPlanDetailPage() {
     return (
       <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6">
         <p className="text-[#666666] font-sans text-center">
-          Parcours non trouvé
+          {t("rplan_not_found")}
         </p>
         <button
           onClick={() => router.push("/reading-plan")}
           className="mt-4 text-[#7B6FD4] font-sans text-sm"
         >
-          Retour aux parcours
+          {t("rplan_back_to_plans")}
         </button>
       </div>
     );
@@ -142,7 +144,7 @@ export default function ReadingPlanDetailPage() {
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="font-sans tracking-wide uppercase text-[11px]">
-            ← Parcours
+            ← {t("rplan_back")}
           </span>
         </button>
       </header>
@@ -171,7 +173,7 @@ export default function ReadingPlanDetailPage() {
               </span>
               {plan.isAIGenerated && (
                 <span className="px-3 py-1 rounded-full bg-[#7B6FD4]/20 backdrop-blur-sm text-[10px] font-sans tracking-[0.15em] uppercase text-[#7B6FD4] border border-[#7B6FD4]/20">
-                  IA Personnalisé
+                  {t("rplan_ai_badge")}
                 </span>
               )}
             </div>
@@ -242,7 +244,7 @@ export default function ReadingPlanDetailPage() {
                       isCurrent ? "text-[#7B6FD4]" : isFuture ? "text-[#666666]/40" : "text-[#666666]"
                     }`}
                   >
-                    {isCurrent ? "Aujourd'hui" : `Jour ${day.number}`}
+                    {isCurrent ? t("common_today") : `${t("rplan_day")} ${day.number}`}
                   </span>
                   <span
                     className={`text-[12px] mt-1 ${
@@ -265,10 +267,10 @@ export default function ReadingPlanDetailPage() {
             onClick={() => router.push("/reading-plan/day")}
             className="w-full h-14 bg-[#E8E8E8] text-[#141414] rounded-full font-bold text-sm tracking-wide transition-all active:scale-95 shadow-2xl"
           >
-            Commencer le Jour {getCurrentDayNumber()}
+            {t("rplan_start_day")} {getCurrentDayNumber()}
           </button>
           <button className="w-full h-12 bg-transparent text-[#E8E8E8] rounded-full font-sans tracking-[0.15em] uppercase text-[11px] transition-all hover:bg-[#1c1c1c]/30 active:opacity-70">
-            Aperçu du parcours
+            {t("rplan_overview")}
           </button>
         </div>
       </div>

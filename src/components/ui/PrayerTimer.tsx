@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useXPToast } from "@/components/providers/XPToastProvider";
 import type { XPResult } from "@/lib/xp-shared";
+import { useLanguage } from "@/lib/i18n";
 
 const DURATIONS = [5, 10, 15, 30] as const;
 
@@ -32,6 +33,7 @@ const AMBIANCES = [
 
 export function PrayerTimer() {
   const { showXPToast } = useXPToast();
+  const { t } = useLanguage();
   // Keep showXPToast stable in setInterval closures
   const showXPToastRef = useRef(showXPToast);
   useEffect(() => { showXPToastRef.current = showXPToast; }, [showXPToast]);
@@ -190,7 +192,7 @@ export function PrayerTimer() {
           onClick={start}
           className="mt-8 rounded-full bg-accent px-10 py-3 font-sans text-sm uppercase tracking-wider text-white"
         >
-          Démarrer
+          {t("prayer_timer_start")}
         </button>
       ) : null}
 

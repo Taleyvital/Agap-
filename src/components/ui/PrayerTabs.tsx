@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLanguage } from "@/lib/i18n";
 
 interface PrayerTabsProps {
   activeTab: "timer" | "prayers";
@@ -8,6 +9,7 @@ interface PrayerTabsProps {
 }
 
 export function PrayerTabs({ activeTab, onTabChange }: PrayerTabsProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex w-full max-w-[280px] rounded-full bg-bg-secondary p-1">
       <button
@@ -24,7 +26,7 @@ export function PrayerTabs({ activeTab, onTabChange }: PrayerTabsProps) {
             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
           />
         )}
-        <span className="relative z-10">Timer</span>
+        <span className="relative z-10">{t("prayer_tabs_timer")}</span>
       </button>
       <button
         type="button"
@@ -40,7 +42,7 @@ export function PrayerTabs({ activeTab, onTabChange }: PrayerTabsProps) {
             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
           />
         )}
-        <span className="relative z-10">Mes Prières</span>
+        <span className="relative z-10">{t("prayer_tabs_prayers")}</span>
       </button>
     </div>
   );

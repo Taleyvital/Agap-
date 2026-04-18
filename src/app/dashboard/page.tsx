@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { LEVELS, getLevelForXP, getNextLevel } from "@/lib/xp-shared";
+import { useLanguage } from "@/lib/i18n";
 
 // ── Types ────────────────────────────────────────────────────
 interface LevelRow {
@@ -23,17 +24,16 @@ interface XPRow {
   created_at: string;
 }
 
-// ── Action label / icon map ──────────────────────────────────
-const ACTION_META: Record<string, { label: string; Icon: React.ElementType }> = {
-  LECTURE_DAY_COMPLETED:    { label: "Jour de lecture complété",        Icon: BookOpen      },
-  PRAYER_TIMER_COMPLETED:   { label: "Session de prière terminée",      Icon: Timer         },
-  VERSE_ANNOTATED:          { label: "Verset annoté",                   Icon: Highlighter   },
-  COMMUNITY_POST_PUBLISHED: { label: "Publication dans la communauté",  Icon: MessageSquare },
-  COMMUNITY_AMEN_RECEIVED:  { label: "Amen reçu",                       Icon: Heart         },
-  PRAYER_ANSWERED_LOGGED:   { label: "Prière exaucée enregistrée",      Icon: Star          },
-  STREAK_7_DAYS:            { label: "Bonus – 7 jours de suite",        Icon: Zap           },
-  STREAK_30_DAYS:           { label: "Bonus – 30 jours de suite",       Icon: Flame         },
-  ONBOARDING_COMPLETED:     { label: "Profil complété",                 Icon: Check         },
+const ACTION_ICONS: Record<string, React.ElementType> = {
+  LECTURE_DAY_COMPLETED:    BookOpen,
+  PRAYER_TIMER_COMPLETED:   Timer,
+  VERSE_ANNOTATED:          Highlighter,
+  COMMUNITY_POST_PUBLISHED: MessageSquare,
+  COMMUNITY_AMEN_RECEIVED:  Heart,
+  PRAYER_ANSWERED_LOGGED:   Star,
+  STREAK_7_DAYS:            Zap,
+  STREAK_30_DAYS:           Flame,
+  ONBOARDING_COMPLETED:     Check,
 };
 
 function formatDateTime(iso: string) {
@@ -101,9 +101,22 @@ function TreeIllustration() {
 // ── Page ─────────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [levelRow, setLevelRow] = useState<LevelRow | null>(null);
   const [recentXP, setRecentXP] = useState<XPRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const ACTION_META: Record<string, { label: string; Icon: React.ElementType }> = {
+    LECTURE_DAY_COMPLETED:    { label: t("dashboard_action_lecture"),    Icon: ACTION_ICONS.LECTURE_DAY_COMPLETED },
+    PRAYER_TIMER_COMPLETED:   { label: t("dashboard_action_prayer"),     Icon: ACTION_ICONS.PRAYER_TIMER_COMPLETED },
+    VERSE_ANNOTATED:          { label: t("dashboard_action_verse"),      Icon: ACTION_ICONS.VERSE_ANNOTATED },
+    COMMUNITY_POST_PUBLISHED: { label: t("dashboard_action_community"),  Icon: ACTION_ICONS.COMMUNITY_POST_PUBLISHED },
+    COMMUNITY_AMEN_RECEIVED:  { label: t("dashboard_action_amen"),       Icon: ACTION_ICONS.COMMUNITY_AMEN_RECEIVED },
+    PRAYER_ANSWERED_LOGGED:   { label: t("dashboard_action_answered"),   Icon: ACTION_ICONS.PRAYER_ANSWERED_LOGGED },
+    STREAK_7_DAYS:            { label: t("dashboard_action_streak7"),    Icon: ACTION_ICONS.STREAK_7_DAYS },
+    STREAK_30_DAYS:           { label: t("dashboard_action_streak30"),   Icon: ACTION_ICONS.STREAK_30_DAYS },
+    ONBOARDING_COMPLETED:     { label: t("dashboard_action_onboarding"), Icon: ACTION_ICONS.ONBOARDING_COMPLETED },
+  };
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -159,10 +172,10 @@ export default function DashboardPage() {
         {/* ── Header ── */}
         <div className="px-4 pt-5 pb-0">
           <h1 className="font-serif font-normal text-text-primary leading-tight" style={{ fontSize: 26 }}>
-            Ma progression
+            {t("dashboard_title")}
           </h1>
           <p className="mt-1 font-sans text-text-secondary uppercase tracking-widest" style={{ fontSize: 11 }}>
-            Ton chemin spirituel
+            {t("dashboard_subtitle")}
           </p>
         </div>
 
@@ -194,11 +207,11 @@ export default function DashboardPage() {
 
           {nextLevelData ? (
             <p className="mt-2 font-sans text-accent uppercase tracking-widest" style={{ fontSize: 11 }}>
-              {xpToNext.toLocaleString("fr-FR")} XP pour atteindre {nextLevelData.name}
+              {t("dashboard_xp_to_next").replace("{xp}", xpToNext.toLocaleString()).replace("{name}", nextLevelData.name)}
             </p>
           ) : (
             <p className="mt-2 font-sans text-accent uppercase tracking-widest" style={{ fontSize: 11 }}>
-              Niveau maximum atteint
+              {t("dashboard_max_level")}
             </p>
           )}
         </motion.div>
@@ -206,10 +219,10 @@ export default function DashboardPage() {
         {/* ── 4 metric cards ── */}
         <div className="grid grid-cols-2 gap-3 px-4 mb-5">
           {[
-            { label: "XP Total", value: totalXP.toLocaleString("fr-FR") },
-            { label: "Niveau",   value: String(currentLevel) },
-            { label: "Streak",   value: `${levelRow?.current_streak ?? 0} jours` },
-            { label: "Record",   value: `${levelRow?.longest_streak ?? 0} jours` },
+            { label: t("dashboard_stat_xp"),     value: totalXP.toLocaleString() },
+            { label: t("dashboard_stat_level"),  value: String(currentLevel) },
+            { label: t("dashboard_stat_streak"), value: `${levelRow?.current_streak ?? 0} ${t("common_days")}` },
+            { label: t("dashboard_stat_record"), value: `${levelRow?.longest_streak ?? 0} ${t("common_days")}` },
           ].map((card, i) => (
             <motion.div
               key={card.label}
@@ -238,7 +251,7 @@ export default function DashboardPage() {
             className="mb-3 font-sans text-text-secondary uppercase"
             style={{ fontSize: 10, letterSpacing: "0.12em" }}
           >
-            Activité récente
+            {t("dashboard_recent")}
           </p>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -249,7 +262,7 @@ export default function DashboardPage() {
           >
             {recentXP.length === 0 ? (
               <p className="px-4 py-5 font-sans text-text-secondary" style={{ fontSize: 13 }}>
-                Aucune activité pour l&apos;instant. Commence par lire la Bible ou prier !
+                {t("dashboard_no_activity")}
               </p>
             ) : (
               <div>
@@ -290,7 +303,7 @@ export default function DashboardPage() {
             className="mb-3 font-sans text-text-secondary uppercase"
             style={{ fontSize: 10, letterSpacing: "0.12em" }}
           >
-            Ton chemin
+            {t("dashboard_path")}
           </p>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -341,12 +354,12 @@ export default function DashboardPage() {
                       className="font-sans text-accent font-semibold uppercase"
                       style={{ fontSize: 11, letterSpacing: "0.1em" }}
                     >
-                      Niveau actuel
+                      {t("dashboard_current_level")}
                     </p>
                   )}
                   {reached && !isCurrent && (
                     <p className="font-sans text-text-secondary" style={{ fontSize: 12 }}>
-                      Atteint
+                      {t("dashboard_reached")}
                     </p>
                   )}
                   {!reached && (

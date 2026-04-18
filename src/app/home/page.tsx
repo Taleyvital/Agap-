@@ -10,6 +10,7 @@ import { VerseImageCard } from "@/components/ui/VerseImageCard";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 // Collection de versets pour le verset journalier
 const DAILY_VERSES = [
@@ -80,6 +81,7 @@ export default function HomePage() {
   const [profile, setProfile] = useState<{ first_name: string | null; anonymous_name: string | null } | null>(null);
   const [isVerseModalOpen, setIsVerseModalOpen] = useState(false);
   const [dailyImage, setDailyImage] = useState<string | null>(null);
+  const { t } = useLanguage();
   
   // Get the daily verse
   const dailyVerse = getDailyVerse();
@@ -174,19 +176,18 @@ export default function HomePage() {
         <FadeUp delay={0.05}>
         <div className="mt-8">
           <Card>
-            <p className="ui-label text-text-tertiary">AGAPE CHAT</p>
+            <p className="ui-label text-text-tertiary">{t("home_chat_label")}</p>
             <p className="mt-2 font-serif text-lg font-bold text-text-primary">
-              Parler avec ton compagnon spirituel
+              {t("home_chat_title")}
             </p>
             <p className="mt-2 line-clamp-2 font-sans text-sm text-text-secondary">
-              Un verset, une écoute, une question pour avancer dans la foi — à
-              ton rythme.
+              {t("home_chat_desc")}
             </p>
             <Link
               href="/chat"
               className="mt-3 inline-block font-sans text-xs uppercase tracking-wider text-accent"
             >
-              OUVRIR LE CHAT →
+              {t("home_chat_cta")}
             </Link>
           </Card>
         </div>
@@ -195,18 +196,18 @@ export default function HomePage() {
         <FadeUp delay={0.07}>
         <div className="mt-6">
           <Card>
-            <p className="ui-label text-text-tertiary">COMMUNAUTÉ</p>
+            <p className="ui-label text-text-tertiary">{t("home_community_label")}</p>
             <p className="mt-2 font-serif text-lg font-bold text-text-primary">
-              Partage ta foi, prie avec d&apos;autres
+              {t("home_community_title")}
             </p>
             <p className="mt-2 line-clamp-2 font-sans text-sm text-text-secondary">
-              Connecte-toi avec la famille Agape. Partage tes réflexions, confie tes requêtes et lis les témoignages pour encourager et être encouragé.
+              {t("home_community_desc")}
             </p>
             <Link
               href="/community"
               className="mt-3 inline-block font-sans text-xs uppercase tracking-wider text-accent"
             >
-              REJOINDRE LA COMMUNAUTÉ →
+              {t("home_community_cta")}
             </Link>
           </Card>
         </div>
@@ -216,16 +217,16 @@ export default function HomePage() {
         <div className="mt-6">
           <Card>
             <p className="font-serif text-lg italic text-text-primary">
-              Difficile de prier ?
+              {t("home_prayer_title")}
             </p>
             <p className="mt-2 font-sans text-sm text-text-secondary">
-              Un rappel doux peut suffire à ramener ton cœur au silence.
+              {t("home_prayer_desc")}
             </p>
             <Link
               href="/prayer"
               className="mt-4 inline-flex rounded-3xl border border-separator px-6 py-3 font-sans text-xs uppercase tracking-wider text-text-secondary transition-colors hover:border-text-tertiary hover:text-text-primary"
             >
-              RAPPEL DE PRIÈRE
+              {t("home_prayer_cta")}
             </Link>
           </Card>
         </div>
@@ -234,7 +235,7 @@ export default function HomePage() {
         {/* Reading Plans Section */}
         <section className="mt-10">
           <div className="flex items-center justify-between">
-            <p className="ui-label text-text-tertiary">PLANS DE LECTURE</p>
+            <p className="ui-label text-text-tertiary">{t("home_plans_label")}</p>
           </div>
           <Link href="/reading-plan">
             <Card className="mt-4">
@@ -246,17 +247,17 @@ export default function HomePage() {
                   <div>
                     <div className="inline-flex items-center gap-2 mb-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#7B6FD4] animate-pulse" />
-                      <span className="text-[10px] uppercase tracking-widest text-[#7B6FD4]">Parcours personnalisé</span>
+                      <span className="text-[10px] uppercase tracking-widest text-[#7B6FD4]">{t("home_plans_badge")}</span>
                     </div>
                     <p className="font-serif text-lg italic text-white">
-                      Mon Plan de Lecture
+                      {t("home_plans_title")}
                     </p>
                     <p className="mt-1 font-sans text-sm text-white/80">
-                      Généré par l&apos;IA selon ton profil
+                      {t("home_plans_desc")}
                     </p>
                   </div>
                   <span className="font-sans text-xs uppercase tracking-wider text-white/60">
-                    Explorer les parcours →
+                    {t("home_plans_cta")}
                   </span>
                 </div>
               </div>

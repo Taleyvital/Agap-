@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Home, Users, Flame, User } from "lucide-react";
-
-const items = [
-  { href: "/home", label: "Accueil", Icon: Home },
-  { href: "/bible", label: "Bible", Icon: BookOpen },
-  { href: "/community", label: "Communauté", Icon: Users },
-  { href: "/prayer", label: "Prier", Icon: Flame },
-  { href: "/profile", label: "Profil", Icon: User },
-] as const;
+import { useLanguage } from "@/lib/i18n";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const items = [
+    { href: "/home", label: t("nav_home"), Icon: Home },
+    { href: "/bible", label: t("nav_bible"), Icon: BookOpen },
+    { href: "/community", label: t("nav_community"), Icon: Users },
+    { href: "/prayer", label: t("nav_pray"), Icon: Flame },
+    { href: "/profile", label: t("nav_profile"), Icon: User },
+  ] as const;
 
   return (
     <nav

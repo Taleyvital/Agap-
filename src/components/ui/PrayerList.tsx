@@ -6,9 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
 import { PrayerRequest } from "@/lib/types";
 import confetti from "canvas-confetti";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 
 export function PrayerList() {
   const { prayers, loading, addPrayer, markAsAnswered } = usePrayerRequests();
+  const { t } = useLanguage();
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [answerSheetOpen, setAnswerSheetOpen] = useState(false);
   const [selectedPrayer, setSelectedPrayer] = useState<PrayerRequest | null>(null);
@@ -31,7 +33,7 @@ export function PrayerList() {
       setNewNote("");
       setAddSheetOpen(false);
     } catch {
-      alert("Erreur lors de l'ajout");
+      alert(t("prayer_list_add_error"));
     }
   };
 
@@ -53,7 +55,7 @@ export function PrayerList() {
       });
       
     } catch {
-      alert("Erreur lors de la mise à jour");
+      alert(t("prayer_list_update_error"));
     }
   };
 
@@ -71,10 +73,10 @@ export function PrayerList() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif text-2xl italic text-text-primary">
-            Mes Sujets de Prière
+            {t("prayer_list_title")}
           </h2>
           <p className="mt-1 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
-            {activePrayers.length} prières • {answeredPrayers.length} exaucées
+            {activePrayers.length} • {answeredPrayers.length} {t("prayer_list_answered_section").toLowerCase()}
           </p>
         </div>
         <button
@@ -86,14 +88,14 @@ export function PrayerList() {
       </div>
 
       {prayers.length === 0 ? (
-        <EmptyState onAdd={() => setAddSheetOpen(true)} />
+        <EmptyState onAdd={() => setAddSheetOpen(true)} t={t} />
       ) : (
         <div className="mt-8 space-y-8">
           {/* Active Prayers */}
           {activePrayers.length > 0 && (
             <section>
               <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-text-tertiary">
-                En cours
+                {t("prayer_list_active_section")}
               </h3>
               <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence mode="popLayout">
@@ -120,7 +122,7 @@ export function PrayerList() {
                             </p>
                           )}
                           <p className="mt-3 text-[10px] uppercase tracking-wider text-text-tertiary">
-                            Depuis le {new Date(prayer.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                            {t("prayer_list_since")} {new Date(prayer.created_at).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
                           </p>
                         </div>
                       </div>
@@ -128,7 +130,7 @@ export function PrayerList() {
                         <div className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
                           <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">
-                            En prière
+                            {t("prayer_list_in_prayer")}
                           </span>
                         </div>
                         <button
@@ -140,7 +142,7 @@ export function PrayerList() {
                           className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-accent-light active:scale-95"
                         >
                           <Check className="h-3.5 w-3.5" />
-                          Exaucée
+                          {t("prayer_list_mark_answered")}
                         </button>
                       </div>
                     </motion.div>
@@ -154,7 +156,7 @@ export function PrayerList() {
           {answeredPrayers.length > 0 && (
             <section>
               <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-text-tertiary">
-                Exaucées 🎉
+                {t("prayer_list_answered_section")} 🎉
               </h3>
               <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence mode="popLayout">
@@ -181,7 +183,7 @@ export function PrayerList() {
                             </p>
                           )}
                           <p className="mt-3 text-[10px] uppercase tracking-wider text-green-600 font-semibold">
-                            Exaucée le {new Date(prayer.date_exaucement!).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                            {t("prayer_list_answered_on")} {new Date(prayer.date_exaucement!).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
                           </p>
                         </div>
                       </div>
@@ -189,7 +191,7 @@ export function PrayerList() {
                         <div className="flex items-center gap-2">
                           <span className="text-lg">🎉</span>
                           <span className="text-[10px] uppercase tracking-wider text-green-600 font-semibold">
-                            Dieu a répondu
+                            {t("prayer_list_god_answered")}
                           </span>
                         </div>
                       </div>
@@ -203,7 +205,7 @@ export function PrayerList() {
       )}
 
       {/* Bottom Sheets */}
-      <BottomSheets 
+      <BottomSheets
         addOpen={addSheetOpen}
         setAddOpen={setAddSheetOpen}
         answerOpen={answerSheetOpen}
@@ -218,28 +220,29 @@ export function PrayerList() {
         setShareCommunity={setShareCommunity}
         onAdd={handleAddPrayer}
         onAnswer={handleMarkAsAnswered}
+        t={t}
       />
     </div>
   );
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ onAdd, t }: { onAdd: () => void; t: (key: TranslationKey) => string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-bg-secondary text-4xl">
         <HandHeart className="h-10 w-10 text-accent" aria-hidden />
       </div>
       <h3 className="font-serif text-2xl italic text-text-primary">
-        Commence à noter tes prières
+        {t("prayer_empty_title")}
       </h3>
       <p className="mt-3 max-w-[240px] text-xs leading-relaxed text-text-tertiary">
-        Chaque prière exaucée est un témoignage de Sa fidélité
+        {t("prayer_empty_desc")}
       </p>
       <button
         onClick={onAdd}
         className="mt-8 rounded-full bg-accent px-8 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-transform active:scale-95"
       >
-        Première prière +
+        {t("prayer_empty_cta")}
       </button>
     </div>
   );
@@ -260,16 +263,17 @@ interface BottomSheetsProps {
   setShareCommunity: (val: boolean) => void;
   onAdd: (e: React.FormEvent) => Promise<void>;
   onAnswer: (e: React.FormEvent) => Promise<void>;
+  t: (key: TranslationKey) => string;
 }
 
-function BottomSheets({ 
-  addOpen, setAddOpen, 
+function BottomSheets({
+  addOpen, setAddOpen,
   answerOpen, setAnswerOpen,
   newTitle, setNewTitle,
   newNote, setNewNote,
   testimony, setTestimony,
   shareCommunity, setShareCommunity,
-  onAdd, onAnswer
+  onAdd, onAnswer, t
 }: BottomSheetsProps) {
   return (
     <>
@@ -298,9 +302,9 @@ function BottomSheets({
           >
              <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-bg-tertiary" />
              <p className="text-center text-[10px] font-bold uppercase tracking-[0.25em] text-text-tertiary mb-8">
-               Nouveau sujet de prière
+               {t("prayer_add_heading")}
              </p>
-             
+
              <form onSubmit={onAdd} className="space-y-6">
                <div className="space-y-2">
                  <input
@@ -309,7 +313,7 @@ function BottomSheets({
                    maxLength={100}
                    value={newTitle}
                    onChange={(e) => setNewTitle(e.target.value)}
-                   placeholder="Pour quoi veux-tu prier ?"
+                   placeholder={t("prayer_add_title_placeholder")}
                    className="w-full rounded-2xl bg-bg-tertiary p-5 font-serif text-lg text-text-primary placeholder:text-text-tertiary focus:outline-accent/30"
                  />
                  <div className="text-right text-[10px] text-text-tertiary">
@@ -323,7 +327,7 @@ function BottomSheets({
                    rows={3}
                    value={newNote}
                    onChange={(e) => setNewNote(e.target.value)}
-                   placeholder="Contexte ou détails (optionnel)..."
+                   placeholder={t("prayer_add_note_placeholder")}
                    className="w-full resize-none rounded-2xl bg-bg-tertiary p-5 font-sans text-sm text-text-primary placeholder:text-text-tertiary focus:outline-accent/30"
                  />
                  <div className="text-right text-[10px] text-text-tertiary">
@@ -335,7 +339,7 @@ function BottomSheets({
                  type="submit"
                  className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-4 font-bold uppercase tracking-[0.15em] text-white transition-opacity hover:opacity-90 active:scale-[0.98]"
                >
-                 Ajouter <HandHeart className="h-4 w-4" aria-hidden />
+                 {t("prayer_add_btn")} <HandHeart className="h-4 w-4" aria-hidden />
                </button>
              </form>
           </motion.div>
@@ -355,20 +359,20 @@ function BottomSheets({
              <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-bg-tertiary" />
              
              <div className="text-center space-y-2 mb-8">
-               <h2 className="font-serif text-2xl italic text-text-primary">🎉 Dieu a répondu !</h2>
-               <p className="text-xs text-text-tertiary">Prends un moment pour noter ce miracle</p>
+               <h2 className="font-serif text-2xl italic text-text-primary">🎉 {t("prayer_answer_title")}</h2>
+               <p className="text-xs text-text-tertiary">{t("prayer_answer_subtitle")}</p>
              </div>
 
              <div className="flex justify-center mb-8">
                 <span className="rounded-full bg-bg-tertiary px-4 py-1.5 text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
-                  Exaucée le {new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                  {t("prayer_list_answered_on")} {new Date().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
                 </span>
              </div>
              
              <form onSubmit={onAnswer} className="space-y-6">
                <div className="space-y-3">
                  <p className="text-[10px] font-bold uppercase tracking-widest text-text-tertiary">
-                   Comment Dieu a-t-il répondu ?
+                   {t("prayer_answer_how")}
                  </p>
                  <textarea
                    autoFocus
@@ -376,7 +380,7 @@ function BottomSheets({
                    rows={4}
                    value={testimony}
                    onChange={(e) => setTestimony(e.target.value)}
-                   placeholder="Raconte ce que Dieu a fait..."
+                   placeholder={t("prayer_answer_placeholder")}
                    className="w-full resize-none rounded-2xl bg-bg-tertiary p-5 font-serif text-base italic text-text-primary placeholder:text-text-tertiary focus:outline-accent/30"
                  />
                  <div className="text-right text-[10px] text-text-tertiary">
@@ -386,8 +390,8 @@ function BottomSheets({
 
                <div className="flex items-center justify-between rounded-2xl bg-bg-tertiary/50 p-4">
                  <div className="space-y-0.5">
-                   <p className="text-xs font-semibold text-text-primary">Partage anonyme</p>
-                   <p className="text-[10px] text-text-tertiary leading-tight pr-4">Publier le témoignage dans la Communauté</p>
+                   <p className="text-xs font-semibold text-text-primary">{t("prayer_answer_share_label")}</p>
+                   <p className="text-[10px] text-text-tertiary leading-tight pr-4">{t("prayer_answer_share_desc")}</p>
                  </div>
                  <button
                    type="button"
@@ -405,7 +409,7 @@ function BottomSheets({
                  type="submit"
                  className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-4 font-bold uppercase tracking-[0.15em] text-white shadow-lg shadow-accent/20 transition-opacity hover:opacity-90 active:scale-[0.98]"
                >
-                 Confirmer ✓
+                 {t("prayer_answer_confirm")} ✓
                </button>
              </form>
           </motion.div>

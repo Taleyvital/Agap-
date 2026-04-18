@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { X, Share2, CheckCircle } from "lucide-react";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
+import { useLanguage } from "@/lib/i18n";
 
 interface Question {
   id: number;
@@ -55,6 +56,7 @@ const mockDayReading: DayReading = {
 export default function DayReadingPage() {
   const router = useRouter();
   const { showXPToast } = useXPToast();
+  const { t } = useLanguage();
   const [dayReading] = useState<DayReading>(mockDayReading);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isCompleted, setIsCompleted] = useState(false);
@@ -109,7 +111,7 @@ export default function DayReadingPage() {
       <header className="fixed top-0 w-full z-50 bg-[#141414]/80 backdrop-blur-xl h-16 flex items-center justify-between px-6">
         <div className="flex flex-col">
           <span className="font-sans uppercase tracking-[0.15em] text-[10px] text-[#7B6FD4] font-bold">
-            JOUR {dayReading.dayNumber} • {dayReading.totalDays}
+            {t("rplan_day_label")} {dayReading.dayNumber} • {dayReading.totalDays}
           </span>
           <h1 className="font-serif italic text-lg tracking-tight text-[#E8E8E8]">
             {dayReading.title}
@@ -132,7 +134,7 @@ export default function DayReadingPage() {
           className="mb-8"
         >
           <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
-            LECTURE BIBLIQUE
+            {t("rplan_bible_reading")}
           </span>
           <h2 className="text-[#666666] mt-1 font-sans font-medium">
             {dayReading.scripture.reference}
@@ -156,7 +158,7 @@ export default function DayReadingPage() {
             {dayReading.scripture.reference}
           </span>
           <p className="mt-3 font-sans text-[10px] text-[#444444] uppercase tracking-widest">
-            Appui long pour afficher la carte
+            {t("rplan_long_press")}
           </p>
         </motion.section>
 
@@ -169,7 +171,7 @@ export default function DayReadingPage() {
         >
           <header className="mb-4">
             <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
-              MÉDITATION DU JOUR
+              {t("rplan_meditation")}
             </span>
           </header>
           <div className="space-y-6 text-[#c9c4d4] leading-relaxed font-sans font-light text-[15px]">
@@ -188,7 +190,7 @@ export default function DayReadingPage() {
         >
           <header className="mb-6">
             <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
-              QUESTIONS DE DISCERNEMENT
+              {t("rplan_questions")}
             </span>
           </header>
           <div className="space-y-4">
@@ -203,8 +205,8 @@ export default function DayReadingPage() {
                   className="w-full bg-[#141414] border-none rounded-lg text-sm text-[#E8E8E8] placeholder-[#474552] focus:ring-1 focus:ring-[#7B6FD4] min-h-[100px] resize-none p-4"
                   placeholder={
                     question.id === 1
-                      ? "Écrivez vos pensées ici..."
-                      : "Réflexion personnelle..."
+                      ? t("rplan_write_thoughts")
+                      : t("rplan_personal_reflection")
                   }
                 />
               </div>
@@ -237,7 +239,7 @@ export default function DayReadingPage() {
             className="flex-1 bg-[#1c1c1c] text-[#E8E8E8] font-sans uppercase tracking-[0.15em] text-[11px] py-4 rounded-full flex items-center justify-center gap-2 hover:bg-[#252525] transition-all active:scale-95"
           >
             <Share2 className="w-4 h-4" />
-            Partager
+            {t("rplan_share")}
           </button>
           <button
             onClick={handleComplete}
@@ -246,12 +248,12 @@ export default function DayReadingPage() {
           >
             {isCompleted ? (
               <>
-                Complété
+                {t("rplan_completed")}
                 <CheckCircle className="w-4 h-4" />
               </>
             ) : (
               <>
-                Terminer le jour
+                {t("rplan_finish_day")}
                 <CheckCircle className="w-4 h-4" />
               </>
             )}

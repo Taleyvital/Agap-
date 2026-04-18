@@ -17,9 +17,17 @@ import type { BibleBook, BibleVerseRow } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
+import { useLanguage } from "@/lib/i18n";
 
 // Livres de l'Ancien Testament (bookid 1–39) et Nouveau Testament (40–66)
 const AT_MAX_ID = 39;
+
+const FONT_OPTIONS = [
+  { value: "var(--font-serif)", labelKey: "font_classic" as const },
+  { value: "Georgia, serif", labelKey: "font_georgia" as const },
+  { value: "var(--font-sans)", labelKey: "font_modern" as const },
+  { value: "'Times New Roman', serif", labelKey: "font_times" as const },
+];
 
 type ViewMode = "books" | "chapters" | "verses";
 
@@ -29,6 +37,7 @@ function stripHtml(html: string) {
 
 function BiblePageContent() {
   const { showXPToast } = useXPToast();
+  const { t } = useLanguage();
 
   // ── State ──────────────────────────────────
   const [books, setBooks] = useState<BibleBook[]>([]);
@@ -48,6 +57,8 @@ function BiblePageContent() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [fontSize, setFontSize] = useState(16);
   const [verseBold, setVerseBold] = useState(false);
+  const [fontFamily, setFontFamily] = useState("var(--font-serif)");
+  const [letterSpacing, setLetterSpacing] = useState(0);
   const settingsRef = useRef<HTMLDivElement>(null);
 
   const [verseNotes, setVerseNotes] = useState<Record<string, string>>({});
@@ -122,12 +133,14 @@ function BiblePageContent() {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("verse_font_size, verse_bold, preferred_translation")
+        .select("verse_font_size, verse_bold, verse_font_family, verse_letter_spacing, preferred_translation")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         if (data.verse_font_size) setFontSize(data.verse_font_size);
         if (data.verse_bold !== null) setVerseBold(data.verse_bold);
+        if (data.verse_font_family) setFontFamily(data.verse_font_family);
+        if (data.verse_letter_spacing !== null) setLetterSpacing(Number(data.verse_letter_spacing));
         if (data.preferred_translation && TRANSLATION_OPTIONS.some((t) => t.slug === data.preferred_translation)) {
           setTranslation(data.preferred_translation);
         }
@@ -144,10 +157,10 @@ function BiblePageContent() {
       if (!user) return;
       await supabase
         .from("profiles")
-        .update({ verse_font_size: fontSize, verse_bold: verseBold })
+        .update({ verse_font_size: fontSize, verse_bold: verseBold, verse_font_family: fontFamily, verse_letter_spacing: letterSpacing })
         .eq("id", user.id);
     })();
-  }, [fontSize, verseBold]);
+  }, [fontSize, verseBold, fontFamily, letterSpacing]);
 
   // ── Save preferred_translation (skip initial load) ───────────────────────
   useEffect(() => {
@@ -516,11 +529,11 @@ function BiblePageContent() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -6 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 top-11 z-50 w-56 rounded-2xl border border-separator bg-bg-secondary/95 backdrop-blur-xl p-4 shadow-xl shadow-black/40"
+                    className="absolute right-0 top-11 z-50 w-64 rounded-2xl border border-separator bg-bg-secondary/95 backdrop-blur-xl p-4 shadow-xl shadow-black/40"
                   >
                     {/* Font size */}
                     <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary mb-2">
-                      Taille du texte
+                      {t("bible_settings_size")}
                     </p>
                     <div className="flex items-center gap-3">
                       <span className="font-serif text-xs text-text-tertiary select-none">A</span>
@@ -541,11 +554,52 @@ function BiblePageContent() {
                         A
                       </span>
                     </div>
-                    <p className="mt-1.5 text-center font-sans text-[10px] text-text-tertiary">{fontSize}px</p>
+                    <p className="mt-1 text-center font-sans text-[10px] text-text-tertiary">{fontSize}px</p>
+
+                    {/* Font family */}
+                    <p className="mt-4 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary mb-2">
+                      {t("bible_settings_font")}
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {FONT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setFontFamily(opt.value)}
+                          className={`rounded-xl border px-3 py-2.5 text-sm transition-all ${
+                            fontFamily === opt.value
+                              ? "border-accent bg-accent/10 text-accent"
+                              : "border-separator bg-bg-tertiary text-text-secondary hover:text-text-primary"
+                          }`}
+                          style={{ fontFamily: opt.value }}
+                        >
+                          {t(opt.labelKey)}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Letter spacing */}
+                    <p className="mt-4 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary mb-2">
+                      {t("bible_settings_spacing")}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <span className="font-sans text-xs text-text-tertiary select-none" style={{ letterSpacing: "0em" }}>Aa</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={0.12}
+                        step={0.02}
+                        value={letterSpacing}
+                        onChange={(e) => setLetterSpacing(Number(e.target.value))}
+                        className="flex-1 h-1 appearance-none rounded-full bg-bg-tertiary accent-accent cursor-pointer"
+                        aria-label="Espacement des lettres"
+                      />
+                      <span className="font-sans text-xs text-text-tertiary select-none" style={{ letterSpacing: "0.12em" }}>Aa</span>
+                    </div>
 
                     {/* Bold toggle */}
                     <div className="mt-4 flex items-center justify-between rounded-xl border border-separator bg-bg-tertiary px-4 py-3">
-                      <span className="font-sans text-xs text-text-primary">Texte en gras</span>
+                      <span className="font-sans text-xs text-text-primary">{t("bible_settings_bold")}</span>
                       <button
                         type="button"
                         onClick={() => setVerseBold(!verseBold)}
@@ -900,8 +954,8 @@ function BiblePageContent() {
                                   )}
                                 </span>
                                 <span
-                                  className={`font-serif text-text-primary ${verseBold ? "font-bold" : ""}`}
-                                  style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
+                                  className={`text-text-primary ${verseBold ? "font-bold" : ""}`}
+                                  style={{ fontSize: `${fontSize}px`, lineHeight: 1.85, fontFamily, letterSpacing: `${letterSpacing}em` }}
                                 >
                                   {stripHtml(row.text)}
                                 </span>

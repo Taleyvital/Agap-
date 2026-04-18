@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
 
 interface ReadingPathway {
   id: string;
@@ -49,6 +50,7 @@ const thematicPathways: ReadingPathway[] = [
 
 export default function ReadingPlanPage() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -78,10 +80,10 @@ export default function ReadingPlanPage() {
             transition={{ duration: 0.5 }}
           >
             <h1 className="font-serif text-[22px] italic text-text-primary mb-1">
-              Parcours de lecture
+              {t("rplan_title")}
             </h1>
             <p className="font-sans text-[15px] text-text-secondary">
-              Chemins vers la Parole
+              {t("rplan_subtitle")}
             </p>
           </motion.div>
 
@@ -95,7 +97,7 @@ export default function ReadingPlanPage() {
             <div className="inline-flex items-center gap-3 bg-[#7B6FD4]/10 border border-[#7B6FD4]/20 rounded-full px-4 py-2.5">
               <div className="w-2 h-2 rounded-full bg-[#7B6FD4] animate-pulse" />
               <span className="font-sans text-[12px] uppercase tracking-widest text-[#7B6FD4] font-medium">
-                Parcours personnalisé disponible pour toi
+                {t("rplan_personalized_badge")}
               </span>
             </div>
           </motion.div>
@@ -110,7 +112,7 @@ export default function ReadingPlanPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-sans text-[11px] uppercase tracking-[0.2em] text-text-tertiary font-bold">
-                Généré par l&apos;IA • Pour toi
+                {t("rplan_ai_label")}
               </h3>
             </div>
 
@@ -123,7 +125,7 @@ export default function ReadingPlanPage() {
                 <div className="inline-flex items-center gap-2 mb-4">
                   <Sparkles className="w-3 h-3 text-[#7B6FD4]" />
                   <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#7B6FD4]">
-                    Basé sur ton profil spirituel
+                    {t("rplan_ai_based_on")}
                   </span>
                 </div>
 
@@ -137,7 +139,7 @@ export default function ReadingPlanPage() {
                 </p>
 
                 <button className="inline-flex items-center gap-2 font-sans text-sm uppercase tracking-widest text-[#7B6FD4] hover:text-[#9B8FF4] transition-colors group">
-                  Commencer
+                  {t("rplan_start_btn")}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
@@ -158,10 +160,10 @@ export default function ReadingPlanPage() {
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-sans text-[11px] uppercase tracking-[0.2em] text-text-tertiary font-bold">
-                Parcours thématiques
+                {t("rplan_thematic_section")}
               </h3>
               <button className="font-sans text-[10px] uppercase tracking-widest text-text-tertiary hover:text-text-primary transition-colors">
-                Voir tout
+                {t("rplan_see_all")}
               </button>
             </div>
 

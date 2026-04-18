@@ -28,6 +28,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import Image from "next/image";
 import { useRef } from "react";
+import { useLanguage, LANGUAGE_OPTIONS, type AppLanguage } from "@/lib/i18n";
 
 interface Profile {
   first_name: string | null;
@@ -36,29 +37,18 @@ interface Profile {
   avatar_url: string | null;
   verse_font_size: number | null;
   verse_bold: boolean | null;
+  verse_font_family: string | null;
+  verse_letter_spacing: number | null;
+  app_language: string | null;
 }
 
-
-const MENU_SECTIONS = [
-  {
-    title: "Mes contenus",
-    items: [
-      { href: "/dashboard", label: "Ma progression", Icon: Zap },
-      { href: "/profile/posts", label: "Mes Publications", Icon: FileText },
-      { href: "/profile/saved-verses", label: "Versets sauvegardés", Icon: BookOpen },
-      { href: "/profile/chat-history", label: "Historique AGAPE Chat", Icon: MessageCircle },
-      { href: "/profile/prayer-journal", label: "Journal de prière", Icon: Flame },
-    ],
-  },
-  {
-    title: "Préférences",
-    items: [
-      { href: "/home", label: "Notifications", Icon: Bell },
-      { href: "/home", label: "Confidentialité", Icon: Shield },
-      { href: "/home", label: "Aide & Support", Icon: HelpCircle },
-    ],
-  },
+const FONT_OPTIONS = [
+  { value: "var(--font-serif)", label: "Classique" },
+  { value: "Georgia, serif", label: "Georgia" },
+  { value: "var(--font-sans)", label: "Moderne" },
+  { value: "'Times New Roman', serif", label: "Times" },
 ];
+
 
 function stagger(i: number) {
   return { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { delay: i * 0.06, duration: 0.3 } };
@@ -76,8 +66,32 @@ export default function ProfilePage() {
   const [themeSheetOpen, setThemeSheetOpen] = useState(false);
   const [verseFontSize, setVerseFontSize] = useState(16);
   const [verseBold, setVerseBold] = useState(false);
+  const [verseFontFamily, setVerseFontFamily] = useState("var(--font-serif)");
+  const [verseLetterSpacing, setVerseLetterSpacing] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
+
+  const MENU_SECTIONS = [
+    {
+      title: t("profile_section_contents"),
+      items: [
+        { href: "/dashboard", label: t("profile_item_progress"), Icon: Zap },
+        { href: "/profile/posts", label: t("profile_item_posts"), Icon: FileText },
+        { href: "/profile/saved-verses", label: t("profile_item_saved_verses"), Icon: BookOpen },
+        { href: "/profile/chat-history", label: t("profile_item_chat_history"), Icon: MessageCircle },
+        { href: "/profile/prayer-journal", label: t("profile_item_prayer_journal"), Icon: Flame },
+      ],
+    },
+    {
+      title: t("profile_section_preferences"),
+      items: [
+        { href: "/home", label: t("profile_item_notifications"), Icon: Bell },
+        { href: "/home", label: t("profile_item_privacy"), Icon: Shield },
+        { href: "/home", label: t("profile_item_help"), Icon: HelpCircle },
+      ],
+    },
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -91,7 +105,7 @@ export default function ProfilePage() {
       setUser(user);
       const { data } = await supabase
         .from("profiles")
-        .select("first_name, anonymous_name, created_at, avatar_url, verse_font_size, verse_bold")
+        .select("first_name, anonymous_name, created_at, avatar_url, verse_font_size, verse_bold, verse_font_family, verse_letter_spacing, app_language")
         .eq("id", user.id)
         .single();
       if (data) {
@@ -99,6 +113,9 @@ export default function ProfilePage() {
         setInitial((data.first_name ?? data.anonymous_name ?? "A").charAt(0).toUpperCase());
         setVerseFontSize(data.verse_font_size ?? 16);
         setVerseBold(data.verse_bold ?? false);
+        if (data.verse_font_family) setVerseFontFamily(data.verse_font_family);
+        if (data.verse_letter_spacing !== null) setVerseLetterSpacing(Number(data.verse_letter_spacing));
+        if (data.app_language) setLanguage(data.app_language as AppLanguage);
         if (data.created_at) {
           setSince(
             new Date(data.created_at).toLocaleDateString("fr-FR", {
@@ -178,17 +195,29 @@ export default function ProfilePage() {
         .update({
           verse_font_size: verseFontSize,
           verse_bold: verseBold,
+          verse_font_family: verseFontFamily,
+          verse_letter_spacing: verseLetterSpacing,
         })
         .eq("id", user.id);
     } catch (error) {
       console.error("Error saving verse settings:", error);
     }
-  }, [supabase, user, verseFontSize, verseBold]);
+  }, [supabase, user, verseFontSize, verseBold, verseFontFamily, verseLetterSpacing]);
+
+  const saveLanguage = useCallback(async (lang: AppLanguage) => {
+    if (!user) return;
+    setLanguage(lang);
+    try {
+      await supabase.from("profiles").update({ app_language: lang }).eq("id", user.id);
+    } catch (error) {
+      console.error("Error saving language:", error);
+    }
+  }, [supabase, user, setLanguage]);
 
   useEffect(() => {
     saveVerseSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [verseFontSize, verseBold]);
+  }, [verseFontSize, verseBold, verseFontFamily, verseLetterSpacing]);
 
   return (
     <AppShell>
@@ -197,7 +226,7 @@ export default function ProfilePage() {
         {/* ── Header ────────────────────────────────── */}
         <header className="flex items-center justify-between">
           <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-text-tertiary">
-            Profil
+            {t("profile_title")}
           </p>
           <button
             type="button"
@@ -281,7 +310,7 @@ export default function ProfilePage() {
           {/* Since */}
           {since && (
             <p className="mt-1 font-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-              Membre depuis {since}
+              {t("profile_member_since")} {since}
             </p>
           )}
         </motion.div>
@@ -290,9 +319,9 @@ export default function ProfilePage() {
         <motion.div {...stagger(1)} className="mt-8 flex flex-col gap-4">
           <div className="flex divide-x divide-separator overflow-hidden rounded-2xl border border-separator bg-bg-secondary">
             {[
-              { value: "12", label: "Jours consécutifs" },
-              { value: "156", label: "Versets lus" },
-              { value: answeredCount.toString(), label: "Prières exaucées" },
+              { value: "12", label: t("profile_stat_streak") },
+              { value: "156", label: t("profile_stat_verses") },
+              { value: answeredCount.toString(), label: t("profile_stat_prayers") },
             ].map((s) => (
               <div key={s.label} className="flex flex-1 flex-col items-center py-4">
                 <span className="font-serif text-2xl font-semibold text-text-primary">
@@ -305,12 +334,12 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
-          
-          <Link 
-            href="/prayer" 
+
+          <Link
+            href="/prayer"
             className="flex items-center justify-center gap-2 rounded-xl bg-bg-secondary/50 py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-accent hover:bg-bg-tertiary transition-colors"
           >
-            PRAYER HISTORY <ChevronRight size={12} />
+            {t("profile_prayer_history")} <ChevronRight size={12} />
           </Link>
         </motion.div>
 
@@ -319,13 +348,13 @@ export default function ProfilePage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
-                Parcours de lecture
+                {t("profile_reading_plan")}
               </p>
               <p className="mt-1 font-serif text-lg italic text-text-primary">
-                Nouveau Testament
+                {t("profile_reading_plan_name")}
               </p>
               <p className="mt-0.5 font-sans text-xs text-text-secondary">
-                Actuellement dans Éphésiens 4
+                {t("profile_reading_plan_current")}
               </p>
             </div>
             <span className="font-serif text-3xl text-accent">64%</span>
@@ -342,7 +371,7 @@ export default function ProfilePage() {
             href="/bible"
             className="mt-4 inline-block font-sans text-xs uppercase tracking-wider text-accent"
           >
-            Reprendre la lecture →
+            {t("profile_reading_resume")} →
           </Link>
         </motion.div>
 
@@ -378,7 +407,7 @@ export default function ProfilePage() {
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-danger/20 bg-danger/5 py-3.5 font-sans text-sm text-danger/80 transition-colors hover:bg-danger/10 hover:text-danger"
           >
             <LogOut className="h-4 w-4" />
-            Déconnexion
+            {t("profile_sign_out")}
           </button>
         </motion.div>
 
@@ -405,15 +434,16 @@ export default function ProfilePage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 26, stiffness: 260 }}
-              className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary p-6 shadow-2xl"
+              className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary p-6 shadow-2xl overflow-y-auto"
+              style={{ maxHeight: "90vh" }}
             >
-              <div className="mb-8 flex items-center justify-between">
-                <h2 className="font-serif text-xl italic text-text-primary">Paramètres</h2>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="font-serif text-xl italic text-text-primary">{t("settings_title")}</h2>
                 <button
                   type="button"
                   onClick={() => setThemeSheetOpen(false)}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors"
-                  aria-label="Fermer"
+                  aria-label={t("close")}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
@@ -421,15 +451,15 @@ export default function ProfilePage() {
 
               {/* Theme section */}
               <div>
-                <p className="mb-4 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
-                  Apparence
+                <p className="mb-3 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
+                  {t("settings_appearance")}
                 </p>
                 <div className="flex gap-3">
                   {[
-                    { id: "light", label: "Clair", Icon: Sun },
-                    { id: "dark", label: "Sombre", Icon: Moon },
-                    { id: "system", label: "Système", Icon: Monitor },
-                  ].map(({ id, label, Icon }) => {
+                    { id: "light", labelKey: "settings_theme_light" as const, Icon: Sun },
+                    { id: "dark", labelKey: "settings_theme_dark" as const, Icon: Moon },
+                    { id: "system", labelKey: "settings_theme_system" as const, Icon: Monitor },
+                  ].map(({ id, labelKey, Icon }) => {
                     const active = mounted && theme === id;
                     return (
                       <button
@@ -444,7 +474,7 @@ export default function ProfilePage() {
                       >
                         <Icon className="h-5 w-5" />
                         <span className="font-sans text-[10px] font-medium uppercase tracking-wider">
-                          {label}
+                          {t(labelKey)}
                         </span>
                       </button>
                     );
@@ -452,15 +482,43 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Language section */}
+              <div className="mt-6">
+                <p className="mb-3 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
+                  {t("settings_language")}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {LANGUAGE_OPTIONS.map((opt) => {
+                    const active = language === opt.code;
+                    return (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        onClick={() => void saveLanguage(opt.code)}
+                        className={`flex items-center gap-2.5 rounded-xl border px-3 py-3 transition-all ${
+                          active
+                            ? "border-accent bg-accent/10 text-accent"
+                            : "border-separator bg-bg-tertiary text-text-secondary hover:text-text-primary"
+                        }`}
+                      >
+                        <span className="text-base leading-none">{opt.flag}</span>
+                        <span className="font-sans text-xs font-medium">{opt.label}</span>
+                        {active && <Check className="ml-auto h-3.5 w-3.5 text-accent shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Verse reading settings */}
-              <div className="mt-8">
-                <p className="mb-4 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
-                  Lecture des versets
+              <div className="mt-6">
+                <p className="mb-3 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
+                  {t("settings_verse_reading")}
                 </p>
 
                 {/* Font size */}
                 <div className="mb-4">
-                  <p className="mb-2 font-sans text-xs text-text-secondary">Taille de police</p>
+                  <p className="mb-2 font-sans text-xs text-text-secondary">{t("settings_font_size")}</p>
                   <div className="flex items-center gap-3">
                     <span className="font-serif text-xs text-text-tertiary select-none">A</span>
                     <input
@@ -485,9 +543,53 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
+                {/* Font family */}
+                <div className="mb-4">
+                  <p className="mb-2 font-sans text-xs text-text-secondary">{t("settings_font_family")}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {FONT_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setVerseFontFamily(opt.value)}
+                        className={`rounded-xl border px-3 py-2.5 text-sm transition-all ${
+                          verseFontFamily === opt.value
+                            ? "border-accent bg-accent/10 text-accent"
+                            : "border-separator bg-bg-tertiary text-text-secondary hover:text-text-primary"
+                        }`}
+                        style={{ fontFamily: opt.value }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Letter spacing */}
+                <div className="mb-4">
+                  <p className="mb-2 font-sans text-xs text-text-secondary">{t("settings_letter_spacing")}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="font-sans text-xs text-text-tertiary select-none" style={{ letterSpacing: "0em" }}>Aa</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={0.12}
+                      step={0.02}
+                      value={verseLetterSpacing}
+                      onChange={(e) => setVerseLetterSpacing(Number(e.target.value))}
+                      className="flex-1 h-1 appearance-none rounded-full bg-bg-tertiary accent-accent cursor-pointer"
+                      aria-label="Espacement des lettres"
+                    />
+                    <span className="font-sans text-xs text-text-tertiary select-none" style={{ letterSpacing: "0.12em" }}>Aa</span>
+                  </div>
+                  <p className="mt-1 text-center font-sans text-[10px] text-text-tertiary">
+                    {verseLetterSpacing === 0 ? t("spacing_tight") : verseLetterSpacing <= 0.04 ? t("spacing_normal") : verseLetterSpacing <= 0.08 ? t("spacing_wide") : t("spacing_wider")}
+                  </p>
+                </div>
+
                 {/* Bold toggle */}
                 <div className="flex items-center justify-between rounded-xl border border-separator bg-bg-tertiary px-4 py-3">
-                  <span className="font-sans text-sm text-text-primary">Texte en gras</span>
+                  <span className="font-sans text-sm text-text-primary">{t("settings_bold")}</span>
                   <button
                     type="button"
                     onClick={() => setVerseBold(!verseBold)}
