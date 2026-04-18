@@ -1,0 +1,886 @@
+[
+  {
+    "key": "epee",
+    "names": {
+      "fr": ["épée", "épées", "glaive", "glaives", "sabre"],
+      "en": ["sword", "swords", "blade", "blades"],
+      "pt": ["espada", "espadas", "gládio"],
+      "es": ["espada", "espadas", "gladio"]
+    },
+    "category": "weapon",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Mainz_type_gladius.jpg",
+    "description": {
+      "fr": "Arme à lame en fer forgé à double tranchant, longue d'environ 60 cm. L'épée romaine (gladius) était courte pour le combat rapproché. Aujourd'hui conservées dans de nombreux musées archéologiques, ces lames témoignent d'un artisanat métallurgique avancé.",
+      "en": "A double-edged forged iron blade about 60 cm long. The Roman gladius was short for close combat. Preserved in many archaeological museums today, these blades testify to advanced metalworking.",
+      "pt": "Uma lâmina de ferro forjado de dois gumes com cerca de 60 cm de comprimento. O gladius romano era curto para combate corpo a corpo. Preservado em muitos museus arqueológicos hoje.",
+      "es": "Una hoja de hierro forjado de doble filo de unos 60 cm de longitud. El gladius romano era corto para el combate cuerpo a cuerpo. Conservado en muchos museos arqueológicos hoy."
+    }
+  },
+  {
+    "key": "lance",
+    "names": {
+      "fr": ["lance", "lances", "javelot", "javelots", "pique", "piques"],
+      "en": ["spear", "spears", "javelin", "javelins", "pike"],
+      "pt": ["lança", "lanças", "dardo"],
+      "es": ["lanza", "lanzas", "dardo", "dardos"]
+    },
+    "category": "weapon",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Spear-type_weapon.jpg",
+    "description": {
+      "fr": "La lance était l'arme la plus répandue dans l'Antiquité : une longue hampe en bois surmontée d'une pointe en bronze ou en fer. Les soldats romains utilisaient le pilum, une lance lourde à pointe de fer conçue pour se tordre à l'impact.",
+      "en": "The spear was the most common weapon in antiquity: a long wooden shaft topped with a bronze or iron tip. Roman soldiers used the pilum, a heavy iron-tipped spear designed to bend on impact.",
+      "pt": "A lança era a arma mais comum na antiguidade: um longo cabo de madeira com uma ponta de bronze ou ferro. Os soldados romanos usavam o pilum.",
+      "es": "La lanza era el arma más común en la antigüedad: un largo mástil de madera con una punta de bronce o hierro. Los soldados romanos usaban el pilum."
+    }
+  },
+  {
+    "key": "arc",
+    "names": {
+      "fr": ["arc", "arcs", "archer", "archers"],
+      "en": ["bow", "bows", "archer", "archers"],
+      "pt": ["arco", "arcos", "arqueiro"],
+      "es": ["arco", "arcos", "arquero"]
+    },
+    "category": "weapon",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Composite_recurve_bow.jpg",
+    "description": {
+      "fr": "L'arc composite utilisé dans le Proche-Orient ancien était fabriqué à partir d'os, de bois et de tendons collés ensemble, ce qui le rendait beaucoup plus puissant qu'un arc simple. Les Éthiopiens et les Perses étaient renommés pour leurs archers.",
+      "en": "The composite bow used in the ancient Near East was made from bone, wood, and sinew glued together, making it far more powerful than a simple bow. Ethiopians and Persians were renowned for their archers.",
+      "pt": "O arco composto usado no antigo Oriente Próximo era feito de osso, madeira e tendões colados, tornando-o muito mais poderoso que um arco simples.",
+      "es": "El arco compuesto usado en el antiguo Oriente Próximo estaba hecho de hueso, madera y tendones pegados, haciéndolo mucho más poderoso que un arco simple."
+    }
+  },
+  {
+    "key": "bouclier",
+    "names": {
+      "fr": ["bouclier", "boucliers", "écu"],
+      "en": ["shield", "shields", "buckler"],
+      "pt": ["escudo", "escudos"],
+      "es": ["escudo", "escudos"]
+    },
+    "category": "weapon",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Scutum_of_shield.jpg",
+    "description": {
+      "fr": "Le bouclier romain (scutum) était un grand bouclier rectangulaire courbe en bois recouvert de cuir. Les boucliers hébreux étaient plus petits et ronds (magen). L'expression 'bouclier de la foi' (Éphésiens 6) reflète cette réalité militaire.",
+      "en": "The Roman shield (scutum) was a large curved rectangular shield of wood covered with leather. Hebrew shields were smaller and round (magen). The phrase 'shield of faith' (Ephesians 6) reflects this military reality.",
+      "pt": "O escudo romano (scutum) era um grande escudo retangular curvo de madeira coberto de couro.",
+      "es": "El escudo romano (scutum) era un gran escudo rectangular curvo de madera cubierto de cuero."
+    }
+  },
+  {
+    "key": "armure",
+    "names": {
+      "fr": ["armure", "armures", "cuirasse", "cuirasses", "cotte de mailles"],
+      "en": ["armor", "armour", "breastplate", "coat of mail"],
+      "pt": ["armadura", "armaduras", "couraça"],
+      "es": ["armadura", "armaduras", "coraza"]
+    },
+    "category": "weapon",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Lorica_segmentata_Newstead.jpg",
+    "description": {
+      "fr": "La lorica segmentata était l'armure romaine en plaques de fer articulées. La cotte de mailles (lorica hamata), faite d'anneaux de métal entrelacés, était plus ancienne et plus répandue dans le monde biblique. Saul en revêtit David avant son combat contre Goliath.",
+      "en": "The lorica segmentata was Roman plate armor of articulated iron plates. Chain mail (lorica hamata), made of interlocking metal rings, was older and more common in the biblical world. Saul dressed David in it before his fight against Goliath.",
+      "pt": "A lorica segmentata era a armadura romana de placas de ferro articuladas. A cota de malha era mais antiga e comum no mundo bíblico.",
+      "es": "La lorica segmentata era la armadura romana de placas de hierro articuladas. La cota de malla era más antigua y común en el mundo bíblico."
+    }
+  },
+  {
+    "key": "lampe",
+    "names": {
+      "fr": ["lampe", "lampes", "flambeau", "flambeaux", "chandelier", "torche"],
+      "en": ["lamp", "lamps", "torch", "torches", "candle", "lampstand"],
+      "pt": ["lâmpada", "lâmpadas", "tocha", "candelabro"],
+      "es": ["lámpara", "lámparas", "antorcha", "candelabro"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Oil_lamps_JNR.jpg",
+    "description": {
+      "fr": "Les lampes à huile de l'époque biblique étaient de petits récipients en argile remplis d'huile d'olive avec une mèche en lin. Elles produisaient une lumière faible mais suffisante pour éclairer une pièce. La parabole des dix vierges met en scène ces lampes portatives.",
+      "en": "Oil lamps of the biblical era were small clay containers filled with olive oil with a linen wick. They produced a faint but sufficient light to illuminate a room. The parable of the ten virgins features these portable lamps.",
+      "pt": "As lâmpadas de azeite da era bíblica eram pequenos recipientes de argila cheios de azeite de oliva com um pavio de linho.",
+      "es": "Las lámparas de aceite de la era bíblica eran pequeños recipientes de arcilla llenos de aceite de oliva con una mecha de lino."
+    }
+  },
+  {
+    "key": "meule",
+    "names": {
+      "fr": ["meule", "meules", "moulin"],
+      "en": ["millstone", "millstones", "mill"],
+      "pt": ["pedra de moinho", "mó"],
+      "es": ["piedra de molino", "muela"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Millstone_in_Capernaum.jpg",
+    "description": {
+      "fr": "La meule de Capharnaüm (Ier siècle) était un lourd disque de basalte noir utilisé pour moudre le grain. Les femmes passaient plusieurs heures chaque jour à moudre du blé ou de l'orge. Jésus y fait référence dans Matthieu 18:6 comme symbole de châtiment.",
+      "en": "The Capernaum millstone (1st century) was a heavy disk of black basalt used to grind grain. Women spent several hours each day grinding wheat or barley. Jesus refers to it in Matthew 18:6 as a symbol of punishment.",
+      "pt": "A pedra de moinho de Cafarnaum (século I) era um pesado disco de basalto negro usado para moer grãos.",
+      "es": "La piedra de molino de Cafarnaúm (siglo I) era un pesado disco de basalto negro usado para moler grano."
+    }
+  },
+  {
+    "key": "charrue",
+    "names": {
+      "fr": ["charrue", "charrues", "araire"],
+      "en": ["plow", "plough", "plows"],
+      "pt": ["arado", "arados"],
+      "es": ["arado", "arados"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Ancient_wooden_plow.jpg",
+    "description": {
+      "fr": "La charrue biblique (araire) était un simple outil en bois avec une pointe en métal ou en bois durci qui labourait la surface du sol sans le retourner. Elle était tirée par une paire de bœufs. 'Qui met la main à la charrue et regarde en arrière n'est pas propre au Royaume de Dieu' (Luc 9:62).",
+      "en": "The biblical plow (ard) was a simple wooden tool with a metal or hardened wood point that scratched the soil surface without turning it. It was pulled by a pair of oxen. 'No one who puts a hand to the plow and looks back is fit for the kingdom of God' (Luke 9:62).",
+      "pt": "O arado bíblico era um simples instrumento de madeira com uma ponta de metal que arranhava a superfície do solo.",
+      "es": "El arado bíblico era un simple instrumento de madera con una punta de metal que arañaba la superficie del suelo."
+    }
+  },
+  {
+    "key": "joug",
+    "names": {
+      "fr": ["joug", "jougs"],
+      "en": ["yoke", "yokes"],
+      "pt": ["jugo", "jugos"],
+      "es": ["yugo", "yugos"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yoke_for_oxen.jpg",
+    "description": {
+      "fr": "Le joug était une pièce de bois placée sur le cou de deux animaux de trait (bœufs, ânes) pour les lier ensemble et les attacher à une charrue ou un véhicule. Jésus utilise cette image : 'Prenez mon joug sur vous... mon joug est doux et mon fardeau léger' (Matthieu 11:29-30).",
+      "en": "The yoke was a wooden piece placed on the necks of two draft animals (oxen, donkeys) to link them together and attach them to a plow or vehicle. Jesus uses this image: 'Take my yoke upon you... my yoke is easy and my burden is light' (Matthew 11:29-30).",
+      "pt": "O jugo era uma peça de madeira colocada no pescoço de dois animais de tração para ligá-los juntos.",
+      "es": "El yugo era una pieza de madera colocada en el cuello de dos animales de tiro para unirlos."
+    }
+  },
+  {
+    "key": "faucille",
+    "names": {
+      "fr": ["faucille", "faucilles", "faux"],
+      "en": ["sickle", "sickles", "scythe"],
+      "pt": ["foice", "foices"],
+      "es": ["hoz", "hoces"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Iron_sickle.jpg",
+    "description": {
+      "fr": "La faucille en fer servait à moissonner les céréales (blé, orge). Avant le fer, elle était en silex ou en bronze. La moisson était un moment de fête communautaire en Israël (Fête des Semaines). L'image de la faucille représente le jugement eschatologique dans Joël 3 et l'Apocalypse.",
+      "en": "The iron sickle was used to harvest grain (wheat, barley). Before iron, it was made of flint or bronze. Harvest was a communal celebration in Israel (Feast of Weeks). The sickle image represents eschatological judgment in Joel 3 and Revelation.",
+      "pt": "A foice de ferro era usada para colher cereais. Antes do ferro, era feita de sílex ou bronze.",
+      "es": "La hoz de hierro se usaba para cosechar cereales. Antes del hierro, estaba hecha de sílex o bronce."
+    }
+  },
+  {
+    "key": "hache",
+    "names": {
+      "fr": ["hache", "haches", "cognée"],
+      "en": ["ax", "axe", "axes", "hatchet"],
+      "pt": ["machado", "machados"],
+      "es": ["hacha", "hachas"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Bronze_Age_socketed_axe.jpg",
+    "description": {
+      "fr": "La hache biblique servait à couper le bois pour la construction et le chauffage. Jean-Baptiste déclare : 'La hache est déjà mise à la racine des arbres' (Matthieu 3:10). L'histoire d'Élisée et de la hache perdue dans le Jourdain (2 Rois 6) montre la valeur de cet outil coûteux.",
+      "en": "The biblical axe was used to cut wood for construction and heating. John the Baptist declares: 'The ax is already at the root of the trees' (Matthew 3:10). Elisha's story of the lost axe in the Jordan (2 Kings 6) shows the value of this costly tool.",
+      "pt": "O machado bíblico era usado para cortar madeira. João Batista declara: 'O machado já está posto à raiz das árvores' (Mateus 3:10).",
+      "es": "El hacha bíblica se usaba para cortar madera. Juan el Bautista declara: 'El hacha ya está puesta a la raíz de los árboles' (Mateo 3:10)."
+    }
+  },
+  {
+    "key": "jarre",
+    "names": {
+      "fr": ["jarre", "jarres", "cruche", "cruches", "pot", "pots", "vase", "vases", "amphore"],
+      "en": ["jar", "jars", "pitcher", "pitchers", "pot", "pots", "vessel", "vessels", "amphora"],
+      "pt": ["jarra", "jarras", "pote", "potes", "ânfora"],
+      "es": ["jarra", "jarras", "tinaja", "tinajas", "ánfora"]
+    },
+    "category": "vessel",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Canaanite_storage_jar.jpg",
+    "description": {
+      "fr": "Les jarres en argile étaient essentielles pour stocker et transporter l'eau, le vin, l'huile et le grain. Les jarres de Qumrân ont préservé les manuscrits de la mer Morte pendant 2000 ans. Les noces de Cana se déroulent autour de 6 jarres de pierre 'contenant deux ou trois mesures chacune'.",
+      "en": "Clay jars were essential for storing and transporting water, wine, oil, and grain. The Qumran jars preserved the Dead Sea Scrolls for 2,000 years. The wedding at Cana takes place around 6 stone jars 'containing two or three measures each'.",
+      "pt": "Jarras de argila eram essenciais para armazenar e transportar água, vinho, óleo e grão. As jarras de Qumrã preservaram os Manuscritos do Mar Morto por 2.000 anos.",
+      "es": "Las jarras de arcilla eran esenciales para almacenar y transportar agua, vino, aceite y grano."
+    }
+  },
+  {
+    "key": "outre",
+    "names": {
+      "fr": ["outre", "outres"],
+      "en": ["wineskin", "wineskins", "skin of wine", "bottle"],
+      "pt": ["odre", "odres"],
+      "es": ["odre", "odres"]
+    },
+    "category": "vessel",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Goatskin_wineskin.jpg",
+    "description": {
+      "fr": "L'outre était une peau de chèvre ou de mouton tannée et cousue hermétiquement pour contenir du vin ou de l'eau. Jésus y fait une célèbre allusion : 'On ne met pas non plus du vin nouveau dans de vieilles outres' (Matthieu 9:17), métaphore de la nouveauté de son enseignement.",
+      "en": "The wineskin was a tanned goat or sheep skin sewn hermetically to hold wine or water. Jesus makes a famous allusion: 'Neither do people pour new wine into old wineskins' (Matthew 9:17), a metaphor for the newness of his teaching.",
+      "pt": "O odre era uma pele de cabra ou ovelha curtida e costurada hermeticamente para conter vinho ou água.",
+      "es": "El odre era una piel de cabra u oveja curtida y cosida herméticamente para contener vino o agua."
+    }
+  },
+  {
+    "key": "sandale",
+    "names": {
+      "fr": ["sandale", "sandales", "chaussure", "chaussures", "soulier", "souliers"],
+      "en": ["sandal", "sandals", "shoe", "shoes", "footwear"],
+      "pt": ["sandália", "sandálias", "sapato", "sapatos"],
+      "es": ["sandalia", "sandalias", "zapato", "zapatos"]
+    },
+    "category": "clothing",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Ancient_Roman_sandal.jpg",
+    "description": {
+      "fr": "Les sandales bibliques étaient des semelles en cuir épais (peau de vache ou de chameau) attachées au pied par des lanières. Retirer la sandale de quelqu'un était le geste d'un serviteur ou d'un esclave. Jean-Baptiste dit : 'Je ne suis pas digne de dénouer la courroie de sa sandale' (Jean 1:27).",
+      "en": "Biblical sandals were thick leather soles (cow or camel hide) attached to the foot by straps. Removing someone's sandal was the gesture of a servant or slave. John the Baptist says: 'I am not worthy to untie the strap of his sandal' (John 1:27).",
+      "pt": "As sandálias bíblicas eram solas grossas de couro presas ao pé por tiras.",
+      "es": "Las sandalias bíblicas eran suelas gruesas de cuero sujetas al pie por correas."
+    }
+  },
+  {
+    "key": "sac",
+    "names": {
+      "fr": ["sac", "sacs", "sac de crin", "cilice"],
+      "en": ["sackcloth", "sack", "burlap"],
+      "pt": ["saco", "sacos", "pano de saco"],
+      "es": ["saco", "sacos", "cilicio"]
+    },
+    "category": "clothing",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Rough_burlap_texture.jpg",
+    "description": {
+      "fr": "Le sac (saq en hébreu) était un vêtement grossier fait de poils de chèvre noire. Il était porté en signe de deuil, de repentance ou de supplication. Les rois, prophètes et peuple d'Israël le revêtaient dans les moments de crise nationale. Jonas proclame que Ninive doit se couvrir de sacs.",
+      "en": "Sackcloth (saq in Hebrew) was a rough garment made of black goat hair. It was worn as a sign of mourning, repentance, or supplication. Kings, prophets, and the people of Israel wore it in times of national crisis. Jonah proclaims that Nineveh must cover itself in sackcloth.",
+      "pt": "O saco era uma roupa grosseira feita de pelos de cabra negra. Era usado em sinal de luto, arrependimento ou súplica.",
+      "es": "El saco era una vestimenta áspera hecha de pelo de cabra negra. Se usaba como señal de duelo, arrepentimiento o súplica."
+    }
+  },
+  {
+    "key": "agneau",
+    "names": {
+      "fr": ["agneau", "agneaux", "brebis", "mouton", "moutons", "bélier", "béliers"],
+      "en": ["lamb", "lambs", "sheep", "ewe", "ram", "rams"],
+      "pt": ["cordeiro", "cordeiros", "ovelha", "ovelhas", "carneiro"],
+      "es": ["cordero", "corderos", "oveja", "ovejas", "carnero"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Ovis_aries_palface.jpg",
+    "description": {
+      "fr": "Le mouton était l'animal central de l'économie et de la religion d'Israël. Les sacrifices à l'autel incluaient principalement des agneaux. La métaphore du berger et de ses brebis est omniprésente dans la Bible. Jésus est appelé 'l'Agneau de Dieu qui ôte le péché du monde' (Jean 1:29).",
+      "en": "The sheep was the central animal in Israel's economy and religion. Altar sacrifices mainly included lambs. The shepherd and sheep metaphor is pervasive in the Bible. Jesus is called 'the Lamb of God who takes away the sin of the world' (John 1:29).",
+      "pt": "O cordeiro era o animal central na economia e religião de Israel.",
+      "es": "El cordero era el animal central en la economía y religión de Israel."
+    }
+  },
+  {
+    "key": "colombe",
+    "names": {
+      "fr": ["colombe", "colombes", "pigeon", "pigeons", "tourterelle", "tourterelles"],
+      "en": ["dove", "doves", "pigeon", "pigeons", "turtledove"],
+      "pt": ["pomba", "pombas", "rola"],
+      "es": ["paloma", "palomas", "tórtola"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Columba_livia_03.jpg",
+    "description": {
+      "fr": "La colombe est le symbole biblique de la paix et du Saint-Esprit. Noé envoie une colombe pour tester si les eaux s'étaient retirées. À l'Esprit Saint descend sur Jésus 'comme une colombe' lors de son baptême. Les tourterelles étaient l'offrande des pauvres au Temple.",
+      "en": "The dove is the biblical symbol of peace and the Holy Spirit. Noah sends a dove to test if the waters had receded. The Holy Spirit descends on Jesus 'like a dove' at his baptism. Turtledoves were the offering of the poor at the Temple.",
+      "pt": "A pomba é o símbolo bíblico da paz e do Espírito Santo.",
+      "es": "La paloma es el símbolo bíblico de la paz y el Espíritu Santo."
+    }
+  },
+  {
+    "key": "serpent",
+    "names": {
+      "fr": ["serpent", "serpents", "vipère", "vipères", "couleuvre"],
+      "en": ["serpent", "serpents", "snake", "snakes", "viper", "vipers"],
+      "pt": ["serpente", "serpentes", "cobra", "cobras", "víbora"],
+      "es": ["serpiente", "serpientes", "víbora", "víboras"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Vipera_palaestinae.jpg",
+    "description": {
+      "fr": "La Vipera palaestinae (vipère de Palestine) est l'un des serpents les plus dangereux du Proche-Orient et probablement le 'serpent enflammé' mentionné en Nombres 21. Le symbole du serpent d'airain élevé par Moïse préfigure pour Jésus son élévation sur la croix (Jean 3:14).",
+      "en": "The Vipera palaestinae (Palestine viper) is one of the most dangerous snakes in the Near East and likely the 'fiery serpent' mentioned in Numbers 21. The bronze serpent raised by Moses prefigures for Jesus his raising on the cross (John 3:14).",
+      "pt": "A Vipera palaestinae é uma das cobras mais perigosas do Oriente Próximo.",
+      "es": "La Vipera palaestinae es una de las serpientes más peligrosas del Oriente Próximo."
+    }
+  },
+  {
+    "key": "lion",
+    "names": {
+      "fr": ["lion", "lions", "lionne", "lionnes", "lionceau"],
+      "en": ["lion", "lions", "lioness"],
+      "pt": ["leão", "leões", "leoa"],
+      "es": ["león", "leones", "leona"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Lion_waiting_in_Namibia.jpg",
+    "description": {
+      "fr": "Le lion d'Asie (Panthera leo persica) peuplait autrefois le Proche-Orient jusqu'à sa disparition au XIXe siècle. Il symbolise force et royauté dans la Bible. Samson en tue un à mains nues (Juges 14). Daniel est jeté dans la fosse aux lions. Jésus est appelé 'le Lion de la tribu de Juda' (Apocalypse 5:5).",
+      "en": "The Asiatic lion (Panthera leo persica) once inhabited the Near East until its disappearance in the 19th century. It symbolizes strength and royalty in the Bible. Samson kills one with his bare hands (Judges 14). Daniel is thrown into the lions' den. Jesus is called 'the Lion of the tribe of Judah' (Revelation 5:5).",
+      "pt": "O leão asiático habitava o Oriente Próximo até o século XIX. Simboliza força e realeza na Bíblia.",
+      "es": "El león asiático habitaba el Oriente Próximo hasta el siglo XIX. Simboliza fuerza y realeza en la Biblia."
+    }
+  },
+  {
+    "key": "chameau",
+    "names": {
+      "fr": ["chameau", "chameaux", "dromadaire"],
+      "en": ["camel", "camels"],
+      "pt": ["camelo", "camelos", "dromedário"],
+      "es": ["camello", "camellos", "dromedario"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Camelus_dromedarius_at_Tierpark_Berlin.jpg",
+    "description": {
+      "fr": "Le chameau à une bosse (dromadaire) était le principal moyen de transport longue distance dans le Proche-Orient ancien. Une caravane pouvait parcourir 40 km par jour. La reine de Saba arriva chez Salomon avec 'des chameaux chargés d'aromates'. Jésus dit : 'Il est plus facile à un chameau de passer par le trou d'une aiguille...'",
+      "en": "The one-humped camel (dromedary) was the main long-distance transport in the ancient Near East. A caravan could cover 40 km per day. The Queen of Sheba arrived to Solomon with 'camels loaded with spices'. Jesus says: 'It is easier for a camel to go through the eye of a needle...'",
+      "pt": "O camelo de uma corcova (dromedário) era o principal meio de transporte de longa distância no antigo Oriente Próximo.",
+      "es": "El camello de una joroba (dromedario) era el principal medio de transporte de larga distancia en el antiguo Oriente Próximo."
+    }
+  },
+  {
+    "key": "ane",
+    "names": {
+      "fr": ["âne", "ânes", "ânesse", "ânon"],
+      "en": ["donkey", "donkeys", "ass", "foal", "colt"],
+      "pt": ["jumento", "jumentos", "burro", "jumentinha"],
+      "es": ["asno", "asnos", "burro", "pollino"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Donkey_1_arp_750px.jpg",
+    "description": {
+      "fr": "L'âne domestiqué était l'animal de travail universel en Palestine : transport de marchandises, labour, meunerie. Les rois montaient sur des ânes comme signe de paix (vs le cheval de guerre). L'entrée triomphale de Jésus à Jérusalem sur un ânon accomplit la prophétie de Zacharie 9:9.",
+      "en": "The domesticated donkey was the universal work animal in Palestine: transporting goods, plowing, milling. Kings rode on donkeys as a sign of peace (vs. the warhorse). Jesus' triumphal entry into Jerusalem on a young donkey fulfills the prophecy of Zechariah 9:9.",
+      "pt": "O jumento domesticado era o animal de trabalho universal na Palestina.",
+      "es": "El asno domesticado era el animal de trabajo universal en Palestina."
+    }
+  },
+  {
+    "key": "chevre",
+    "names": {
+      "fr": ["chèvre", "chèvres", "bouc", "boucs", "chevreau"],
+      "en": ["goat", "goats", "kid", "buck"],
+      "pt": ["cabra", "cabras", "bode", "cabrinho"],
+      "es": ["cabra", "cabras", "macho cabrío", "cabrillo"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Domestic_goat_kid_in_capeweed.jpg",
+    "description": {
+      "fr": "La chèvre était élevée pour son lait, sa viande, son cuir (outres, tentes) et ses poils (tissus). Le rite du bouc émissaire (Lévitique 16) symbolisait le transfert des péchés d'Israël sur cet animal. Dans la parabole de Matthieu 25, les boucs représentent ceux qui rejettent Dieu.",
+      "en": "The goat was raised for its milk, meat, hide (wineskins, tents), and hair (cloth). The scapegoat ritual (Leviticus 16) symbolized the transfer of Israel's sins onto this animal. In Matthew 25's parable, goats represent those who reject God.",
+      "pt": "A cabra era criada por seu leite, carne, couro e pelos.",
+      "es": "La cabra se criaba por su leche, carne, cuero y pelo."
+    }
+  },
+  {
+    "key": "poisson",
+    "names": {
+      "fr": ["poisson", "poissons", "filet", "filets"],
+      "en": ["fish", "fishes", "net", "nets"],
+      "pt": ["peixe", "peixes", "rede", "redes"],
+      "es": ["pez", "peces", "pescado", "red", "redes"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Sarotherodon_galilaeus.jpg",
+    "description": {
+      "fr": "Le 'poisson de saint Pierre' (Sarotherodon galilaeus) est la tilapia du lac de Tibériade, aussi appelé mer de Galilée. Ce poisson buccal incubateur peut atteindre 45 cm. C'est probablement le poisson dont la bouche contenait la pièce de monnaie dans Matthieu 17:27, et celui des repas de Jésus ressuscité.",
+      "en": "\"St. Peter's fish\" (Sarotherodon galilaeus) is the tilapia of the Sea of Galilee. This mouthbrooder can reach 45 cm. It is probably the fish whose mouth contained the coin in Matthew 17:27, and the fish of Jesus' post-resurrection meals.",
+      "pt": "O 'peixe de São Pedro' (Sarotherodon galilaeus) é a tilápia do Mar da Galileia.",
+      "es": "El 'pez de San Pedro' (Sarotherodon galilaeus) es la tilapia del Mar de Galilea."
+    }
+  },
+  {
+    "key": "aigle",
+    "names": {
+      "fr": ["aigle", "aigles", "vautour", "vautours"],
+      "en": ["eagle", "eagles", "vulture", "vultures"],
+      "pt": ["águia", "águias", "abutre"],
+      "es": ["águila", "águilas", "buitre"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Aquila_chrysaetos_close_up.jpg",
+    "description": {
+      "fr": "L'aigle royal et le vautour fauve habitaient les montagnes de Palestine. Les deux sont désignés par le même mot hébreu (nesher). 'Ceux qui espèrent en l'Éternel renouvellent leur force. Ils prennent le vol comme les aigles' (Ésaïe 40:31). L'aigle est l'un des quatre êtres vivants de l'Apocalypse.",
+      "en": "The golden eagle and griffon vulture inhabited the mountains of Palestine. Both are designated by the same Hebrew word (nesher). 'Those who hope in the Lord will renew their strength. They will soar on wings like eagles' (Isaiah 40:31). The eagle is one of the four living creatures in Revelation.",
+      "pt": "A águia e o grifo habitavam as montanhas da Palestina.",
+      "es": "El águila real y el buitre leonado habitaban las montañas de Palestina."
+    }
+  },
+  {
+    "key": "boeuf",
+    "names": {
+      "fr": ["bœuf", "bœufs", "taureau", "taureaux", "veau", "veaux", "génisse"],
+      "en": ["ox", "oxen", "bull", "bulls", "calf", "calves", "heifer"],
+      "pt": ["boi", "bois", "touro", "bezerro", "novilha"],
+      "es": ["buey", "bueyes", "toro", "ternero", "novillo"]
+    },
+    "category": "animal",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cattle_waterbuck.jpg",
+    "description": {
+      "fr": "Le bœuf était essentiel à l'agriculture biblique : labour avec la charrue et l'araire. Sa chair et sa graisse servaient aux sacrifices. Le veau d'or (Exode 32) reflète l'influence égyptienne du culte du taureau Apis. La parabole du fils prodigue se conclut par l'abattage du 'veau gras'.",
+      "en": "The ox was essential to biblical agriculture: plowing with the plow and ard. Its flesh and fat served in sacrifices. The golden calf (Exodus 32) reflects Egyptian influence of the Apis bull cult. The prodigal son parable concludes with the slaughter of the 'fattened calf'.",
+      "pt": "O boi era essencial para a agricultura bíblica. O bezerro de ouro reflete a influência egípcia.",
+      "es": "El buey era esencial para la agricultura bíblica. El becerro de oro refleja la influencia egipcia."
+    }
+  },
+  {
+    "key": "olivier",
+    "names": {
+      "fr": ["olivier", "oliviers", "olive", "olives"],
+      "en": ["olive tree", "olive trees", "olive", "olives"],
+      "pt": ["oliveira", "oliveiras", "azeitona", "azeitonas"],
+      "es": ["olivo", "olivos", "aceituna", "aceitunas"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Olive_tree_in_Gethsemane.jpg",
+    "description": {
+      "fr": "L'olivier est l'arbre symbolique de la Terre Sainte. Certains oliviers du jardin de Gethsémani (mont des Oliviers) ont plus de 2000 ans et pourraient être des témoins du temps de Jésus. L'olive et son huile servaient à l'alimentation, l'éclairage, l'onction sacrée et la médecine.",
+      "en": "The olive tree is the symbolic tree of the Holy Land. Some olive trees in the Garden of Gethsemane (Mount of Olives) are more than 2,000 years old and could be witnesses to the time of Jesus. Olives and oil served for food, lighting, sacred anointing, and medicine.",
+      "pt": "A oliveira é a árvore simbólica da Terra Santa. Algumas oliveiras do Jardim do Getsêmani têm mais de 2.000 anos.",
+      "es": "El olivo es el árbol simbólico de la Tierra Santa. Algunos olivos del Jardín de Getsemaní tienen más de 2.000 años."
+    }
+  },
+  {
+    "key": "figuier",
+    "names": {
+      "fr": ["figuier", "figuiers", "figue", "figues"],
+      "en": ["fig tree", "fig trees", "fig", "figs"],
+      "pt": ["figueira", "figueiras", "figo", "figos"],
+      "es": ["higuera", "higueras", "higo", "higos"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Ficus_carica_1.jpg",
+    "description": {
+      "fr": "Le figuier (Ficus carica) était l'un des arbres les plus communs en Palestine. 'Chacun sous sa vigne et sous son figuier' (1 Rois 4:25) était l'image biblique de la paix et de la prospérité. Jésus maudit un figuier sans fruits (Matthieu 21:19), symbole d'Israël. Les figues séchées constituaient une réserve alimentaire.",
+      "en": "The fig tree (Ficus carica) was one of the most common trees in Palestine. 'Each under his vine and under his fig tree' (1 Kings 4:25) was the biblical image of peace and prosperity. Jesus cursed a fruitless fig tree (Matthew 21:19), a symbol of Israel.",
+      "pt": "A figueira era uma das árvores mais comuns na Palestina.",
+      "es": "La higuera era uno de los árboles más comunes en Palestina."
+    }
+  },
+  {
+    "key": "vigne",
+    "names": {
+      "fr": ["vigne", "vignes", "raisin", "raisins", "grappe", "grappes", "vendange"],
+      "en": ["vine", "vines", "vineyard", "grapes", "grape", "cluster", "harvest"],
+      "pt": ["videira", "videiras", "uva", "uvas", "vinhedo"],
+      "es": ["vid", "vides", "viña", "uva", "uvas", "viñedo"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Grapevines_in_Tuscany.jpg",
+    "description": {
+      "fr": "La vigne cultivée (Vitis vinifera) était l'une des cultures fondamentales de la Palestine antique, avec le blé et l'olivier. Jésus se déclare 'la vraie vigne' (Jean 15:1). La vigne d'Eshcol (Nombres 13) dont les grappes nécessitaient deux hommes pour les porter était légendaire dans le peuple hébreu.",
+      "en": "The cultivated vine (Vitis vinifera) was one of the foundational crops of ancient Palestine, along with wheat and olive. Jesus declares himself 'the true vine' (John 15:1). The Eshcol cluster (Numbers 13) whose grapes required two men to carry was legendary in Hebrew culture.",
+      "pt": "A videira cultivada era uma das culturas fundamentais da Palestina antiga.",
+      "es": "La vid cultivada era uno de los cultivos fundamentales de la antigua Palestina."
+    }
+  },
+  {
+    "key": "palmier",
+    "names": {
+      "fr": ["palmier", "palmiers", "palme", "palmes"],
+      "en": ["palm tree", "palm trees", "palm branch", "palm"],
+      "pt": ["palmeira", "palmeiras", "palma", "palmas"],
+      "es": ["palmera", "palmeras", "palma", "palmas"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Date_palm_tree_israel.jpg",
+    "description": {
+      "fr": "Le palmier-dattier (Phoenix dactylifera) était abondant en Palestine, notamment autour de Jéricho, surnommée 'la ville des palmiers'. Les palmes représentaient la victoire et la fête. L'entrée de Jésus à Jérusalem fut accueillie par des rameaux de palmes (Jean 12:13). Les dattes constituaient un aliment de base.",
+      "en": "The date palm (Phoenix dactylifera) was abundant in Palestine, especially around Jericho, nicknamed 'the city of palms'. Palm branches represented victory and celebration. Jesus' entry into Jerusalem was greeted with palm branches (John 12:13).",
+      "pt": "A palmeira-tâmareira era abundante na Palestina, especialmente ao redor de Jericó.",
+      "es": "La palmera datilera era abundante en Palestina, especialmente alrededor de Jericó."
+    }
+  },
+  {
+    "key": "ble",
+    "names": {
+      "fr": ["blé", "grain", "grains", "froment", "gerbe", "gerbes", "épi", "épis"],
+      "en": ["wheat", "grain", "grains", "ear", "ears", "sheaf", "sheaves"],
+      "pt": ["trigo", "grão", "grãos", "espiga", "espigas"],
+      "es": ["trigo", "grano", "granos", "espiga", "espigas"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Wheat_close-up.JPG",
+    "description": {
+      "fr": "Le blé (Triticum aestivum) était la céréale principale de la Palestine antique, cultivé depuis la plaine de Jezréel jusqu'en Judée. La moisson du blé avait lieu entre avril et juin. Jésus use de l'image du grain : 'Si le grain de blé ne tombe en terre et ne meurt... il porte beaucoup de fruit' (Jean 12:24).",
+      "en": "Wheat (Triticum aestivum) was the main cereal of ancient Palestine, cultivated from the Jezreel Valley to Judea. Wheat harvest took place between April and June. Jesus uses the grain image: 'Unless a grain of wheat falls into the earth and dies... it bears much fruit' (John 12:24).",
+      "pt": "O trigo era o cereal principal da Palestina antiga.",
+      "es": "El trigo era el cereal principal de la antigua Palestina."
+    }
+  },
+  {
+    "key": "orge",
+    "names": {
+      "fr": ["orge"],
+      "en": ["barley"],
+      "pt": ["cevada"],
+      "es": ["cebada"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Barley_field.jpg",
+    "description": {
+      "fr": "L'orge était la céréale des pauvres en Palestine : moins chère et récoltée avant le blé (avril). Ruth glane de l'orge dans le champ de Boaz. Jésus multiplie cinq pains d'orge pour nourrir 5000 personnes. L'orge servait aussi à la fabrication de bière dans le Proche-Orient ancien.",
+      "en": "Barley was the poor man's grain in Palestine: cheaper and harvested before wheat (April). Ruth gleans barley in Boaz's field. Jesus multiplies five barley loaves to feed 5,000 people. Barley was also used to make beer in the ancient Near East.",
+      "pt": "A cevada era o cereal dos pobres na Palestina.",
+      "es": "La cebada era el cereal de los pobres en Palestina."
+    }
+  },
+  {
+    "key": "cedre",
+    "names": {
+      "fr": ["cèdre", "cèdres"],
+      "en": ["cedar", "cedars"],
+      "pt": ["cedro", "cedros"],
+      "es": ["cedro", "cedros"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cedrus_libani_Bcharri.jpg",
+    "description": {
+      "fr": "Le cèdre du Liban (Cedrus libani) pouvait atteindre 40 m de hauteur et 2500 ans d'âge. Son bois résistant et parfumé était le matériau de construction le plus précieux du Proche-Orient. Salomon fit venir des cèdres du Liban pour bâtir le Temple de Jérusalem et son palais.",
+      "en": "The Cedar of Lebanon (Cedrus libani) could reach 40 m in height and 2,500 years of age. Its resistant and fragrant wood was the most precious building material in the Near East. Solomon brought cedars from Lebanon to build the Temple of Jerusalem and his palace.",
+      "pt": "O cedro do Líbano podia atingir 40 m de altura e 2.500 anos de idade.",
+      "es": "El cedro del Líbano podía alcanzar 40 m de altura y 2.500 años de edad."
+    }
+  },
+  {
+    "key": "moutarde",
+    "names": {
+      "fr": ["moutarde", "graine de moutarde"],
+      "en": ["mustard", "mustard seed"],
+      "pt": ["mostarda", "grão de mostarda"],
+      "es": ["mostaza", "grano de mostaza"]
+    },
+    "category": "plant",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Sinapis_arvensis_2.jpg",
+    "description": {
+      "fr": "La moutarde noire (Brassica nigra) pousse abondamment en Galilée. Sa graine mesure environ 1 mm, la plus petite utilisée par les agriculteurs palestiniens. La plante peut atteindre 3-4 m en une saison. Jésus compare le Royaume des cieux à 'une graine de moutarde... la plus petite de toutes les graines' (Matthieu 13:31).",
+      "en": "Black mustard (Brassica nigra) grows abundantly in Galilee. Its seed measures about 1 mm, the smallest used by Palestinian farmers. The plant can reach 3-4 m in a season. Jesus compares the Kingdom of Heaven to 'a mustard seed... the smallest of all seeds' (Matthew 13:31).",
+      "pt": "A mostarda negra cresce abundantemente na Galileia.",
+      "es": "La mostaza negra crece abundantemente en Galilea."
+    }
+  },
+  {
+    "key": "pain",
+    "names": {
+      "fr": ["pain", "pains", "galette", "galettes", "azyme", "azymes"],
+      "en": ["bread", "loaf", "loaves", "unleavened bread"],
+      "pt": ["pão", "pães", "pão ázimo"],
+      "es": ["pan", "panes", "pan ázimo"]
+    },
+    "category": "food",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Matzo_Ashkenaz.jpg",
+    "description": {
+      "fr": "Le pain de la Bible était principalement une galette plate (pita) faite de farine d'orge ou de blé, cuite sur des pierres chauffées ou dans un four en argile (taboun). La manne 'semblait à du pain' (Exode 16). Jésus se désigne comme 'le pain de vie descendu du ciel' (Jean 6:35) et institue l'Eucharistie avec du pain.",
+      "en": "Biblical bread was mainly a flat cake (pita) made of barley or wheat flour, cooked on heated stones or in a clay oven (taboun). Manna 'seemed like bread' (Exodus 16). Jesus designates himself as 'the bread of life that came down from heaven' (John 6:35).",
+      "pt": "O pão bíblico era principalmente um bolo achatado feito de farinha de cevada ou trigo.",
+      "es": "El pan bíblico era principalmente una torta plana hecha de harina de cebada o trigo."
+    }
+  },
+  {
+    "key": "huile",
+    "names": {
+      "fr": ["huile", "onction"],
+      "en": ["oil", "anointing oil"],
+      "pt": ["óleo", "azeite", "unção"],
+      "es": ["aceite", "ungir", "unción"]
+    },
+    "category": "food",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Olive_oil_from_Oneglia.jpg",
+    "description": {
+      "fr": "L'huile d'olive était l'huile universelle du monde biblique : cuisiner, allumer les lampes, oindre les rois et les prêtres, soigner les blessures. Le mot 'Christ' vient du grec christos (oint), traduction de l'hébreu mashiach (messie). L'huile sainte du Tabernacle était mélangée de myrrhe, de cannelle, de canne aromatique et de casse.",
+      "en": "Olive oil was the universal oil of the biblical world: cooking, lighting lamps, anointing kings and priests, healing wounds. The word 'Christ' comes from the Greek christos (anointed), a translation of the Hebrew mashiach (messiah).",
+      "pt": "O azeite de oliva era o óleo universal do mundo bíblico.",
+      "es": "El aceite de oliva era el aceite universal del mundo bíblico."
+    }
+  },
+  {
+    "key": "miel",
+    "names": {
+      "fr": ["miel", "rayon de miel"],
+      "en": ["honey", "honeycomb"],
+      "pt": ["mel", "favo de mel"],
+      "es": ["miel", "panal de miel"]
+    },
+    "category": "food",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Honey_comb.jpg",
+    "description": {
+      "fr": "La Terre Promise est décrite comme 'une terre où coulent le lait et le miel'. Ce miel était probablement du miel de dattes ou de figues, mais aussi du miel d'abeilles sauvages. Samson trouve du miel dans le cadavre d'un lion (Juges 14). Jean-Baptiste se nourrit de 'sauterelles et de miel sauvage'.",
+      "en": "The Promised Land is described as 'a land flowing with milk and honey.' This honey was likely date or fig honey, but also wild bee honey. Samson finds honey in a lion's carcass (Judges 14). John the Baptist ate 'locusts and wild honey'.",
+      "pt": "A Terra Prometida é descrita como 'uma terra onde correm o leite e o mel'.",
+      "es": "La Tierra Prometida se describe como 'una tierra donde fluyen leche y miel'."
+    }
+  },
+  {
+    "key": "vin",
+    "names": {
+      "fr": ["vin", "vins", "coupe de vin", "calice"],
+      "en": ["wine", "cup of wine", "chalice", "goblet"],
+      "pt": ["vinho", "cálice", "taça"],
+      "es": ["vino", "cáliz", "copa"]
+    },
+    "category": "food",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Glass_of_wine.jpg",
+    "description": {
+      "fr": "Le vin était la boisson principale du monde méditerranéen antique, mélangé d'eau pour réduire l'ivresse. La première vigne fut plantée par Noé après le Déluge (Genèse 9). Les noces de Cana marquent le premier miracle de Jésus : transformer l'eau en vin. Le vin de la Cène devient le symbole du sang du Christ.",
+      "en": "Wine was the main beverage of the ancient Mediterranean world, mixed with water to reduce intoxication. The first vineyard was planted by Noah after the Flood (Genesis 9). The wedding at Cana marks Jesus' first miracle: turning water into wine.",
+      "pt": "O vinho era a bebida principal do mundo mediterrâneo antigo.",
+      "es": "El vino era la bebida principal del mundo mediterráneo antiguo."
+    }
+  },
+  {
+    "key": "temple",
+    "names": {
+      "fr": ["temple", "temples", "maison de Dieu"],
+      "en": ["temple", "house of God", "sanctuary"],
+      "pt": ["templo", "casa de Deus", "santuário"],
+      "es": ["templo", "casa de Dios", "santuario"]
+    },
+    "category": "structure",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Jerusalem_2nd_Temple.jpg",
+    "description": {
+      "fr": "Le Second Temple de Jérusalem (reconstruit par Hérode le Grand à partir de 20 av. J.-C.) était une structure monumentale en marbre blanc et or visible à des kilomètres. Détruit par les Romains en 70 apr. J.-C., il reste le Mur occidental (Mur des Lamentations). C'est là que Jésus enseigne, chasse les marchands et prédit la destruction.",
+      "en": "The Second Temple of Jerusalem (rebuilt by Herod the Great from 20 BC) was a monumental structure of white marble and gold visible for miles. Destroyed by the Romans in 70 AD, only the Western Wall (Wailing Wall) remains. This is where Jesus teaches, drives out merchants, and predicts the destruction.",
+      "pt": "O Segundo Templo de Jerusalém foi reconstruído por Herodes. Destruído pelos romanos em 70 d.C., restando apenas o Muro Ocidental.",
+      "es": "El Segundo Templo de Jerusalén fue reconstruido por Herodes. Destruido por los romanos en 70 d.C., quedando solo el Muro Occidental."
+    }
+  },
+  {
+    "key": "autel",
+    "names": {
+      "fr": ["autel", "autels"],
+      "en": ["altar", "altars"],
+      "pt": ["altar", "altares"],
+      "es": ["altar", "altares"]
+    },
+    "category": "structure",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Megiddo_altar.jpg",
+    "description": {
+      "fr": "Les autels bibliques étaient des structures en pierre ou en bois recouvert de bronze, élevées pour offrir des sacrifices à Dieu. L'autel des holocaustes se trouvait devant le Tabernacle puis dans la cour du Temple. L'autel de Tell Megiddo (IXe siècle av. J.-C.), découvert par des archéologues, donne une idée de leur forme.",
+      "en": "Biblical altars were structures of stone or wood covered with bronze, raised to offer sacrifices to God. The altar of burnt offerings stood before the Tabernacle and then in the Temple courtyard. The Tell Megiddo altar (9th century BC), discovered by archaeologists, gives an idea of their form.",
+      "pt": "Os altares bíblicos eram estruturas de pedra ou madeira revestida de bronze para oferecer sacrifícios.",
+      "es": "Los altares bíblicos eran estructuras de piedra o madera recubierta de bronce para ofrecer sacrificios."
+    }
+  },
+  {
+    "key": "tente",
+    "names": {
+      "fr": ["tente", "tentes", "tabernacle"],
+      "en": ["tent", "tents", "tabernacle", "dwelling"],
+      "pt": ["tenda", "tendas", "tabernáculo"],
+      "es": ["tienda", "tiendas", "tabernáculo"]
+    },
+    "category": "structure",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Bedouin_tent.jpg",
+    "description": {
+      "fr": "La tente bédouine en poils de chèvre noire est quasi identique à celles des patriarches bibliques. Abraham, Isaac et Jacob vivaient sous de telles tentes. Le Tabernacle du désert était une tente monumentale en peaux de dauphin et en bois d'acacia. Paul était 'fabricant de tentes' (skénopoios, Actes 18:3).",
+      "en": "The Bedouin tent made of black goat hair is almost identical to those of the biblical patriarchs. Abraham, Isaac, and Jacob lived under such tents. The desert Tabernacle was a monumental tent of dolphin skins and acacia wood. Paul was a 'tent maker' (skenopoios, Acts 18:3).",
+      "pt": "A tenda beduína de pelos de cabra negra é quase idêntica às dos patriarcas bíblicos.",
+      "es": "La tienda beduina de pelo de cabra negra es casi idéntica a las de los patriarcas bíblicos."
+    }
+  },
+  {
+    "key": "arche",
+    "names": {
+      "fr": ["arche", "arche de l'alliance", "arche d'alliance"],
+      "en": ["ark", "ark of the covenant"],
+      "pt": ["arca", "arca da aliança"],
+      "es": ["arca", "arca de la alianza"]
+    },
+    "category": "structure",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Illustration_of_the_Ark_of_the_Covenant.jpg",
+    "description": {
+      "fr": "L'Arche de l'Alliance était un coffre en bois d'acacia recouvert d'or (environ 1,3 m × 0,8 m × 0,8 m), surmonté de deux chérubins en or aux ailes déployées. Elle contenait les Tables de la Loi, le vase de manne et le bâton d'Aaron. Sa localisation actuelle reste un mystère archéologique.",
+      "en": "The Ark of the Covenant was an acacia wood chest covered with gold (about 1.3 m × 0.8 m × 0.8 m), topped by two golden cherubim with outstretched wings. It contained the Tablets of the Law, a jar of manna, and Aaron's staff. Its current location remains an archaeological mystery.",
+      "pt": "A Arca da Aliança era uma caixa de madeira de acácia coberta de ouro.",
+      "es": "El Arca de la Alianza era un cofre de madera de acacia cubierto de oro."
+    }
+  },
+  {
+    "key": "jerusalem",
+    "names": {
+      "fr": ["Jérusalem", "la ville sainte", "Sion"],
+      "en": ["Jerusalem", "the holy city", "Zion"],
+      "pt": ["Jerusalém", "a cidade santa", "Sião"],
+      "es": ["Jerusalén", "la ciudad santa", "Sión"]
+    },
+    "category": "place",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Jerusalem_BW_14.JPG",
+    "description": {
+      "fr": "Jérusalem, capitale de David (~1000 av. J.-C.), est la ville la plus citée de la Bible (plus de 800 fois). La vieille ville actuelle préserve essentiellement le tracé de l'époque du Second Temple. Le quartier juif, le Mur occidental, le Mont du Temple et la Voie Douloureuse sont les sites les plus fréquentés au monde.",
+      "en": "Jerusalem, David's capital (~1000 BC), is the most cited city in the Bible (more than 800 times). The current Old City essentially preserves the layout of the Second Temple period. The Jewish Quarter, Western Wall, Temple Mount, and Via Dolorosa are among the world's most visited sites.",
+      "pt": "Jerusalém, capital de Davi (~1000 a.C.), é a cidade mais citada na Bíblia.",
+      "es": "Jerusalén, capital de David (~1000 a.C.), es la ciudad más citada en la Biblia."
+    }
+  },
+  {
+    "key": "jourdain",
+    "names": {
+      "fr": ["Jourdain", "fleuve Jourdain", "rives du Jourdain"],
+      "en": ["Jordan", "Jordan River", "Jordan's banks"],
+      "pt": ["Jordão", "Rio Jordão"],
+      "es": ["Jordán", "Río Jordán"]
+    },
+    "category": "place",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/JordanRiver.jpg",
+    "description": {
+      "fr": "Le Jourdain (300 km, source au mont Hermon, mer Morte) est le fleuve sacré d'Israël. Josué le traverse miraculeusement à pied sec. Élisée guérit Naaman de sa lèpre en l'y plongeant sept fois. C'est là que Jean-Baptiste baptise Jésus. Aujourd'hui, le site de baptême de Qasr el-Yahud est un lieu de pèlerinage mondial.",
+      "en": "The Jordan River (300 km, source at Mount Hermon, Dead Sea) is Israel's sacred river. Joshua miraculously crosses it on dry ground. Elisha heals Naaman of leprosy by dipping him in it seven times. John the Baptist baptizes Jesus here. Today, the baptism site of Qasr el-Yahud is a world pilgrimage destination.",
+      "pt": "O Rio Jordão é o rio sagrado de Israel. João Batista batizou Jesus aqui.",
+      "es": "El Río Jordán es el río sagrado de Israel. Juan el Bautista bautizó a Jesús aquí."
+    }
+  },
+  {
+    "key": "galilee",
+    "names": {
+      "fr": ["Galilée", "mer de Galilée", "lac de Tibériade", "Génésareth"],
+      "en": ["Galilee", "Sea of Galilee", "Lake of Tiberias", "Gennesaret"],
+      "pt": ["Galileia", "Mar da Galileia", "Lago de Tiberíades"],
+      "es": ["Galilea", "Mar de Galilea", "Lago de Tiberíades"]
+    },
+    "category": "place",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Sea_of_Galilee_by_David_Shankbone.jpg",
+    "description": {
+      "fr": "La mer de Galilée (lac d'eau douce, 21 km × 13 km) est le cadre de la majorité du ministère de Jésus. C'est là qu'il appelle ses premiers disciples pêcheurs, marche sur l'eau, apaise la tempête et apparaît après sa résurrection. La ville de Capharnaüm, sa base, est partiellement fouillée sur la rive nord.",
+      "en": "The Sea of Galilee (freshwater lake, 21 km × 13 km) is the setting for most of Jesus' ministry. Here he calls his first fishermen disciples, walks on water, calms the storm, and appears after his resurrection. Capernaum, his base, is partially excavated on the north shore.",
+      "pt": "O Mar da Galileia é o cenário da maioria do ministério de Jesus.",
+      "es": "El Mar de Galilea es el escenario de la mayor parte del ministerio de Jesús."
+    }
+  },
+  {
+    "key": "bethleem",
+    "names": {
+      "fr": ["Bethléem"],
+      "en": ["Bethlehem"],
+      "pt": ["Belém"],
+      "es": ["Belén"]
+    },
+    "category": "place",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Bethlehem_Panoramic_view.jpg",
+    "description": {
+      "fr": "Bethléem (8 km au sud de Jérusalem) est la ville natale du roi David et lieu de naissance de Jésus selon Matthieu et Luc. La basilique de la Nativité (IVe siècle), construite sur la grotte traditionnelle de la naissance, est l'une des plus anciennes églises chrétiennes encore en usage. Elle est inscrite au patrimoine mondial de l'UNESCO.",
+      "en": "Bethlehem (8 km south of Jerusalem) is the birthplace of King David and the birth city of Jesus according to Matthew and Luke. The Church of the Nativity (4th century), built over the traditional birth grotto, is one of the oldest Christian churches still in use. It is a UNESCO World Heritage Site.",
+      "pt": "Belém é a cidade natal do Rei Davi e o local de nascimento de Jesus.",
+      "es": "Belén es la ciudad natal del Rey David y el lugar de nacimiento de Jesús."
+    }
+  },
+  {
+    "key": "egypt",
+    "names": {
+      "fr": ["Égypte", "pays d'Égypte"],
+      "en": ["Egypt", "land of Egypt"],
+      "pt": ["Egito", "terra do Egito"],
+      "es": ["Egipto", "tierra de Egipto"]
+    },
+    "category": "place",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Giza_pyramid_complex_(aerial_view,_looking_West).jpg",
+    "description": {
+      "fr": "L'Égypte ancienne est la grande puissance qui domine le contexte biblique pendant des millénaires. Joseph y est vendu comme esclave. Moïse y naît et en libère les Hébreux par l'Exode. La Sainte Famille s'y réfugie lors de la fuite d'Égypte. Alexandrie d'Égypte était un centre intellectuel majeur de l'ère chrétienne primitive.",
+      "en": "Ancient Egypt is the great power dominating the biblical context for millennia. Joseph is sold there as a slave. Moses is born there and liberates the Hebrews through the Exodus. The Holy Family takes refuge there during the flight into Egypt.",
+      "pt": "O Egito antigo é a grande potência que domina o contexto bíblico por milênios.",
+      "es": "El Egipto antiguo es la gran potencia que domina el contexto bíblico durante milenios."
+    }
+  },
+  {
+    "key": "sinai",
+    "names": {
+      "fr": ["Sinaï", "mont Sinaï", "Horeb"],
+      "en": ["Sinai", "Mount Sinai", "Horeb"],
+      "pt": ["Sinai", "Monte Sinai", "Horebe"],
+      "es": ["Sinaí", "Monte Sinaí", "Horeb"]
+    },
+    "category": "place",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Mount_Sinai_by_David_Shankbone.jpg",
+    "description": {
+      "fr": "Le mont Sinaï (Djebel Musa, 2285 m) est le lieu traditionnel où Dieu donna les Dix Commandements à Moïse. Le monastère de Sainte-Catherine (VIe siècle), au pied de la montagne, est l'un des monastères chrétiens les plus anciens du monde et abrite la plus grande collection de manuscrits après le Vatican.",
+      "en": "Mount Sinai (Jebel Musa, 2,285 m) is the traditional site where God gave the Ten Commandments to Moses. Saint Catherine's Monastery (6th century), at the foot of the mountain, is one of the world's oldest Christian monasteries and houses the largest manuscript collection after the Vatican.",
+      "pt": "O Monte Sinai é o local tradicional onde Deus deu os Dez Mandamentos a Moisés.",
+      "es": "El Monte Sinaí es el lugar tradicional donde Dios dio los Diez Mandamientos a Moisés."
+    }
+  },
+  {
+    "key": "nazareth",
+    "names": {
+      "fr": ["Nazareth"],
+      "en": ["Nazareth"],
+      "pt": ["Nazaré"],
+      "es": ["Nazaret"]
+    },
+    "category": "place",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Nazareth_from_Precipice_Hill.jpg",
+    "description": {
+      "fr": "Nazareth (basse Galilée) était un petit village agricole d'environ 400 habitants au Ier siècle. C'est là que Jésus grandit de son retour d'Égypte jusqu'à son baptême (~30 ans). Le site archéologique de Nazareth Village reconstitue la vie rurale du Ier siècle. La basilique de l'Annonciation marque le lieu traditonnel de la maison de Marie.",
+      "en": "Nazareth (lower Galilee) was a small agricultural village of about 400 inhabitants in the 1st century. Jesus grew up here from his return from Egypt until his baptism (~30 years). The Nazareth Village archaeological site recreates 1st-century rural life.",
+      "pt": "Nazaré era uma pequena aldeia agrícola de cerca de 400 habitantes no século I.",
+      "es": "Nazaret era un pequeño pueblo agrícola de unas 400 personas en el siglo I."
+    }
+  },
+  {
+    "key": "lyre",
+    "names": {
+      "fr": ["lyre", "lyres", "harpe", "harpes", "cithare", "instrument de musique"],
+      "en": ["lyre", "lyres", "harp", "harps", "zither"],
+      "pt": ["lira", "liras", "harpa", "harpas"],
+      "es": ["lira", "liras", "arpa", "arpas"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Ancient_lyre.jpg",
+    "description": {
+      "fr": "La lyre à 10 cordes (kinnor) était l'instrument favori de David. Le psautier (150 psaumes) était accompagné à la harpe et à la lyre dans les cérémonies du Temple. La lyre de David serait à l'origine de la cithare et du luth modernes. Des lyres en or d'Ur (IIIe millénaire av. J.-C.) ont été retrouvées.",
+      "en": "The 10-stringed lyre (kinnor) was David's favorite instrument. The Psalter (150 psalms) was accompanied by harp and lyre in Temple ceremonies. David's lyre would be at the origin of modern zither and lute. Gold lyres from Ur (3rd millennium BC) have been found.",
+      "pt": "A lira de 10 cordas era o instrumento favorito de Davi.",
+      "es": "La lira de 10 cuerdas era el instrumento favorito de David."
+    }
+  },
+  {
+    "key": "encens",
+    "names": {
+      "fr": ["encens", "parfum", "aromates"],
+      "en": ["incense", "frankincense", "myrrh", "perfume", "spices"],
+      "pt": ["incenso", "olíbano", "mirra", "perfume"],
+      "es": ["incienso", "olíbano", "mirra", "perfume"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Frankincense_(Boswellia_sacra).jpg",
+    "description": {
+      "fr": "L'encens (oliban) est une résine aromatique extraite de l'arbre Boswellia sacra, natif du Yémen et de la Somalie. Brûlé dans le Tabernacle et le Temple, il symbolisait la prière montant vers Dieu. Les Mages offrent à l'enfant Jésus de l'or, de l'encens et de la myrrhe. L'encens est encore utilisé dans les liturgies catholiques et orthodoxes.",
+      "en": "Frankincense is an aromatic resin extracted from the Boswellia sacra tree, native to Yemen and Somalia. Burned in the Tabernacle and Temple, it symbolized prayer rising to God. The Magi offer the child Jesus gold, frankincense, and myrrh.",
+      "pt": "O incenso é uma resina aromática extraída da árvore Boswellia sacra.",
+      "es": "El incienso es una resina aromática extraída del árbol Boswellia sacra."
+    }
+  },
+  {
+    "key": "myrrhe",
+    "names": {
+      "fr": ["myrrhe"],
+      "en": ["myrrh"],
+      "pt": ["mirra"],
+      "es": ["mirra"]
+    },
+    "category": "tool",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Myrrh_closeup.jpg",
+    "description": {
+      "fr": "La myrrhe est une résine aromatique brune extraite de l'arbre Commiphora myrrha, originaire de la Corne de l'Afrique. Précieuse comme parfum, médicament et conservateur, elle valait son poids en or dans l'Antiquité. Les Mages en offrent à Jésus. Sa présence dans les onguents funéraires annonce la mort de Jésus (Jean 19:39).",
+      "en": "Myrrh is a brown aromatic resin extracted from the Commiphora myrrha tree, native to the Horn of Africa. Precious as a perfume, medicine, and preservative, it was worth its weight in gold in antiquity. The Magi offer it to Jesus. Its presence in funeral ointments foreshadows Jesus' death (John 19:39).",
+      "pt": "A mirra é uma resina aromática extraída da árvore Commiphora myrrha.",
+      "es": "La mirra es una resina aromática extraída del árbol Commiphora myrrha."
+    }
+  },
+  {
+    "key": "sel",
+    "names": {
+      "fr": ["sel"],
+      "en": ["salt"],
+      "pt": ["sal"],
+      "es": ["sal"]
+    },
+    "category": "food",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Salt_NaCl.jpg",
+    "description": {
+      "fr": "Le sel de la mer Morte était extrait et commercialisé dans tout le Proche-Orient. Il servait à conserver les aliments, assaisonner les offrandes (Lévitique 2:13) et sceller les alliances ('alliance de sel'). Jésus appelle ses disciples 'le sel de la terre' (Matthieu 5:13). Élisée assainit une source en y jetant du sel.",
+      "en": "Dead Sea salt was extracted and traded throughout the Near East. It served to preserve food, season offerings (Leviticus 2:13), and seal covenants ('covenant of salt'). Jesus calls his disciples 'the salt of the earth' (Matthew 5:13). Elisha purified a spring by throwing salt into it.",
+      "pt": "O sal do Mar Morto era extraído e comercializado em todo o Oriente Próximo.",
+      "es": "La sal del Mar Muerto era extraída y comercializada en todo el Oriente Próximo."
+    }
+  }
+]
