@@ -60,6 +60,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [versesRead, setVersesRead] = useState(0);
   const [initial, setInitial] = useState("");
   const [since, setSince] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -126,13 +128,27 @@ export default function ProfilePage() {
         }
       }
 
-      // Fetch answered prayers count
-      const { count } = await supabase
-        .from("prayer_requests")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("exaucee", true);
-      if (count !== null) setAnsweredCount(count);
+      // Fetch real stats in parallel
+      const [prayerRes, levelRes, versesRes] = await Promise.all([
+        supabase
+          .from("prayer_requests")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("exaucee", true),
+        supabase
+          .from("user_levels")
+          .select("current_streak")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("user_xp")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("action_type", "VERSE_ANNOTATED"),
+      ]);
+      if (prayerRes.count !== null) setAnsweredCount(prayerRes.count);
+      if (levelRes.data) setStreak(levelRes.data.current_streak ?? 0);
+      if (versesRes.count !== null) setVersesRead(versesRes.count);
     })();
   }, []);
 
@@ -319,8 +335,8 @@ export default function ProfilePage() {
         <motion.div {...stagger(1)} className="mt-8 flex flex-col gap-4">
           <div className="flex divide-x divide-separator overflow-hidden rounded-2xl border border-separator bg-bg-secondary">
             {[
-              { value: "12", label: t("profile_stat_streak") },
-              { value: "156", label: t("profile_stat_verses") },
+              { value: streak.toString(), label: t("profile_stat_streak") },
+              { value: versesRead.toString(), label: t("profile_stat_verses") },
               { value: answeredCount.toString(), label: t("profile_stat_prayers") },
             ].map((s) => (
               <div key={s.label} className="flex flex-1 flex-col items-center py-4">
