@@ -34,10 +34,17 @@ export async function POST(request: Request) {
 
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
-  // Update streak
+  // ── Streak logic ──────────────────────────────────────────────────────────
+  // Rules:
+  //   - streak_count = number of days where BOTH users sent at least 1 verse
+  //   - The streak increments only when the 2nd person of a pair completes a day
+  //   - If a full day passes without both sending → streak resets to 0
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [userA, userB] = normalizeUserPair(user.id, body.receiverId);
   const isUserA = user.id === userA;
   const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
   const { data: streak } = await supabase
     .from("verse_streaks")
@@ -46,75 +53,86 @@ export async function POST(request: Request) {
     .eq("user_b", userB)
     .maybeSingle();
 
-  let newStreakCount = 1;
+  let newStreakCount = 0;
   let bonusXP: string | null = null;
 
   if (!streak) {
+    // First message ever between these two
+    newStreakCount = 0;
     await supabase.from("verse_streaks").insert({
       user_a: userA,
       user_b: userB,
-      streak_count: 1,
+      streak_count: 0,
       last_exchange_date: today,
       user_a_sent_today: isUserA,
       user_b_sent_today: !isUserA,
     });
   } else {
     const lastDate = streak.last_exchange_date as string;
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-    const bothSentYesterday = lastDate === yesterday && streak.user_a_sent_today && streak.user_b_sent_today;
-    const isToday = lastDate === today;
+    const aSent = streak.user_a_sent_today as boolean;
+    const bSent = streak.user_b_sent_today as boolean;
+    const prevStreak = streak.streak_count as number;
 
-    const aSentToday = isUserA ? true : streak.user_a_sent_today;
-    const bSentToday = !isUserA ? true : streak.user_b_sent_today;
+    if (lastDate === today) {
+      // Same day — mark sender, check if this completes the pair
+      const newA = isUserA ? true : aSent;
+      const newB = !isUserA ? true : bSent;
+      const wasComplete = aSent && bSent;
+      const nowComplete = newA && newB;
 
-    if (isToday) {
-      // Same day, just update who sent
-      newStreakCount = streak.streak_count;
-      const bothNowSentToday = aSentToday && bSentToday;
-      // If both sent today and it wasn't already counted, increment
-      const wasAlreadyBoth = streak.user_a_sent_today && streak.user_b_sent_today;
-      if (bothNowSentToday && !wasAlreadyBoth) {
-        newStreakCount = streak.streak_count + 1;
+      if (nowComplete && !wasComplete) {
+        // 2nd person just sent → complete day → increment streak
+        newStreakCount = prevStreak + 1;
+      } else {
+        newStreakCount = prevStreak;
       }
+
       await supabase.from("verse_streaks").update({
         streak_count: newStreakCount,
-        user_a_sent_today: aSentToday,
-        user_b_sent_today: bSentToday,
+        user_a_sent_today: newA,
+        user_b_sent_today: newB,
         updated_at: new Date().toISOString(),
       }).eq("user_a", userA).eq("user_b", userB);
-    } else if (bothSentYesterday) {
-      // Continue streak from yesterday
-      newStreakCount = streak.streak_count + (aSentToday && bSentToday ? 1 : 0);
+
+    } else if (lastDate === yesterday) {
+      // New day, continuing from yesterday
+      // Only keep the streak if yesterday was a complete day (both sent)
+      const baseStreak = (aSent && bSent) ? prevStreak : 0;
+
+      // Reset today's flags, mark current sender
+      const newA = isUserA;
+      const newB = !isUserA;
+      newStreakCount = baseStreak; // will increment when 2nd person sends today
+
       await supabase.from("verse_streaks").update({
-        streak_count: streak.streak_count,
+        streak_count: baseStreak,
         last_exchange_date: today,
-        user_a_sent_today: aSentToday,
-        user_b_sent_today: bSentToday,
+        user_a_sent_today: newA,
+        user_b_sent_today: newB,
         updated_at: new Date().toISOString(),
       }).eq("user_a", userA).eq("user_b", userB);
-      newStreakCount = streak.streak_count;
+
     } else {
-      // Streak broken or starting fresh
-      newStreakCount = 1;
+      // Gap of 2+ days → streak fully broken, restart
+      newStreakCount = 0;
       await supabase.from("verse_streaks").update({
-        streak_count: 1,
+        streak_count: 0,
         last_exchange_date: today,
         user_a_sent_today: isUserA,
         user_b_sent_today: !isUserA,
         updated_at: new Date().toISOString(),
       }).eq("user_a", userA).eq("user_b", userB);
     }
-
-    // Streak milestone bonuses
-    if (newStreakCount === 3)  bonusXP = "STREAK_3_DAYS_FLAME";
-    if (newStreakCount === 7)  bonusXP = "STREAK_7_DAYS_FLAME";
-    if (newStreakCount === 30) bonusXP = "STREAK_30_DAYS_FLAME";
   }
 
-  // Award XP for sending
+  // Milestone bonuses (trigger exactly when the threshold is crossed)
+  if (newStreakCount === 3)  bonusXP = "STREAK_3_DAYS_FLAME";
+  if (newStreakCount === 7)  bonusXP = "STREAK_7_DAYS_FLAME";
+  if (newStreakCount === 30) bonusXP = "STREAK_30_DAYS_FLAME";
+
+  // Award XP
   const xpResult = await awardXP(user.id, "VERSE_SENT");
-  let bonusResult = null;
-  if (bonusXP) bonusResult = await awardXP(user.id, bonusXP);
+  const bonusResult = bonusXP ? await awardXP(user.id, bonusXP) : null;
 
   return NextResponse.json({
     ok: true,

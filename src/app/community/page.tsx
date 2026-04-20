@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
@@ -46,9 +46,11 @@ interface SupabasePostRow {
 const MOCK_POSTS: Post[] = [];
 
 export default function CommunityPage() {
+  const router = useRouter();
   const { showXPToast } = useXPToast();
   const { t } = useLanguage();
   const [filter, setFilter] = useState<Filter>("all");
+  const [activeSection, setActiveSection] = useState<"posts" | "flames">("posts");
 
   const FILTERS: { id: Filter; label: string }[] = [
     { id: "all", label: t("community_filter_all") },
@@ -297,30 +299,53 @@ export default function CommunityPage() {
             <div className="h-9 w-9 flex items-center justify-center rounded-full bg-bg-tertiary border border-separator">
               <User className="h-5 w-5 text-text-primary" />
             </div>
-            <h1 className="font-serif text-2xl font-semibold text-accent">{t("community_title")}</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/messages"
-              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary"
-              aria-label="Flammes spirituelles"
-            >
-              🔥
+          <button type="button" className="text-accent" aria-label="Notifications">
+            <Bell className="h-5 w-5 fill-accent" />
+          </button>
+        </header>
+
+        {/* TABS — Communauté / Flammes */}
+        <div className="mt-5 flex border-b border-separator px-5">
+          <button
+            type="button"
+            onClick={() => setActiveSection("posts")}
+            className="relative mr-6 pb-3 font-sans text-sm font-semibold uppercase tracking-widest transition-colors"
+            style={{ color: activeSection === "posts" ? "#E8E8E8" : "#666666" }}
+          >
+            {t("community_title")}
+            {activeSection === "posts" && (
+              <motion.div
+                layoutId="community-tab-underline"
+                className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-accent"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+              />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.push("/messages")}
+            className="relative mr-6 pb-3 font-sans text-sm font-semibold uppercase tracking-widest transition-colors"
+            style={{ color: activeSection === "flames" ? "#E8E8E8" : "#666666" }}
+          >
+            <span>
+              Flammes 🔥
               {unreadMessages > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white">
+                <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white align-middle">
                   {unreadMessages > 9 ? "9+" : unreadMessages}
                 </span>
               )}
-            </Link>
-            <button type="button" className="text-accent" aria-label="Notifications">
-              <Bell className="h-5 w-5 fill-accent" />
-            </button>
-          </div>
-        </header>
-        
-        <p className="mt-6 px-5 font-sans text-[10px] uppercase tracking-[0.2em] text-text-secondary">
-          {t("community_subtitle")}
-        </p>
+            </span>
+            {activeSection === "flames" && (
+              <motion.div
+                layoutId="community-tab-underline"
+                className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-accent"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+              />
+            )}
+          </button>
+        </div>
 
         {/* FILTERS */}
         <div className="mt-5 px-5 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
