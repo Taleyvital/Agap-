@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeft, Search, X, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
@@ -264,7 +263,6 @@ export default function ConversationPage() {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherName, setOtherName] = useState("");
-  const [otherAvatarLevel, setOtherAvatarLevel] = useState(1);
   const [streakCount, setStreakCount] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -287,7 +285,6 @@ export default function ConversationPage() {
         .maybeSingle();
       if (profile) {
         setOtherName(profile.first_name as string);
-        setOtherAvatarLevel(profile.avatar_level as number);
       }
 
       // Load streak

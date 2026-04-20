@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -120,7 +120,6 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
 
 export default function MessagesPage() {
   const router = useRouter();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<MutualFriend[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -130,7 +129,6 @@ export default function MessagesPage() {
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
-      setCurrentUserId(user.id);
 
       // Show onboarding on first visit
       const seen = localStorage.getItem("flames-onboarding-seen");
