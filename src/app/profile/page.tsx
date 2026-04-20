@@ -228,10 +228,10 @@ export default function ProfilePage() {
     }
   };
 
-  const supabase = createSupabaseBrowserClient();
   const saveVerseSettings = useCallback(async () => {
     if (!user) return;
     try {
+      const supabase = createSupabaseBrowserClient();
       await supabase
         .from("profiles")
         .update({
@@ -244,17 +244,18 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error saving verse settings:", error);
     }
-  }, [supabase, user, verseFontSize, verseBold, verseFontFamily, verseLetterSpacing]);
+  }, [user, verseFontSize, verseBold, verseFontFamily, verseLetterSpacing]);
 
   const saveLanguage = useCallback(async (lang: AppLanguage) => {
     if (!user) return;
     setLanguage(lang);
     try {
+      const supabase = createSupabaseBrowserClient();
       await supabase.from("profiles").update({ app_language: lang }).eq("id", user.id);
     } catch (error) {
       console.error("Error saving language:", error);
     }
-  }, [supabase, user, setLanguage]);
+  }, [user, setLanguage]);
 
   useEffect(() => {
     saveVerseSettings();
