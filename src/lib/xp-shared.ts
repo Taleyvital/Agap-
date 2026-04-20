@@ -11,6 +11,11 @@ export const XP_VALUES: Record<string, number> = {
   STREAK_7_DAYS:           100,
   STREAK_30_DAYS:          500,
   ONBOARDING_COMPLETED:    200,
+  // Flammes spirituelles
+  VERSE_SENT:               15,
+  STREAK_3_DAYS_FLAME:      50,
+  STREAK_7_DAYS_FLAME:     150,
+  STREAK_30_DAYS_FLAME:    500,
 };
 
 export const LEVELS = [

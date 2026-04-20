@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -60,7 +61,8 @@ export default function CommunityPage() {
   const [composerCategory, setComposerCategory] = useState<"testimony" | "prayer">("testimony");
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
   // Delete menu state
   const [deleteMenuOpen, setDeleteMenuOpen] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -74,7 +76,15 @@ export default function CommunityPage() {
     const supabase = createSupabaseBrowserClient();
     
     void supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserId(user.id);
+      if (user) {
+        setUserId(user.id);
+        void supabase
+          .from("verse_messages")
+          .select("*", { count: "exact", head: true })
+          .eq("receiver_id", user.id)
+          .is("read_at", null)
+          .then(({ count }) => setUnreadMessages(count ?? 0));
+      }
       
       void supabase
         .from("community_posts")
@@ -289,9 +299,23 @@ export default function CommunityPage() {
             </div>
             <h1 className="font-serif text-2xl font-semibold text-accent">{t("community_title")}</h1>
           </div>
-          <button type="button" className="text-accent" aria-label="Notifications">
-            <Bell className="h-5 w-5 fill-accent" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/messages"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary"
+              aria-label="Flammes spirituelles"
+            >
+              🔥
+              {unreadMessages > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white">
+                  {unreadMessages > 9 ? "9+" : unreadMessages}
+                </span>
+              )}
+            </Link>
+            <button type="button" className="text-accent" aria-label="Notifications">
+              <Bell className="h-5 w-5 fill-accent" />
+            </button>
+          </div>
         </header>
         
         <p className="mt-6 px-5 font-sans text-[10px] uppercase tracking-[0.2em] text-text-secondary">

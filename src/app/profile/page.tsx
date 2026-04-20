@@ -31,6 +31,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import Image from "next/image";
 import { useRef } from "react";
 import { useLanguage, LANGUAGE_OPTIONS, type AppLanguage } from "@/lib/i18n";
+import { getFlameColorHex } from "@/lib/flames";
 
 interface Profile {
   first_name: string | null;
@@ -65,6 +66,7 @@ export default function ProfilePage() {
   const [streak, setStreak] = useState(0);
   const [versesRead, setVersesRead] = useState(0);
   const [activePlan, setActivePlan] = useState<{ title: string; currentDay: number; totalDays: number; planId: string } | null>(null);
+  const [topFlames, setTopFlames] = useState<{ userId: string; firstName: string; streakCount: number }[]>([]);
   const [initial, setInitial] = useState("");
   const [since, setSince] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -171,6 +173,42 @@ export default function ProfilePage() {
               planId: progressData.plan_id,
             });
           }
+        }
+      } catch {
+        // table may not exist yet
+      }
+
+      // Fetch top 3 active flame streaks
+      try {
+        const { data: streaksData } = await supabase
+          .from("verse_streaks")
+          .select("user_a, user_b, streak_count")
+          .or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
+          .order("streak_count", { ascending: false })
+          .limit(3);
+
+        if (streaksData && streaksData.length > 0) {
+          const otherIds = streaksData.map((s) =>
+            s.user_a === user.id ? s.user_b : s.user_a,
+          );
+          const { data: flameProfiles } = await supabase
+            .from("user_profiles_public")
+            .select("user_id, first_name")
+            .in("user_id", otherIds);
+
+          const profileMap = new Map(
+            (flameProfiles ?? []).map((p) => [p.user_id as string, p.first_name as string]),
+          );
+          setTopFlames(
+            streaksData.map((s) => {
+              const otherId = s.user_a === user.id ? s.user_b : s.user_a;
+              return {
+                userId: otherId as string,
+                firstName: profileMap.get(otherId as string) ?? "…",
+                streakCount: s.streak_count as number,
+              };
+            }),
+          );
         }
       } catch {
         // table may not exist yet
@@ -440,9 +478,42 @@ export default function ProfilePage() {
           )}
         </motion.div>
 
+        {/* ── Mes flammes actives ───────────────────── */}
+        {topFlames.length > 0 && (
+          <motion.div {...stagger(3)} className="mt-5">
+            <p className="mb-2 px-1 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
+              Mes flammes actives
+            </p>
+            <div className="overflow-hidden rounded-2xl border border-separator bg-bg-secondary divide-y divide-separator">
+              {topFlames.map((flame) => (
+                <Link
+                  key={flame.userId}
+                  href={`/messages/${flame.userId}`}
+                  className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-bg-tertiary"
+                >
+                  <span
+                    className="text-xl"
+                    style={{ filter: flame.streakCount >= 30 ? "drop-shadow(0 0 4px #ffffff88)" : "none" }}
+                  >
+                    🔥
+                  </span>
+                  <span className="flex-1 font-sans text-sm text-text-primary">{flame.firstName}</span>
+                  <span
+                    className="font-sans text-sm font-semibold"
+                    style={{ color: getFlameColorHex(flame.streakCount) }}
+                  >
+                    {flame.streakCount} jour{flame.streakCount > 1 ? "s" : ""}
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-text-tertiary" />
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* ── Menu sections ─────────────────────────── */}
         {MENU_SECTIONS.map((section, si) => (
-          <motion.div key={section.title} {...stagger(3 + si)} className="mt-6">
+          <motion.div key={section.title} {...stagger(4 + si)} className="mt-6">
             <p className="mb-2 px-1 font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
               {section.title}
             </p>
