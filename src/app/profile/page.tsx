@@ -62,6 +62,7 @@ export default function ProfilePage() {
   const [answeredCount, setAnsweredCount] = useState(0);
   const [streak, setStreak] = useState(0);
   const [versesRead, setVersesRead] = useState(0);
+  const [activePlan, setActivePlan] = useState<{ title: string; currentDay: number; totalDays: number; planId: string } | null>(null);
   const [initial, setInitial] = useState("");
   const [since, setSince] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -149,6 +150,29 @@ export default function ProfilePage() {
       if (prayerRes.count !== null) setAnsweredCount(prayerRes.count);
       if (levelRes.data) setStreak(levelRes.data.current_streak ?? 0);
       if (versesRes.count !== null) setVersesRead(versesRes.count);
+
+      // Fetch active reading plan progress
+      try {
+        const { data: progressData } = await supabase
+          .from("user_plan_progress")
+          .select("plan_id, current_day, completed_days, reading_plans(title, total_days)")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (progressData) {
+          const plan = (Array.isArray(progressData.reading_plans) ? progressData.reading_plans[0] : progressData.reading_plans) as { title: string; total_days: number } | null;
+          if (plan) {
+            setActivePlan({
+              title: plan.title,
+              currentDay: progressData.current_day,
+              totalDays: plan.total_days,
+              planId: progressData.plan_id,
+            });
+          }
+        }
+      } catch {
+        // table may not exist yet
+      }
     })();
   }, []);
 
@@ -361,34 +385,56 @@ export default function ProfilePage() {
 
         {/* ── Reading progress ──────────────────────── */}
         <motion.div {...stagger(2)} className="mt-5 rounded-2xl border border-separator bg-bg-secondary p-5">
-          <div className="flex items-start justify-between">
-            <div>
+          {activePlan ? (() => {
+            const pct = Math.round((activePlan.currentDay - 1) / activePlan.totalDays * 100);
+            return (
+              <>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
+                      {t("profile_reading_plan")}
+                    </p>
+                    <p className="mt-1 font-serif text-lg italic text-text-primary">
+                      {activePlan.title}
+                    </p>
+                    <p className="mt-0.5 font-sans text-xs text-text-secondary">
+                      Jour {activePlan.currentDay} / {activePlan.totalDays}
+                    </p>
+                  </div>
+                  <span className="font-serif text-3xl text-accent">{pct}%</span>
+                </div>
+                <div className="mt-4 h-1.5 w-full rounded-full bg-bg-tertiary">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
+                    className="h-full rounded-full bg-accent"
+                  />
+                </div>
+                <Link
+                  href={`/reading-plan/${activePlan.planId}`}
+                  className="mt-4 inline-block font-sans text-xs uppercase tracking-wider text-accent"
+                >
+                  {t("profile_reading_resume")} →
+                </Link>
+              </>
+            );
+          })() : (
+            <>
               <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
                 {t("profile_reading_plan")}
               </p>
-              <p className="mt-1 font-serif text-lg italic text-text-primary">
-                {t("profile_reading_plan_name")}
+              <p className="mt-2 font-sans text-sm text-text-secondary">
+                Aucun parcours actif pour l&apos;instant.
               </p>
-              <p className="mt-0.5 font-sans text-xs text-text-secondary">
-                {t("profile_reading_plan_current")}
-              </p>
-            </div>
-            <span className="font-serif text-3xl text-accent">64%</span>
-          </div>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-bg-tertiary">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "64%" }}
-              transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-              className="h-full rounded-full bg-accent"
-            />
-          </div>
-          <Link
-            href="/bible"
-            className="mt-4 inline-block font-sans text-xs uppercase tracking-wider text-accent"
-          >
-            {t("profile_reading_resume")} →
-          </Link>
+              <Link
+                href="/reading-plan"
+                className="mt-3 inline-block font-sans text-xs uppercase tracking-wider text-accent"
+              >
+                Commencer un parcours →
+              </Link>
+            </>
+          )}
         </motion.div>
 
         {/* ── Menu sections ─────────────────────────── */}
