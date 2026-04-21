@@ -19,7 +19,8 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[430px] -translate-x-1/2 items-center justify-around border-t border-separator bg-bg-nav/95 px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,16px)+12px)] backdrop-blur-sm"
+      className="fixed left-1/2 z-50 flex -translate-x-1/2 items-center justify-around gap-1 rounded-full px-3 py-2 shadow-xl backdrop-blur-md"
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 16px) + 12px)", backgroundColor: "#1a1830" }}
       aria-label="Navigation principale"
     >
       {items.map(({ href, label, Icon }) => {
@@ -28,18 +29,21 @@ export function BottomNav() {
           <Link
             key={href}
             href={href}
-            className="flex min-w-[52px] flex-col items-center gap-0.5"
+            className={`flex items-center gap-2 rounded-full px-4 py-2 transition-colors ${
+              active ? "text-white" : "text-[#666680]"
+            }`}
+            style={active ? { backgroundColor: "#0d0b1e" } : undefined}
           >
             <Icon
-              className={`h-6 w-6 ${active ? "text-text-primary transition-colors" : "text-text-tertiary transition-colors"}`}
+              className="h-5 w-5 shrink-0"
               strokeWidth={active ? 2.2 : 1.5}
               aria-hidden
             />
-            <span
-              className={`text-[10px] font-sans uppercase tracking-widest ${active ? "text-text-primary transition-colors" : "text-text-tertiary transition-colors"}`}
-            >
-              {label}
-            </span>
+            {active && (
+              <span className="font-sans text-[11px] font-semibold uppercase tracking-widest whitespace-nowrap">
+                {label}
+              </span>
+            )}
           </Link>
         );
       })}
