@@ -6,7 +6,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Search, X, Send, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { getFlameColorHex } from "@/lib/flames";
 import { getBooks, getChapter } from "@/lib/bible";
@@ -484,8 +483,8 @@ export default function ConversationPage() {
   }
 
   return (
-    <AppShell showNav={false}>
-      <div className="flex flex-col" style={{ height: "100dvh" }}>
+    <div className="bg-[#141414]">
+      <div className="relative mx-auto max-w-[430px] flex flex-col bg-bg-primary" style={{ height: "100dvh" }}>
 
         {/* Header */}
         <header className="shrink-0 flex items-center gap-3 border-b border-separator bg-bg-primary/95 backdrop-blur-sm px-4 py-3">
@@ -642,6 +641,6 @@ export default function ConversationPage() {
           />
         )}
       </AnimatePresence>
-    </AppShell>
+    </div>
   );
 }

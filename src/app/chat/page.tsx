@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Bell, Plus, Send } from "lucide-react";
 import { motion } from "framer-motion";
-import { AppShell } from "@/components/layout/AppShell";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { ChatBubble } from "@/components/ui/ChatBubble";
 import { VerseCard } from "@/components/ui/VerseCard";
 import { parseAgapeReply } from "@/lib/chat-parse";
@@ -30,11 +30,11 @@ export default function ChatPageWrapper() {
   const { t } = useLanguage();
   return (
     <Suspense fallback={
-      <AppShell>
-        <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
+      <div className="bg-[#141414]">
+        <div className="relative mx-auto max-w-[430px] flex items-center justify-center bg-bg-primary" style={{ height: "100dvh" }}>
           <p className="text-text-tertiary">{t("common_loading")}</p>
         </div>
-      </AppShell>
+      </div>
     }>
       <ChatPage />
     </Suspense>
@@ -143,9 +143,9 @@ function ChatPage() {
   }, [messages, scrollToEnd]);
 
   return (
-    <AppShell>
-      <div className="flex min-h-[calc(100vh-6rem)] flex-col px-4 pt-4">
-        <header className="flex items-center justify-between gap-2">
+    <div className="bg-[#141414]">
+      <div className="relative mx-auto max-w-[430px] flex flex-col bg-bg-primary" style={{ height: "100dvh" }}>
+        <header className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-2">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-bg-tertiary font-sans text-xs font-bold text-accent">
               A
@@ -169,7 +169,7 @@ function ChatPage() {
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-6 text-center"
+          className="mt-4 text-center px-4"
         >
           <p className="font-serif text-2xl italic leading-snug text-text-primary">
             {line}
@@ -181,7 +181,8 @@ function ChatPage() {
 
         <div
           ref={scrollRef}
-          className="mt-6 flex flex-1 flex-col gap-4 overflow-y-auto pb-4"
+          className="mt-4 flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4"
+          style={{ overscrollBehavior: "contain" }}
         >
           {messages.map((m) => (
             <div key={m.id} className="flex flex-col gap-2">
@@ -231,7 +232,7 @@ function ChatPage() {
           ) : null}
         </div>
 
-        <div className="sticky bottom-0 -mx-1 flex gap-2 overflow-x-auto pb-2 pt-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="shrink-0 px-4 flex gap-2 overflow-x-auto pb-2 pt-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {[t("chat_suggest_pray"), t("chat_suggest_peace"), t("chat_suggest_release")].map((s) => (
             <button
               key={s}
@@ -244,7 +245,8 @@ function ChatPage() {
           ))}
         </div>
 
-        <div className="mt-2 flex items-center gap-2 rounded-2xl bg-bg-secondary px-3 py-2">
+        <div className="shrink-0 px-4 pb-2">
+        <div className="flex items-center gap-2 rounded-2xl bg-bg-secondary px-3 py-2">
           <button
             type="button"
             className="p-2 text-text-tertiary"
@@ -271,8 +273,10 @@ function ChatPage() {
             <Send className="h-4 w-4" />
           </button>
         </div>
+        </div>
+        <BottomNav />
       </div>
-    </AppShell>
+    </div>
   );
 }
 
