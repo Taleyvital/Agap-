@@ -542,11 +542,14 @@ export default function CommunityPage() {
 
         {/* COMPOSER MODAL */}
         {composer ? (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm">
             <motion.div
-              initial={{ y: 40, opacity: 0 }}
+              initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="w-full max-w-[430px] rounded-3xl bg-bg-secondary p-5 shadow-2xl"
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="w-full max-w-[430px] rounded-t-3xl bg-bg-secondary p-5 shadow-2xl"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
             >
               <div className="flex items-center justify-between">
                 <p className="ui-label font-bold text-text-tertiary uppercase tracking-widest">{t("community_new_post")}</p>
