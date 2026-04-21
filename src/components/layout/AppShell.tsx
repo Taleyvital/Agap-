@@ -10,8 +10,8 @@ interface AppShellProps {
 
 export function AppShell({ children, showNav = true }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-[#141414]">
-      <div className="relative mx-auto min-h-screen max-w-[430px] bg-bg-primary pb-24 shadow-2xl transition-colors duration-300">
+    <div className="min-h-screen overflow-x-hidden bg-[#141414]">
+      <div className="relative mx-auto min-h-screen max-w-[430px] overflow-x-hidden bg-bg-primary pb-24">
         {children}
         {showNav ? <BottomNav /> : null}
       </div>
