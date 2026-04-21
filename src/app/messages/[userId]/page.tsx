@@ -503,7 +503,7 @@ export default function ConversationPage() {
       <div className="relative mx-auto max-w-[430px] flex flex-col bg-bg-primary" style={{ height: "100dvh", paddingBottom: keyboardOffset > 0 ? `${keyboardOffset}px` : undefined }}>
 
         {/* Header */}
-        <header className="shrink-0 flex items-center gap-3 border-b border-separator bg-bg-primary/95 backdrop-blur-sm px-4 py-3">
+        <header className="shrink-0 flex items-center gap-3 border-b border-separator bg-bg-primary/95 backdrop-blur-sm px-4 pb-3" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)" }}>
           <button type="button" onClick={() => router.back()}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary shrink-0">
             <ArrowLeft className="h-4 w-4" />
