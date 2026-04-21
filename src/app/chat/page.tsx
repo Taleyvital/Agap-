@@ -271,7 +271,7 @@ function ChatPage() {
             <Plus className="h-5 w-5" />
           </button>
           <input
-            className="min-w-0 flex-1 bg-transparent font-sans text-sm text-text-primary outline-none placeholder:text-text-tertiary"
+            className="min-w-0 flex-1 bg-transparent font-sans text-[16px] text-text-primary outline-none placeholder:text-text-tertiary"
             placeholder={t("chat_placeholder")}
             value={input}
             onChange={(e) => setInput(e.target.value)}

@@ -627,7 +627,7 @@ export default function ConversationPage() {
                 onChange={(e) => setChatInput(e.target.value.slice(0, 500))}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSendChat(); } }}
                 placeholder="Message…"
-                className="w-full rounded-2xl border border-separator bg-bg-secondary px-4 py-2.5 font-sans text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent pr-10"
+                className="w-full rounded-2xl border border-separator bg-bg-secondary px-4 py-2.5 font-sans text-[16px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent pr-10"
               />
             </div>
 
