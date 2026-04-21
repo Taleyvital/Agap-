@@ -22,7 +22,6 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  interactiveWidget: "resizes-content",
 };
 
 export const metadata: Metadata = {
@@ -58,7 +57,7 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/icons/logo-fond-violet.svg" />
       </head>
       <body
-        className={`${inter.variable} ${playfair.variable} min-h-screen font-sans antialiased`}
+        className={`${inter.variable} ${playfair.variable} min-h-screen bg-[#141414] font-sans antialiased`}
       >
         <ThemeProvider><LanguageProvider><XPToastProvider>{children}</XPToastProvider></LanguageProvider></ThemeProvider>
         <script dangerouslySetInnerHTML={{
