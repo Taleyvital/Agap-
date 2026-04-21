@@ -58,9 +58,25 @@ function ChatPage() {
     },
   ]);
   const [loading, setLoading] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasSentInitialVerse = useRef<string | null>(null);
   const { line, tag } = timeLabel(t);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handler = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardOffset(offset);
+    };
+    vv.addEventListener("resize", handler);
+    vv.addEventListener("scroll", handler);
+    return () => {
+      vv.removeEventListener("resize", handler);
+      vv.removeEventListener("scroll", handler);
+    };
+  }, []);
 
   const scrollToEnd = useCallback(() => {
     scrollRef.current?.scrollTo({
@@ -144,7 +160,7 @@ function ChatPage() {
 
   return (
     <div className="bg-[#141414]">
-      <div className="relative mx-auto max-w-[430px] flex flex-col bg-bg-primary" style={{ height: "100dvh", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 68px)" }}>
+      <div className="relative mx-auto max-w-[430px] flex flex-col bg-bg-primary" style={{ height: "100dvh", paddingBottom: `calc(${keyboardOffset}px + env(safe-area-inset-bottom, 0px) + 68px)` }}>
         <header className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-2">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-bg-tertiary font-sans text-xs font-bold text-accent">
