@@ -485,10 +485,10 @@ export default function ConversationPage() {
 
   return (
     <AppShell showNav={false}>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col" style={{ height: "100dvh" }}>
 
-        {/* Fixed header */}
-        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-separator bg-bg-primary/95 backdrop-blur-sm px-4 py-3">
+        {/* Header */}
+        <header className="shrink-0 flex items-center gap-3 border-b border-separator bg-bg-primary/95 backdrop-blur-sm px-4 py-3">
           <button type="button" onClick={() => router.back()}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary shrink-0">
             <ArrowLeft className="h-4 w-4" />
@@ -507,7 +507,7 @@ export default function ConversationPage() {
         </header>
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
+        <div className="flex-1 overflow-y-auto px-4 py-4 pb-4" style={{ overscrollBehavior: "contain" }}>
           {loading && (
             <div className="flex justify-center py-12">
               <div className="h-5 w-5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
@@ -592,7 +592,7 @@ export default function ConversationPage() {
         </div>
 
         {/* Bottom bar: chat input + verse button */}
-        <div className="fixed bottom-0 inset-x-0 mx-auto max-w-[430px] border-t border-separator bg-bg-primary/95 backdrop-blur-sm px-3 py-2.5">
+        <div className="shrink-0 border-t border-separator bg-bg-primary/95 backdrop-blur-sm px-3 py-2.5" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)" }}>
           <div className="flex items-end gap-2">
             {/* Flame/verse button */}
             <button

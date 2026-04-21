@@ -17,6 +17,8 @@ export interface VerseFullCardProps {
   onClose: () => void;
   /** Optional background image URL (e.g., daily image) */
   backgroundImage?: string;
+  /** Called when user taps "Envoyer en Flammes" */
+  onSendAsFlame?: () => void;
 }
 
 // ── Grain overlay via CSS (no external file needed) ──────────
@@ -129,7 +131,7 @@ function getDailyImages(count = 15) {
 }
 
 // ── Main component ────────────────────────────────────────────
-export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, backgroundImage }: VerseFullCardProps) {
+export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, backgroundImage, onSendAsFlame }: VerseFullCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -393,6 +395,29 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
               <ImageIcon size={16} />
               Fond
             </button>
+
+            {/* Send as Flame */}
+            {onSendAsFlame && (
+              <button
+                type="button"
+                onClick={onSendAsFlame}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "#7B6FD4",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  transition: "color 0.2s",
+                  padding: "8px 12px",
+                }}
+              >
+                🔥 Flammes
+              </button>
+            )}
 
             {/* Share */}
             <button

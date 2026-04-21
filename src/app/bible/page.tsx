@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
-import { ChevronLeft, ChevronRight, BookOpen, Palette, StickyNote, Pencil, Sparkles, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Palette, StickyNote, Pencil, Sparkles, Check, Flame } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
@@ -17,6 +17,7 @@ import type { BibleBook, BibleVerseRow } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
+import { SendFlameSheet } from "@/components/ui/SendFlameSheet";
 import { BiblicalObjectSheet } from "@/components/ui/BiblicalObjectSheet";
 import { annotateText, type BiblicalObject } from "@/lib/biblicalObjects";
 import { useLanguage } from "@/lib/i18n";
@@ -75,6 +76,7 @@ function BiblePageContent() {
   const [verseCardData, setVerseCardData] = useState<{ verse: number; text: string } | null>(null);
   const [objectSheetOpen, setObjectSheetOpen] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState<BiblicalObject[]>([]);
+  const [flameSheetOpen, setFlameSheetOpen] = useState(false);
 
   // Translation + compare state
   const [translationSheetOpen, setTranslationSheetOpen] = useState(false);
@@ -1030,6 +1032,19 @@ function BiblePageContent() {
                                     <Pencil className="h-3.5 w-3.5" />
                                     {verseNotes[getVerseKey(bookId!, chapter!, row.verse)] ? "NOTE" : "NOTER"}
                                   </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setVerseCardData({ verse: row.verse, text: stripHtml(row.text) });
+                                      setFlameSheetOpen(true);
+                                    }}
+                                    className="flex items-center gap-1.5 font-sans text-xs uppercase tracking-wider text-text-secondary hover:text-accent transition-colors"
+                                    aria-label="Envoyer en Flammes"
+                                  >
+                                    <Flame className="h-3.5 w-3.5" />
+                                    FLAMMES
+                                  </button>
                                 </motion.div>
                               )}
                             </motion.div>
@@ -1311,6 +1326,18 @@ function BiblePageContent() {
       text={verseCardData?.text ?? ""}
       isOpen={verseCardOpen}
       onClose={() => setVerseCardOpen(false)}
+    />
+
+    {/* ── Send as Flame sheet ── */}
+    <SendFlameSheet
+      isOpen={flameSheetOpen}
+      onClose={() => setFlameSheetOpen(false)}
+      verseRef={
+        selectedBook && chapter && verseCardData
+          ? `${selectedBook.name} ${chapter}:${verseCardData.verse}`
+          : ""
+      }
+      verseText={verseCardData?.text ?? ""}
     />
 
     {/* ── Biblical Object Sheet (tap highlighted word) ── */}
