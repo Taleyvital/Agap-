@@ -18,35 +18,60 @@ export function BottomNav() {
   ] as const;
 
   return (
-    <nav
-      className="fixed left-1/2 z-50 flex -translate-x-1/2 items-center justify-around gap-1 rounded-full px-3 py-2 shadow-xl backdrop-blur-md"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 16px) + 12px)", backgroundColor: "#1a1830" }}
-      aria-label="Navigation principale"
+    <div
+      className="fixed left-1/2 z-50 -translate-x-1/2 pointer-events-none"
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 8px) + 4px)" }}
     >
-      {items.map(({ href, label, Icon }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 transition-colors ${
-              active ? "text-white" : "text-[#666680]"
-            }`}
-            style={active ? { backgroundColor: "#0d0b1e" } : undefined}
-          >
-            <Icon
-              className="h-5 w-5 shrink-0"
-              strokeWidth={active ? 2.2 : 1.5}
-              aria-hidden
-            />
-            {active && (
-              <span className="font-sans text-[11px] font-semibold uppercase tracking-widest whitespace-nowrap">
-                {label}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+      {/* Pixel stretch — blurs content that scrolls behind the nav */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: "100%",
+          left: "-40px",
+          right: "-40px",
+          height: "72px",
+          backdropFilter: "blur(28px) saturate(220%)",
+          WebkitBackdropFilter: "blur(28px) saturate(220%)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
+        }}
+      />
+
+      <nav
+        className="pointer-events-auto relative flex items-center justify-around gap-1 rounded-full px-4 py-3 shadow-2xl"
+        style={{
+          backgroundColor: "rgba(26, 24, 48, 0.80)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(123, 111, 212, 0.18)",
+        }}
+        aria-label="Navigation principale"
+      >
+        {items.map(({ href, label, Icon }) => {
+          const active = pathname === href || pathname.startsWith(`${href}/`);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 transition-colors ${
+                active ? "text-white" : "text-[#666680]"
+              }`}
+              style={active ? { backgroundColor: "#0d0b1e" } : undefined}
+            >
+              <Icon
+                className="h-5 w-5 shrink-0"
+                strokeWidth={active ? 2.2 : 1.5}
+                aria-hidden
+              />
+              {active && (
+                <span className="font-sans text-[11px] font-semibold uppercase tracking-widest whitespace-nowrap">
+                  {label}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
