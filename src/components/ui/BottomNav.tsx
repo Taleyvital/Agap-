@@ -19,60 +19,31 @@ export function BottomNav() {
   ] as const;
 
   return (
-    <div
-      className="fixed left-1/2 z-50 -translate-x-1/2 pointer-events-none"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 8px) + 4px)" }}
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 flex items-end justify-around border-t border-separator bg-bg-nav"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}
+      aria-label="Navigation principale"
     >
-      {/* Pixel stretch — blurs content that scrolls behind the nav */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: "100%",
-          left: "-40px",
-          right: "-40px",
-          height: "72px",
-          backdropFilter: "blur(28px) saturate(220%)",
-          WebkitBackdropFilter: "blur(28px) saturate(220%)",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
-        }}
-      />
-
-      <nav
-        className="pointer-events-auto relative flex items-center justify-around gap-1 rounded-full px-4 py-3 shadow-2xl"
-        style={{
-          backgroundColor: "rgba(26, 24, 48, 0.80)",
-          backdropFilter: "blur(24px) saturate(180%)",
-          WebkitBackdropFilter: "blur(24px) saturate(180%)",
-          border: "1px solid rgba(123, 111, 212, 0.18)",
-        }}
-        aria-label="Navigation principale"
-      >
-        {items.map(({ href, label, Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 transition-colors ${
-                active ? "text-white" : "text-[#666680]"
-              }`}
-              style={active ? { backgroundColor: "#0d0b1e" } : undefined}
-            >
-              <Icon
-                className="h-5 w-5 shrink-0"
-                strokeWidth={active ? 2.2 : 1.5}
-                aria-hidden
-              />
-              {active && (
-                <span className="font-sans text-[11px] font-semibold uppercase tracking-widest whitespace-nowrap">
-                  {label}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+      {items.map(({ href, label, Icon }) => {
+        const active = pathname === href || pathname.startsWith(`${href}/`);
+        return (
+          <Link
+            key={href}
+            href={href}
+            className="flex flex-1 flex-col items-center gap-1 py-3 transition-colors"
+            style={{ color: active ? "rgb(var(--text-primary))" : "rgb(var(--text-tertiary))" }}
+          >
+            <Icon
+              className="h-6 w-6 shrink-0"
+              strokeWidth={active ? 2.2 : 1.5}
+              aria-hidden
+            />
+            <span className="font-sans text-[9px] font-semibold uppercase tracking-widest">
+              {label}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
