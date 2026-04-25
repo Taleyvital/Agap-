@@ -16,6 +16,10 @@ export const XP_VALUES: Record<string, number> = {
   STREAK_3_DAYS_FLAME:      50,
   STREAK_7_DAYS_FLAME:     150,
   STREAK_30_DAYS_FLAME:    500,
+  // Gospel
+  GOSPEL_TRACK_PLAYED:       5,
+  GOSPEL_TRACK_LIKED:        5,
+  GOSPEL_TRACK_UPLOADED:   100,
 };
 
 export const LEVELS = [

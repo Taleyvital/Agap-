@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Home, Users, Flame, User } from "lucide-react";
+import { BookOpen, Home, Users, Flame, User, Music2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 
 export function BottomNav() {
@@ -10,11 +10,12 @@ export function BottomNav() {
   const { t } = useLanguage();
 
   const items = [
-    { href: "/home", label: t("nav_home"), Icon: Home },
-    { href: "/bible", label: t("nav_bible"), Icon: BookOpen },
+    { href: "/home",      label: t("nav_home"),     Icon: Home },
+    { href: "/bible",     label: t("nav_bible"),    Icon: BookOpen },
+    { href: "/gospel",    label: "Gospel",           Icon: Music2 },
     { href: "/community", label: t("nav_community"), Icon: Users },
-    { href: "/prayer", label: t("nav_pray"), Icon: Flame },
-    { href: "/profile", label: t("nav_profile"), Icon: User },
+    { href: "/prayer",    label: t("nav_pray"),      Icon: Flame },
+    { href: "/profile",   label: t("nav_profile"),   Icon: User },
   ] as const;
 
   return (
