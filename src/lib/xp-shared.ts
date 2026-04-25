@@ -20,6 +20,8 @@ export const XP_VALUES: Record<string, number> = {
   GOSPEL_TRACK_PLAYED:       5,
   GOSPEL_TRACK_LIKED:        5,
   GOSPEL_TRACK_UPLOADED:   100,
+  // Strong Concordance
+  STRONG_WORD_EXPLORED:     10,
 };
 
 export const LEVELS = [

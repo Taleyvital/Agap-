@@ -21,6 +21,7 @@ import { SendFlameSheet } from "@/components/ui/SendFlameSheet";
 import { BiblicalObjectSheet } from "@/components/ui/BiblicalObjectSheet";
 import { annotateText, type BiblicalObject } from "@/lib/biblicalObjects";
 import { useLanguage } from "@/lib/i18n";
+import { getVerseInterlinear, type WordToken } from "@/lib/strong";
 
 // Livres de l'Ancien Testament (bookid 1–39) et Nouveau Testament (40–66)
 const AT_MAX_ID = 39;
@@ -36,6 +37,71 @@ type ViewMode = "books" | "chapters" | "verses";
 
 function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ");
+}
+
+function StrongChips({
+  bookId, chapter, verse, tokens, loading, onLoad, onLoadingChange, onExplore,
+}: {
+  bookId: number;
+  chapter: number;
+  verse: number;
+  tokens: Record<string, WordToken[]>;
+  loading: Record<string, boolean>;
+  onLoad: (key: string, words: WordToken[]) => void;
+  onLoadingChange: (key: string, val: boolean) => void;
+  onExplore: (number: string) => void;
+}) {
+  const key = `${bookId}-${chapter}-${verse}`;
+  const words = tokens[key];
+  const isLoading = loading[key];
+
+  useEffect(() => {
+    if (words !== undefined || isLoading) return;
+    onLoadingChange(key, true);
+    void getVerseInterlinear(bookId, chapter, verse).then((w) => {
+      onLoad(key, w);
+      onLoadingChange(key, false);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  if (isLoading) {
+    return (
+      <div className="mt-2 ml-[2.1rem] flex flex-wrap gap-1.5">
+        {[60, 48, 72, 52].map((w) => (
+          <div key={w} className="h-7 rounded-full bg-bg-secondary animate-pulse" style={{ width: w }} />
+        ))}
+      </div>
+    );
+  }
+
+  if (!words || words.length === 0) return null;
+
+  return (
+    <div className="mt-2 ml-[2.1rem] flex flex-wrap gap-1.5">
+      {words.map((token, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (token.strong) onExplore(token.strong);
+          }}
+          disabled={!token.strong}
+          className={`flex flex-col items-center rounded-full px-3 py-1 border transition-all text-left ${
+            token.strong
+              ? "border-accent/30 bg-accent/10 hover:bg-accent/15 active:scale-95 cursor-pointer"
+              : "border-separator bg-bg-secondary cursor-default opacity-60"
+          }`}
+        >
+          <span className="font-sans text-[11px] text-text-primary leading-tight">{token.word}</span>
+          {token.strong && (
+            <span className="font-sans text-[9px] text-accent/70 leading-none mt-0.5">{token.strong}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function BiblePageContent() {
@@ -77,6 +143,11 @@ function BiblePageContent() {
   const [objectSheetOpen, setObjectSheetOpen] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState<BiblicalObject[]>([]);
   const [flameSheetOpen, setFlameSheetOpen] = useState(false);
+
+  // Strong concordance state
+  const [strongMode, setStrongMode] = useState(false);
+  const [strongTokens, setStrongTokens] = useState<Record<string, WordToken[]>>({});
+  const [strongLoading, setStrongLoading] = useState<Record<string, boolean>>({});
 
   // Translation + compare state
   const [translationSheetOpen, setTranslationSheetOpen] = useState(false);
@@ -676,6 +747,28 @@ function BiblePageContent() {
               Comparer
             </button>
 
+            {/* Strong concordance toggle */}
+            {view === "verses" && (
+              <button
+                type="button"
+                onClick={() => setStrongMode((prev) => !prev)}
+                style={{
+                  background: strongMode ? "rgba(123,111,212,0.15)" : "#1c1c1c",
+                  border: strongMode ? "0.5px solid rgba(123,111,212,0.5)" : "0.5px solid #2a2a2a",
+                  borderRadius: "10px",
+                  color: strongMode ? "#7B6FD4" : "#666666",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: "12px",
+                  padding: "5px 12px",
+                  cursor: "pointer",
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Strong
+              </button>
+            )}
+
             {/* Compare translation pill (visible only in compare mode) */}
             <AnimatePresence>
               {compareMode && (
@@ -982,6 +1075,27 @@ function BiblePageContent() {
                                   )}
                                 </span>
                               </p>
+                              {/* Strong word chips */}
+                              {strongMode && (
+                                <StrongChips
+                                  bookId={bookId!}
+                                  chapter={chapter!}
+                                  verse={row.verse}
+                                  tokens={strongTokens}
+                                  loading={strongLoading}
+                                  onLoad={(key, words) =>
+                                    setStrongTokens((prev) => ({ ...prev, [key]: words }))
+                                  }
+                                  onLoadingChange={(key, val) =>
+                                    setStrongLoading((prev) => ({ ...prev, [key]: val }))
+                                  }
+                                  onExplore={(number) => {
+                                    void triggerXP("STRONG_WORD_EXPLORED", showXPToast);
+                                    router.push(`/bible/strong/${number}`);
+                                  }}
+                                />
+                              )}
+
                               {active && (
                                 <motion.div
                                   initial={{ opacity: 0, y: 4 }}
