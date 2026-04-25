@@ -48,6 +48,42 @@ export default function GospelUploadPage() {
     lyrics: "",
   });
 
+  // ── XHR upload with real progress ────────────────────────────
+  const uploadAudioXHR = (
+    file: File,
+    path: string,
+    token: string,
+    onProgress: (pct: number) => void,
+  ): Promise<{ error: string | null }> =>
+    new Promise((resolve) => {
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/gospel-audio/${path}`;
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.setRequestHeader("Content-Type", file.type || "audio/mpeg");
+      xhr.setRequestHeader("x-upsert", "false");
+      xhr.timeout = 180_000; // 3 min
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({ error: null });
+        } else {
+          try {
+            const body = JSON.parse(xhr.responseText) as { message?: string };
+            resolve({ error: body.message ?? `Erreur HTTP ${xhr.status}` });
+          } catch {
+            resolve({ error: `Erreur HTTP ${xhr.status}` });
+          }
+        }
+      };
+      xhr.onerror   = () => resolve({ error: "Erreur réseau" });
+      xhr.ontimeout = () => resolve({ error: "Délai dépassé (3 min)" });
+      xhr.send(file);
+    });
+
   // ── Audio upload ─────────────────────────────────────────────
   const handleAudioSelect = async (file: File) => {
     if (!file.type.startsWith("audio/")) {
@@ -60,6 +96,7 @@ export default function GospelUploadPage() {
     }
     setError("");
     setAudioFile(file);
+    setUploadProgress(0);
     const blob = URL.createObjectURL(file);
 
     // Measure duration
@@ -67,21 +104,28 @@ export default function GospelUploadPage() {
     audio.addEventListener("loadedmetadata", () => setAudioDuration(Math.floor(audio.duration)));
     audioPreviewRef.current = audio;
 
-    // Upload to Supabase Storage
+    // Authenticate
     setIsUploading(true);
-    setUploadProgress(10);
     const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Non authentifié"); setIsUploading(false); return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setError("Non authentifié"); setIsUploading(false); return; }
 
     const ext  = file.name.split(".").pop() ?? "mp3";
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error: uploadErr } = await supabase.storage
-      .from("gospel-audio")
-      .upload(path, file, { upsert: false });
+    const path = `${session.user.id}/${Date.now()}.${ext}`;
 
-    setUploadProgress(90);
-    if (uploadErr) { setError("Erreur upload audio: " + uploadErr.message); setIsUploading(false); return; }
+    const { error: uploadErr } = await uploadAudioXHR(
+      file,
+      path,
+      session.access_token,
+      (pct) => setUploadProgress(pct),
+    );
+
+    if (uploadErr) {
+      setError("Erreur upload audio : " + uploadErr);
+      setIsUploading(false);
+      setUploadProgress(0);
+      return;
+    }
     setAudioUrl(path);
     setUploadProgress(100);
     setIsUploading(false);
