@@ -89,9 +89,8 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
           : currentIndex + 1;
         const nextTrack = s.queue[nextIndex] ?? null;
         if (nextTrack) {
-          audio.src = nextTrack.audio_url;
-          audio.play().catch(() => {});
           playCountedRef.current = false;
+          loadAndPlay(nextTrack);
           return { ...s, currentTrack: nextTrack, isPlaying: true, currentTime: 0 };
         }
         return { ...s, isPlaying: false, currentTime: 0 };
@@ -109,16 +108,30 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const play = useCallback((track: GospelTrack, queue?: GospelTrack[]) => {
+  // Résout l'URL signée si audio_url est un chemin Storage brut
+  const resolveAudioUrl = useCallback(async (track: GospelTrack): Promise<string> => {
+    if (track.audio_url.startsWith("http")) return track.audio_url;
+    try {
+      const res = await fetch(`/api/gospel/tracks/${track.id}`);
+      const data = await res.json();
+      return data.track?.audio_url ?? track.audio_url;
+    } catch {
+      return track.audio_url;
+    }
+  }, []);
+
+  // Charge et joue un track en résolvant l'URL au besoin
+  const loadAndPlay = useCallback(async (track: GospelTrack) => {
     const audio = audioRef.current;
     if (!audio) return;
-    playCountedRef.current = false;
-    audio.src = track.audio_url;
+    const url = await resolveAudioUrl(track);
+    audio.src = url;
     audio.play().catch(() => {});
-
-    // Increment play count in background
     fetch(`/api/gospel/tracks/${track.id}/play`, { method: "POST" }).catch(() => {});
+  }, [resolveAudioUrl]);
 
+  const play = useCallback((track: GospelTrack, queue?: GospelTrack[]) => {
+    playCountedRef.current = false;
     setState((s) => ({
       ...s,
       currentTrack: track,
@@ -126,7 +139,8 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
       isPlaying: true,
       currentTime: 0,
     }));
-  }, []);
+    loadAndPlay(track);
+  }, [loadAndPlay]);
 
   const pause = useCallback(() => {
     audioRef.current?.pause();
@@ -160,14 +174,12 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
         ? Math.floor(Math.random() * s.queue.length)
         : (idx + 1) % s.queue.length;
       const nextTrack = s.queue[nextIdx];
-      if (!nextTrack || !audioRef.current) return s;
+      if (!nextTrack) return s;
       playCountedRef.current = false;
-      audioRef.current.src = nextTrack.audio_url;
-      audioRef.current.play().catch(() => {});
-      fetch(`/api/gospel/tracks/${nextTrack.id}/play`, { method: "POST" }).catch(() => {});
+      loadAndPlay(nextTrack);
       return { ...s, currentTrack: nextTrack, isPlaying: true, currentTime: 0 };
     });
-  }, []);
+  }, [loadAndPlay]);
 
   const prev = useCallback(() => {
     const audio = audioRef.current;
@@ -180,13 +192,12 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
       const idx = s.queue.findIndex((t) => t.id === s.currentTrack?.id);
       const prevIdx = idx > 0 ? idx - 1 : s.queue.length - 1;
       const prevTrack = s.queue[prevIdx];
-      if (!prevTrack || !audioRef.current) return s;
+      if (!prevTrack) return s;
       playCountedRef.current = false;
-      audioRef.current.src = prevTrack.audio_url;
-      audioRef.current.play().catch(() => {});
+      loadAndPlay(prevTrack);
       return { ...s, currentTrack: prevTrack, isPlaying: true, currentTime: 0 };
     });
-  }, []);
+  }, [loadAndPlay]);
 
   const toggleShuffle = useCallback(() => {
     setState((s) => ({ ...s, isShuffle: !s.isShuffle }));
