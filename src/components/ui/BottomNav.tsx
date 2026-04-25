@@ -10,9 +10,9 @@ export function BottomNav() {
   const { t } = useLanguage();
 
   const items = [
-    { href: "/home",      label: t("nav_home"),     Icon: Home },
-    { href: "/bible",     label: t("nav_bible"),    Icon: BookOpen },
-    { href: "/gospel",    label: "Gospel",           Icon: Music2 },
+    { href: "/home",      label: t("nav_home"),      Icon: Home },
+    { href: "/bible",     label: t("nav_bible"),     Icon: BookOpen },
+    { href: "/gospel",    label: "Gospel",            Icon: Music2 },
     { href: "/community", label: t("nav_community"), Icon: Users },
     { href: "/prayer",    label: t("nav_pray"),      Icon: Flame },
     { href: "/profile",   label: t("nav_profile"),   Icon: User },
