@@ -43,6 +43,7 @@ interface Profile {
   verse_font_family: string | null;
   verse_letter_spacing: number | null;
   app_language: string | null;
+  is_admin: boolean | null;
 }
 
 const FONT_OPTIONS = [
@@ -112,7 +113,7 @@ export default function ProfilePage() {
       setUser(user);
       const { data } = await supabase
         .from("profiles")
-        .select("first_name, anonymous_name, created_at, avatar_url, verse_font_size, verse_bold, verse_font_family, verse_letter_spacing, app_language")
+        .select("first_name, anonymous_name, created_at, avatar_url, verse_font_size, verse_bold, verse_font_family, verse_letter_spacing, app_language, is_admin")
         .eq("id", user.id)
         .single();
       if (data) {
@@ -546,6 +547,19 @@ export default function ProfilePage() {
             {t("profile_sign_out")}
           </button>
         </motion.div>
+
+        {/* ── Admin link ───────────────────────────── */}
+        {profile?.is_admin && (
+          <motion.div {...stagger(6)} className="mt-4">
+            <Link
+              href="/admin/gospel"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#7B6FD4]/20 bg-[#7B6FD4]/5 py-3.5 font-sans text-sm text-[#7B6FD4]/80 transition-colors hover:bg-[#7B6FD4]/10"
+            >
+              <Settings className="h-4 w-4" />
+              Dashboard Admin Gospel
+            </Link>
+          </motion.div>
+        )}
 
         {/* ── App version ───────────────────────────── */}
         <p className="mt-6 text-center font-sans text-[10px] text-text-tertiary/40">
