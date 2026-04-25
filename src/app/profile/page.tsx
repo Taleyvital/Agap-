@@ -11,9 +11,12 @@ import {
   Camera,
   Check,
   ChevronRight,
+  Eye,
+  EyeOff,
   FileText,
   Flame,
   HelpCircle,
+  KeyRound,
   Loader2,
   LogOut,
   MessageCircle,
@@ -71,7 +74,16 @@ export default function ProfilePage() {
   const [initial, setInitial] = useState("");
   const [since, setSince] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [themeSheetOpen, setThemeSheetOpen] = useState(false);
+  const [themeSheetOpen, setThemeSheetOpen]     = useState(false);
+  const [pwSheetOpen, setPwSheetOpen]           = useState(false);
+  const [pwCurrent, setPwCurrent]               = useState("");
+  const [pwNew, setPwNew]                       = useState("");
+  const [pwConfirm, setPwConfirm]               = useState("");
+  const [pwShowCurrent, setPwShowCurrent]       = useState(false);
+  const [pwShowNew, setPwShowNew]               = useState(false);
+  const [pwLoading, setPwLoading]               = useState(false);
+  const [pwError, setPwError]                   = useState("");
+  const [pwSuccess, setPwSuccess]               = useState(false);
   const [verseFontSize, setVerseFontSize] = useState(16);
   const [verseBold, setVerseBold] = useState(false);
   const [verseFontFamily, setVerseFontFamily] = useState("var(--font-serif)");
@@ -300,6 +312,34 @@ export default function ProfilePage() {
     saveVerseSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verseFontSize, verseBold, verseFontFamily, verseLetterSpacing]);
+
+  const openPwSheet = () => {
+    setPwCurrent(""); setPwNew(""); setPwConfirm("");
+    setPwError(""); setPwSuccess(false);
+    setPwSheetOpen(true);
+  };
+
+  const changePassword = async () => {
+    setPwError("");
+    if (pwNew.length < 8) { setPwError("Le nouveau mot de passe doit contenir au moins 8 caractères."); return; }
+    if (pwNew !== pwConfirm) { setPwError("Les mots de passe ne correspondent pas."); return; }
+
+    setPwLoading(true);
+    const supabase = createSupabaseBrowserClient();
+
+    // Verify current password via re-auth
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const email = authUser?.email ?? "";
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pwCurrent });
+    if (signInErr) { setPwError("Mot de passe actuel incorrect."); setPwLoading(false); return; }
+
+    // Update password
+    const { error: updateErr } = await supabase.auth.updateUser({ password: pwNew });
+    setPwLoading(false);
+    if (updateErr) { setPwError(updateErr.message); return; }
+    setPwSuccess(true);
+    setTimeout(() => setPwSheetOpen(false), 1800);
+  };
 
   return (
     <AppShell>
@@ -536,8 +576,23 @@ export default function ProfilePage() {
           </motion.div>
         ))}
 
+        {/* ── Change password ───────────────────────── */}
+        <motion.div {...stagger(5)} className="mt-6">
+          <button
+            type="button"
+            onClick={openPwSheet}
+            className="flex w-full items-center gap-3 rounded-2xl border border-separator bg-bg-secondary px-4 py-3.5 transition-colors hover:bg-bg-tertiary"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-bg-tertiary">
+              <KeyRound className="h-4 w-4 text-text-secondary" />
+            </div>
+            <span className="flex-1 text-left font-sans text-sm text-text-primary">Modifier le mot de passe</span>
+            <ChevronRight className="h-4 w-4 text-text-tertiary" />
+          </button>
+        </motion.div>
+
         {/* ── Sign out ──────────────────────────────── */}
-        <motion.div {...stagger(5)} className="mt-8">
+        <motion.div {...stagger(6)} className="mt-3">
           <button
             type="button"
             onClick={() => void signOut()}
@@ -756,6 +811,93 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Password sheet ───────────────────────────── */}
+      <AnimatePresence>
+        {pwSheetOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setPwSheetOpen(false)}
+              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 260 }}
+              className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary p-6 shadow-2xl"
+            >
+              {/* Handle */}
+              <div className="mb-5 flex justify-center">
+                <div className="h-1 w-12 rounded-full bg-separator" />
+              </div>
+
+              <h2 className="mb-5 font-serif text-xl italic text-text-primary">Modifier le mot de passe</h2>
+
+              {pwSuccess ? (
+                <div className="flex flex-col items-center gap-3 py-6">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500/10">
+                    <Check className="h-7 w-7 text-green-500" />
+                  </div>
+                  <p className="font-sans text-sm text-text-secondary">Mot de passe mis à jour !</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Current password */}
+                  <div className="relative">
+                    <input
+                      type={pwShowCurrent ? "text" : "password"}
+                      placeholder="Mot de passe actuel"
+                      value={pwCurrent}
+                      onChange={(e) => setPwCurrent(e.target.value)}
+                      className="w-full rounded-2xl border border-separator bg-bg-tertiary px-4 py-3 pr-11 font-sans text-sm text-text-primary outline-none placeholder:text-text-tertiary focus:border-accent"
+                    />
+                    <button type="button" onClick={() => setPwShowCurrent((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+                      {pwShowCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  {/* New password */}
+                  <div className="relative">
+                    <input
+                      type={pwShowNew ? "text" : "password"}
+                      placeholder="Nouveau mot de passe (8 caractères min.)"
+                      value={pwNew}
+                      onChange={(e) => setPwNew(e.target.value)}
+                      className="w-full rounded-2xl border border-separator bg-bg-tertiary px-4 py-3 pr-11 font-sans text-sm text-text-primary outline-none placeholder:text-text-tertiary focus:border-accent"
+                    />
+                    <button type="button" onClick={() => setPwShowNew((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+                      {pwShowNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  {/* Confirm */}
+                  <input
+                    type="password"
+                    placeholder="Confirmer le nouveau mot de passe"
+                    value={pwConfirm}
+                    onChange={(e) => setPwConfirm(e.target.value)}
+                    className="w-full rounded-2xl border border-separator bg-bg-tertiary px-4 py-3 font-sans text-sm text-text-primary outline-none placeholder:text-text-tertiary focus:border-accent"
+                  />
+
+                  {pwError && (
+                    <p className="rounded-xl bg-danger/10 px-3 py-2 font-sans text-xs text-danger">{pwError}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => void changePassword()}
+                    disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 font-sans text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+                  >
+                    {pwLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                    {pwLoading ? "Vérification…" : "Enregistrer"}
+                  </button>
+                </div>
+              )}
             </motion.div>
           </>
         )}
