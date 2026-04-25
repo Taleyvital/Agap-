@@ -464,7 +464,7 @@ export default function GospelPage() {
                               onDeleteConfirm={() => deleteTrack(track.id)}
                             />
                           ))}
-                          <div className="h-4" />
+                          <div className="h-24" />
                         </>
                       )}
                     </div>
