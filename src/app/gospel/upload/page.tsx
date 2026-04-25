@@ -20,6 +20,19 @@ interface FormData {
 
 const STEP_LABELS = ["Audio", "Infos", "Pochette", "Confirmation"];
 
+// Avance la barre de 0 → 90 % de façon progressive pendant l'upload.
+// S'arrête à 90 pour laisser la place au 100 % réel une fois terminé.
+function simulateProgress(onTick: (pct: number) => void): ReturnType<typeof setInterval> {
+  let current = 0;
+  return setInterval(() => {
+    // Ralentit exponentiellement en approchant de 90 %
+    const remaining = 90 - current;
+    current += Math.max(1, Math.floor(remaining * 0.08));
+    if (current >= 90) current = 90;
+    onTick(current);
+  }, 400);
+}
+
 export default function GospelUploadPage() {
   const router = useRouter();
   const audioInputRef  = useRef<HTMLInputElement>(null);
@@ -48,42 +61,6 @@ export default function GospelUploadPage() {
     lyrics: "",
   });
 
-  // ── XHR upload with real progress ────────────────────────────
-  const uploadAudioXHR = (
-    file: File,
-    path: string,
-    token: string,
-    onProgress: (pct: number) => void,
-  ): Promise<{ error: string | null }> =>
-    new Promise((resolve) => {
-      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/gospel-audio/${path}`;
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", url);
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-      xhr.setRequestHeader("Content-Type", file.type || "audio/mpeg");
-      xhr.setRequestHeader("x-upsert", "false");
-      xhr.timeout = 180_000; // 3 min
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-      };
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve({ error: null });
-        } else {
-          try {
-            const body = JSON.parse(xhr.responseText) as { message?: string };
-            resolve({ error: body.message ?? `Erreur HTTP ${xhr.status}` });
-          } catch {
-            resolve({ error: `Erreur HTTP ${xhr.status}` });
-          }
-        }
-      };
-      xhr.onerror   = () => resolve({ error: "Erreur réseau" });
-      xhr.ontimeout = () => resolve({ error: "Délai dépassé (3 min)" });
-      xhr.send(file);
-    });
-
   // ── Audio upload ─────────────────────────────────────────────
   const handleAudioSelect = async (file: File) => {
     if (!file.type.startsWith("audio/")) {
@@ -104,24 +81,25 @@ export default function GospelUploadPage() {
     audio.addEventListener("loadedmetadata", () => setAudioDuration(Math.floor(audio.duration)));
     audioPreviewRef.current = audio;
 
-    // Authenticate
     setIsUploading(true);
     const supabase = createSupabaseBrowserClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { setError("Non authentifié"); setIsUploading(false); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setError("Non authentifié"); setIsUploading(false); return; }
 
     const ext  = file.name.split(".").pop() ?? "mp3";
-    const path = `${session.user.id}/${Date.now()}.${ext}`;
+    const path = `${user.id}/${Date.now()}.${ext}`;
 
-    const { error: uploadErr } = await uploadAudioXHR(
-      file,
-      path,
-      session.access_token,
-      (pct) => setUploadProgress(pct),
-    );
+    // Animate progress while Supabase client uploads (no real progress events)
+    const ticker = simulateProgress((pct) => setUploadProgress(pct));
+
+    const { error: uploadErr } = await supabase.storage
+      .from("gospel-audio")
+      .upload(path, file, { upsert: false });
+
+    clearInterval(ticker);
 
     if (uploadErr) {
-      setError("Erreur upload audio : " + uploadErr);
+      setError("Erreur upload : " + uploadErr.message);
       setIsUploading(false);
       setUploadProgress(0);
       return;
