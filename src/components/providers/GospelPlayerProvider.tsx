@@ -41,6 +41,8 @@ const GospelPlayerContext = createContext<GospelPlayerContextValue | null>(null)
 export function GospelPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playCountedRef = useRef(false);
+  const nextRef = useRef<() => void>(() => {});
+  const prevRef = useRef<() => void>(() => {});
 
   const [state, setState] = useState<GospelPlayerState>({
     currentTrack: null,
@@ -97,8 +99,22 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
       });
     });
 
-    audio.addEventListener("play",  () => setState((s) => ({ ...s, isPlaying: true  })));
-    audio.addEventListener("pause", () => setState((s) => ({ ...s, isPlaying: false })));
+    audio.addEventListener("play",  () => {
+      setState((s) => ({ ...s, isPlaying: true }));
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+    });
+    audio.addEventListener("pause", () => {
+      setState((s) => ({ ...s, isPlaying: false }));
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+    });
+
+    // Boutons lock screen / Control Center
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.setActionHandler("play",  () => audio.play().catch(() => {}));
+      navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+      navigator.mediaSession.setActionHandler("nexttrack",     () => nextRef.current());
+      navigator.mediaSession.setActionHandler("previoustrack", () => prevRef.current());
+    }
 
     audioRef.current = audio;
 
@@ -106,7 +122,8 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
       audio.pause();
       audio.src = "";
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // Résout l'URL signée si audio_url est un chemin Storage brut
   const resolveAudioUrl = useCallback(async (track: GospelTrack): Promise<string> => {
@@ -128,6 +145,19 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
     audio.src = url;
     audio.play().catch(() => {});
     fetch(`/api/gospel/tracks/${track.id}/play`, { method: "POST" }).catch(() => {});
+
+    // Media Session API — lock screen & Control Center iOS/Android
+    if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
+      const artwork: MediaImage[] = track.cover_url
+        ? [{ src: track.cover_url, sizes: "512x512", type: "image/jpeg" }]
+        : [];
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title:  track.title,
+        artist: track.artist_name,
+        album:  track.album ?? "AGAPE Gospel",
+        artwork,
+      });
+    }
   }, [resolveAudioUrl]);
 
   const play = useCallback((track: GospelTrack, queue?: GospelTrack[]) => {
@@ -198,6 +228,10 @@ export function GospelPlayerProvider({ children }: { children: ReactNode }) {
       return { ...s, currentTrack: prevTrack, isPlaying: true, currentTime: 0 };
     });
   }, [loadAndPlay]);
+
+  // Garde les refs à jour pour Media Session (évite les dépendances circulaires)
+  nextRef.current = next;
+  prevRef.current = prev;
 
   const toggleShuffle = useCallback(() => {
     setState((s) => ({ ...s, isShuffle: !s.isShuffle }));
