@@ -20,7 +20,8 @@ type MyTrack = {
   rejection_reason: string | null;
   lyrics: string | null;
   duration_seconds: number;
-  play_count: number;
+  unique_plays: number;      // écoutes uniques (user × jour)
+  unique_listeners: number;  // auditeurs distincts
   likes_count: number;
   submitted_at: string;
   published_at: string | null;
@@ -95,26 +96,40 @@ export default function GospelPage() {
 
     const { data: tracksData } = await supabase
       .from("gospel_tracks")
-      .select("id,title,artist_name,cover_url,status,rejection_reason,lyrics,duration_seconds,play_count,submitted_at,published_at")
+      .select("id,title,artist_name,cover_url,status,rejection_reason,lyrics,duration_seconds,submitted_at,published_at")
       .eq("artist_id", user.id)
       .order("submitted_at", { ascending: false });
 
-    if (!tracksData) return;
+    if (!tracksData || tracksData.length === 0) { setMyTracks([]); return; }
 
-    // Fetch like counts for all user tracks in one query
     const ids = tracksData.map((t) => t.id);
-    const { data: likesData } = await supabase
-      .from("gospel_likes")
-      .select("track_id")
-      .in("track_id", ids);
+
+    // Fetch unique plays + likes in parallel
+    const [playsRes, likesRes] = await Promise.all([
+      supabase.from("gospel_plays").select("track_id, user_id").in("track_id", ids),
+      supabase.from("gospel_likes").select("track_id").in("track_id", ids),
+    ]);
+
+    // Aggregate unique plays (rows) and unique listeners (distinct user_id) per track
+    const playsCount: Record<string, number> = {};
+    const listenersSet: Record<string, Set<string>> = {};
+    for (const p of playsRes.data ?? []) {
+      playsCount[p.track_id] = (playsCount[p.track_id] ?? 0) + 1;
+      (listenersSet[p.track_id] ??= new Set()).add(p.user_id);
+    }
 
     const likesByTrack: Record<string, number> = {};
-    for (const l of likesData ?? []) {
+    for (const l of likesRes.data ?? []) {
       likesByTrack[l.track_id] = (likesByTrack[l.track_id] ?? 0) + 1;
     }
 
     setMyTracks(
-      tracksData.map((t) => ({ ...t, likes_count: likesByTrack[t.id] ?? 0 })) as MyTrack[]
+      tracksData.map((t) => ({
+        ...t,
+        unique_plays:     playsCount[t.id] ?? 0,
+        unique_listeners: listenersSet[t.id]?.size ?? 0,
+        likes_count:      likesByTrack[t.id] ?? 0,
+      })) as MyTrack[]
     );
   }, []);
 
@@ -319,36 +334,38 @@ export default function GospelPage() {
               onClick={() => { if (!editingTrack) setShowDrawer(false); }}
             />
 
-            {/* Sheet — fixed height so inner div can scroll */}
+            {/* Sheet — flex-col + fixed height, scroll inside */}
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-[24px] bg-[#1c1c1c]"
-              style={{ height: "88vh" }}
+              className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-[24px] bg-bg-secondary"
+              style={{ height: "88dvh" }}
             >
               {/* Handle */}
               <div className="flex-shrink-0 flex justify-center pt-3 pb-1">
-                <div className="h-1 w-10 rounded-full bg-[#2a2a2a]" />
+                <div className="h-1 w-10 rounded-full bg-separator" />
               </div>
 
               {/* ── Edit lyrics view ── */}
               {editingTrack ? (
                 <>
-                  {/* Sticky header */}
-                  <div className="flex-shrink-0 flex items-center gap-3 px-5 py-3 border-b border-[#2a2a2a]">
-                    <button onClick={() => setEditingTrack(null)} className="text-[#666]">
+                  <div className="flex-shrink-0 flex items-center gap-3 px-5 py-3 border-b border-separator">
+                    <button onClick={() => setEditingTrack(null)} className="text-text-secondary">
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className="font-sans text-[10px] uppercase tracking-widest text-[#666]">Modifier les paroles</p>
-                      <p className="truncate font-serif text-[15px] italic text-[#E8E8E8]">{editingTrack.title}</p>
+                      <p className="font-sans text-[10px] uppercase tracking-widest text-text-secondary">Modifier les paroles</p>
+                      <p className="truncate font-serif text-[15px] italic text-text-primary">{editingTrack.title}</p>
                     </div>
                   </div>
 
-                  {/* Scrollable content */}
-                  <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+                  {/* Scrollable zone */}
+                  <div
+                    className="flex-1 px-5 py-4"
+                    style={{ overflowY: "scroll", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                  >
                     <textarea
                       ref={lyricsRef}
                       value={lyricsValue}
@@ -356,9 +373,9 @@ export default function GospelPage() {
                       maxLength={3000}
                       rows={14}
                       placeholder="Écris les paroles ici…"
-                      className="w-full rounded-xl bg-[#141414] px-4 py-3 font-sans text-[14px] text-[#E8E8E8] placeholder-[#474552] focus:outline-none focus:ring-1 focus:ring-[#7B6FD4] resize-none"
+                      className="w-full rounded-xl bg-bg-primary px-4 py-3 font-sans text-[14px] text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-1 focus:ring-accent resize-none"
                     />
-                    <p className="mt-1 text-right font-sans text-[11px] text-[#444]">{lyricsValue.length}/3000</p>
+                    <p className="mt-1 text-right font-sans text-[11px] text-text-tertiary">{lyricsValue.length}/3000</p>
 
                     {editingTrack.status === "approved" && (
                       <div className="mt-3 flex items-start gap-2 rounded-xl bg-[#f0c051]/10 px-4 py-3">
@@ -370,12 +387,11 @@ export default function GospelPage() {
                     )}
                   </div>
 
-                  {/* Fixed save button */}
-                  <div className="flex-shrink-0 px-5 py-4 border-t border-[#2a2a2a]">
+                  <div className="flex-shrink-0 px-5 py-4 border-t border-separator">
                     <button
                       onClick={saveLyrics}
                       disabled={saving}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7B6FD4] py-4 font-sans text-[13px] font-bold tracking-wide text-white transition-opacity disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-4 font-sans text-[13px] font-bold tracking-wide text-white transition-opacity disabled:opacity-50"
                     >
                       {saving ? (
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -389,71 +405,69 @@ export default function GospelPage() {
               ) : (
                 /* ── Dashboard view ── */
                 <>
-                  {/* Sticky header */}
-                  <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-[#2a2a2a]">
+                  <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-separator">
                     <div>
-                      <h2 className="font-serif text-[18px] italic text-[#E8E8E8]">Studio</h2>
-                      <p className="font-sans text-[11px] text-[#666]">{myTracks.length} titre{myTracks.length !== 1 ? "s" : ""} soumis</p>
+                      <h2 className="font-serif text-[18px] italic text-text-primary">Studio</h2>
+                      <p className="font-sans text-[11px] text-text-secondary">{myTracks.length} titre{myTracks.length !== 1 ? "s" : ""} soumis</p>
                     </div>
                     <button onClick={() => setShowDrawer(false)}>
-                      <X className="h-5 w-5 text-[#666]" />
+                      <X className="h-5 w-5 text-text-secondary" />
                     </button>
                   </div>
 
-                  {/* Scrollable content */}
-                  <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
+                  {/* Scrollable zone */}
+                  <div
+                    className="flex-1 px-5 py-4"
+                    style={{ overflowY: "scroll", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                  >
+                    <div className="space-y-4">
+                      {/* Feedback message */}
+                      <AnimatePresence>
+                        {drawerMsg && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center gap-2 rounded-xl px-4 py-3"
+                            style={{ backgroundColor: drawerMsg.ok ? "#4CAF8215" : "#ff6b6b15" }}
+                          >
+                            <div className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: drawerMsg.ok ? "#4CAF82" : "#ff6b6b" }} />
+                            <p className="font-sans text-[13px]" style={{ color: drawerMsg.ok ? "#4CAF82" : "#ff6b6b" }}>
+                              {drawerMsg.text}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                    {/* Feedback message */}
-                    <AnimatePresence>
-                      {drawerMsg && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center gap-2 rounded-xl px-4 py-3"
-                          style={{ backgroundColor: drawerMsg.ok ? "#4CAF8215" : "#ff6b6b15" }}
-                        >
-                          <div className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: drawerMsg.ok ? "#4CAF82" : "#ff6b6b" }} />
-                          <p className="font-sans text-[13px]" style={{ color: drawerMsg.ok ? "#4CAF82" : "#ff6b6b" }}>
-                            {drawerMsg.text}
-                          </p>
-                        </motion.div>
+                      {myTracks.length === 0 ? (
+                        <div className="flex flex-col items-center gap-3 py-16">
+                          <Music className="h-10 w-10 text-text-tertiary" />
+                          <p className="font-sans text-[14px] text-text-secondary">Aucun titre soumis</p>
+                          <button
+                            onClick={() => { setShowDrawer(false); router.push("/gospel/upload"); }}
+                            className="mt-1 rounded-2xl border border-accent/40 px-5 py-2 font-sans text-[13px] font-semibold text-accent"
+                          >
+                            Soumettre un titre
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <ArtistStatsBanner tracks={myTracks} />
+                          {myTracks.map((track) => (
+                            <TrackDashboardCard
+                              key={track.id}
+                              track={track}
+                              isConfirmingDelete={confirmDeleteId === track.id}
+                              onEdit={() => startEdit(track)}
+                              onDeleteRequest={() => { setConfirmDeleteId(track.id); setDrawerMsg(null); }}
+                              onDeleteCancel={() => setConfirmDeleteId(null)}
+                              onDeleteConfirm={() => deleteTrack(track.id)}
+                            />
+                          ))}
+                          <div className="h-4" />
+                        </>
                       )}
-                    </AnimatePresence>
-
-                    {myTracks.length === 0 ? (
-                      <div className="flex flex-col items-center gap-3 py-16">
-                        <Music className="h-10 w-10 text-[#333]" />
-                        <p className="font-sans text-[14px] text-[#666]">Aucun titre soumis</p>
-                        <button
-                          onClick={() => { setShowDrawer(false); router.push("/gospel/upload"); }}
-                          className="mt-1 rounded-2xl border border-[#7B6FD4]/40 px-5 py-2 font-sans text-[13px] font-semibold text-[#7B6FD4]"
-                        >
-                          Soumettre un titre
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Global stats banner */}
-                        <ArtistStatsBanner tracks={myTracks} />
-
-                        {/* Track cards */}
-                        {myTracks.map((track) => (
-                          <TrackDashboardCard
-                            key={track.id}
-                            track={track}
-                            isConfirmingDelete={confirmDeleteId === track.id}
-                            onEdit={() => startEdit(track)}
-                            onDeleteRequest={() => { setConfirmDeleteId(track.id); setDrawerMsg(null); }}
-                            onDeleteCancel={() => setConfirmDeleteId(null)}
-                            onDeleteConfirm={() => deleteTrack(track.id)}
-                          />
-                        ))}
-
-                        {/* Bottom spacer */}
-                        <div className="h-4" />
-                      </>
-                    )}
+                    </div>
                   </div>
                 </>
               )}
@@ -548,29 +562,29 @@ function TrackRow({ track, isActive, onClick, onLike }: { track: GospelTrack; is
 }
 
 function ArtistStatsBanner({ tracks }: { tracks: MyTrack[] }) {
-  const totalPlays  = tracks.reduce((s, t) => s + t.play_count, 0);
-  const totalLikes  = tracks.reduce((s, t) => s + t.likes_count, 0);
-  const approved    = tracks.filter((t) => t.status === "approved").length;
-  const pending     = tracks.filter((t) => t.status === "pending").length;
+  const totalPlays     = tracks.reduce((s, t) => s + t.unique_plays, 0);
+  const totalListeners = tracks.reduce((s, t) => s + t.unique_listeners, 0);
+  const totalLikes     = tracks.reduce((s, t) => s + t.likes_count, 0);
+  const approved       = tracks.filter((t) => t.status === "approved").length;
 
   return (
     <div className="grid grid-cols-2 gap-3 mb-1">
-      <StatBox label="Écoutes totales" value={totalPlays.toLocaleString()} icon="▶" color="#7B6FD4" />
-      <StatBox label="Likes totaux"     value={totalLikes.toLocaleString()} icon="♥" color="#ff6b6b" />
-      <StatBox label="Approuvés"        value={String(approved)}            icon="✓" color="#4CAF82" />
-      <StatBox label="En attente"       value={String(pending)}             icon="⧖" color="#f0c051" />
+      <StatBox label="Écoutes uniques"  value={totalPlays.toLocaleString()}     icon="▶" color="#7B6FD4" />
+      <StatBox label="Auditeurs"        value={totalListeners.toLocaleString()}  icon="👤" color="#9B8FF4" />
+      <StatBox label="Likes totaux"     value={totalLikes.toLocaleString()}      icon="♥" color="#ff6b6b" />
+      <StatBox label="Approuvés"        value={String(approved)}                 icon="✓" color="#4CAF82" />
     </div>
   );
 }
 
 function StatBox({ label, value, icon, color }: { label: string; value: string; icon: string; color: string }) {
   return (
-    <div className="rounded-2xl bg-[#141414] border border-[#2a2a2a] px-4 py-3">
+    <div className="rounded-2xl bg-bg-primary border border-separator px-4 py-3">
       <div className="flex items-center gap-1.5 mb-1">
         <span className="text-[11px]" style={{ color }}>{icon}</span>
-        <span className="font-sans text-[10px] uppercase tracking-wider text-[#666]">{label}</span>
+        <span className="font-sans text-[10px] uppercase tracking-wider text-text-secondary">{label}</span>
       </div>
-      <p className="font-serif text-[22px] text-[#E8E8E8] leading-none">{value}</p>
+      <p className="font-serif text-[22px] text-text-primary leading-none">{value}</p>
     </div>
   );
 }
@@ -596,17 +610,17 @@ function TrackDashboardCard({
     : null;
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-[#2a2a2a] overflow-hidden">
+    <div className="rounded-2xl bg-bg-primary border border-separator overflow-hidden">
       {/* Track identity row */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3">
         {track.cover_url ? (
           <img src={track.cover_url} alt={track.title} className="h-12 w-12 shrink-0 rounded-xl object-cover" />
         ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1c1c1c] text-lg border border-[#2a2a2a]">🎵</div>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-bg-secondary text-lg border border-separator">🎵</div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-sans text-[14px] font-semibold text-[#E8E8E8]">{track.title}</p>
-          <p className="truncate font-sans text-[11px] text-[#666]">{track.artist_name} · {formatDuration(track.duration_seconds)}</p>
+          <p className="truncate font-sans text-[14px] font-semibold text-text-primary">{track.title}</p>
+          <p className="truncate font-sans text-[11px] text-text-secondary">{track.artist_name} · {formatDuration(track.duration_seconds)}</p>
         </div>
         <span
           className="shrink-0 rounded-full px-2.5 py-1 font-sans text-[10px] font-bold uppercase tracking-wide"
@@ -617,30 +631,34 @@ function TrackDashboardCard({
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 divide-x divide-[#2a2a2a] border-t border-[#2a2a2a]">
+      <div className="grid grid-cols-4 divide-x divide-separator border-t border-separator">
         <div className="flex flex-col items-center py-3 gap-0.5">
-          <span className="font-serif text-[18px] text-[#E8E8E8] leading-none">{track.play_count.toLocaleString()}</span>
-          <span className="font-sans text-[9px] uppercase tracking-wider text-[#555]">Écoutes</span>
+          <span className="font-serif text-[16px] text-text-primary leading-none">{track.unique_plays.toLocaleString()}</span>
+          <span className="font-sans text-[8px] uppercase tracking-wider text-text-tertiary">Écoutes</span>
         </div>
         <div className="flex flex-col items-center py-3 gap-0.5">
-          <span className="font-serif text-[18px] text-[#E8E8E8] leading-none">{track.likes_count.toLocaleString()}</span>
-          <span className="font-sans text-[9px] uppercase tracking-wider text-[#555]">Likes</span>
+          <span className="font-serif text-[16px] text-text-primary leading-none">{track.unique_listeners.toLocaleString()}</span>
+          <span className="font-sans text-[8px] uppercase tracking-wider text-text-tertiary">Auditeurs</span>
         </div>
         <div className="flex flex-col items-center py-3 gap-0.5">
-          <span className="font-serif text-[18px] text-[#E8E8E8] leading-none">{track.lyrics ? track.lyrics.split(/\s+/).length : 0}</span>
-          <span className="font-sans text-[9px] uppercase tracking-wider text-[#555]">Mots</span>
+          <span className="font-serif text-[16px] text-text-primary leading-none">{track.likes_count.toLocaleString()}</span>
+          <span className="font-sans text-[8px] uppercase tracking-wider text-text-tertiary">Likes</span>
+        </div>
+        <div className="flex flex-col items-center py-3 gap-0.5">
+          <span className="font-serif text-[16px] text-text-primary leading-none">{track.lyrics ? track.lyrics.split(/\s+/).length : 0}</span>
+          <span className="font-sans text-[8px] uppercase tracking-wider text-text-tertiary">Mots</span>
         </div>
       </div>
 
       {/* Dates */}
-      <div className="flex gap-4 px-4 py-2.5 border-t border-[#2a2a2a]">
+      <div className="flex gap-4 px-4 py-2.5 border-t border-separator">
         <div className="flex items-center gap-1.5">
-          <span className="font-sans text-[10px] text-[#444]">Soumis</span>
-          <span className="font-sans text-[10px] text-[#666]">{submitted}</span>
+          <span className="font-sans text-[10px] text-text-tertiary">Soumis</span>
+          <span className="font-sans text-[10px] text-text-secondary">{submitted}</span>
         </div>
         {published && (
           <div className="flex items-center gap-1.5">
-            <span className="font-sans text-[10px] text-[#444]">Publié</span>
+            <span className="font-sans text-[10px] text-text-tertiary">Publié</span>
             <span className="font-sans text-[10px] text-[#4CAF82]">{published}</span>
           </div>
         )}
@@ -648,37 +666,37 @@ function TrackDashboardCard({
 
       {/* Rejection reason */}
       {track.status === "rejected" && track.rejection_reason && (
-        <div className="mx-4 mb-3 rounded-xl bg-[#ff6b6b]/10 px-3 py-2 border border-[#ff6b6b]/20">
-          <p className="font-sans text-[11px] text-[#ff6b6b] leading-relaxed">{track.rejection_reason}</p>
+        <div className="mx-4 mb-3 rounded-xl bg-danger/10 px-3 py-2 border border-danger/20">
+          <p className="font-sans text-[11px] text-danger leading-relaxed">{track.rejection_reason}</p>
         </div>
       )}
 
       {/* Actions */}
-      <div className="border-t border-[#2a2a2a]">
+      <div className="border-t border-separator">
         {isConfirmingDelete ? (
           <div className="flex items-center gap-2 px-4 py-3">
-            <p className="flex-1 font-sans text-[12px] text-[#666]">Supprimer définitivement ?</p>
-            <button onClick={onDeleteCancel} className="rounded-xl border border-[#2a2a2a] px-3 py-1.5 font-sans text-[12px] text-[#666]">
+            <p className="flex-1 font-sans text-[12px] text-text-secondary">Supprimer définitivement ?</p>
+            <button onClick={onDeleteCancel} className="rounded-xl border border-separator px-3 py-1.5 font-sans text-[12px] text-text-secondary">
               Annuler
             </button>
-            <button onClick={onDeleteConfirm} className="rounded-xl bg-[#ff6b6b]/15 px-3 py-1.5 font-sans text-[12px] font-semibold text-[#ff6b6b]">
+            <button onClick={onDeleteConfirm} className="rounded-xl bg-danger/15 px-3 py-1.5 font-sans text-[12px] font-semibold text-danger">
               Supprimer
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 divide-x divide-[#2a2a2a]">
+          <div className="grid grid-cols-2 divide-x divide-separator">
             <button
               onClick={onEdit}
-              className="flex items-center justify-center gap-2 py-3 font-sans text-[12px] font-medium text-[#E8E8E8] transition-colors active:bg-[#1c1c1c]"
+              className="flex items-center justify-center gap-2 py-3 font-sans text-[12px] font-medium text-text-primary transition-colors active:bg-bg-secondary"
             >
-              <Pencil className="h-3.5 w-3.5 text-[#7B6FD4]" />
+              <Pencil className="h-3.5 w-3.5 text-accent" />
               Paroles
             </button>
             <button
               onClick={onDeleteRequest}
-              className="flex items-center justify-center gap-2 py-3 font-sans text-[12px] font-medium text-[#E8E8E8] transition-colors active:bg-[#1c1c1c]"
+              className="flex items-center justify-center gap-2 py-3 font-sans text-[12px] font-medium text-text-primary transition-colors active:bg-bg-secondary"
             >
-              <Trash2 className="h-3.5 w-3.5 text-[#ff6b6b]" />
+              <Trash2 className="h-3.5 w-3.5 text-danger" />
               Supprimer
             </button>
           </div>
