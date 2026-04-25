@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronDown, Heart, Play, Pause, SkipBack, SkipForward,
@@ -11,13 +11,13 @@ import type { GospelTrack } from "@/types/gospel";
 import { formatDuration } from "@/types/gospel";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 type TabType = "player" | "lyrics";
 
 export default function GospelPlayerPage({ params }: PageProps) {
-  const { id } = use(params);
+  const { id } = params;
   const router = useRouter();
   const {
     currentTrack, isPlaying, currentTime, duration,
