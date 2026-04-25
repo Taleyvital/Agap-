@@ -1,69 +1,99 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useRef, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { X, Share2, CheckCircle } from "lucide-react";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { useLanguage } from "@/lib/i18n";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 interface Question {
   id: number;
   text: string;
-  answer: string;
 }
 
 interface DayReading {
   dayNumber: number;
   totalDays: number;
   title: string;
-  scripture: {
-    reference: string;
-    text: string;
-  };
-  meditation: string[];
+  bibleReference: string;
+  paragraphs: string[];
   questions: Question[];
+  planId: string;
 }
 
-// Mock data for day reading
-const mockDayReading: DayReading = {
-  dayNumber: 1,
-  totalDays: 14,
-  title: "La Paix Intérieure",
-  scripture: {
-    reference: "Jean 14:27",
-    text: "Je vous laisse la paix, je vous donne ma paix. Je ne vous la donne pas comme le monde la donne. Que votre cœur ne se trouble point, et ne s'alarme point.",
-  },
-  meditation: [
-    "Le tumulte du monde nous pousse souvent à chercher la tranquillité dans des circonstances extérieures favorables. Pourtant, la promesse du Christ s'établit sur une réalité différente : une paix qui subsiste même au cœur de l'orage.",
-    "Cette paix n'est pas l'absence de problèmes, mais la présence d'une certitude. C'est l'ancre de l'âme qui refuse de céder à l'alarme, car elle repose sur une parole immuable.",
-  ],
-  questions: [
-    {
-      id: 1,
-      text: "Quelles sont les sources de trouble qui occupent votre cœur aujourd'hui ?",
-      answer: "",
-    },
-    {
-      id: 2,
-      text: "Comment la paix de Dieu peut-elle transformer votre perspective sur ces défis ?",
-      answer: "",
-    },
-  ],
-};
-
-export default function DayReadingPage() {
+function DayReadingContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showXPToast } = useXPToast();
   const { t } = useLanguage();
-  const [dayReading] = useState<DayReading>(mockDayReading);
+
+  const planId = searchParams.get("planId") ?? "";
+  const dayNum = parseInt(searchParams.get("day") ?? "1", 10);
+
+  const [dayReading, setDayReading] = useState<DayReading | null>(null);
+  const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [verseCardOpen, setVerseCardOpen] = useState(false);
 
-  // Long-press on scripture block
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!planId) { setLoading(false); return; }
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { router.push("/login"); return; }
+
+        const [reflectionRes, planRes] = await Promise.all([
+          supabase
+            .from("daily_reflections")
+            .select("*")
+            .eq("plan_id", planId)
+            .eq("day_number", dayNum)
+            .single(),
+          supabase
+            .from("reading_plans")
+            .select("total_days")
+            .eq("id", planId)
+            .single(),
+        ]);
+
+        if (!reflectionRes.data) { setLoading(false); return; }
+
+        const r = reflectionRes.data;
+        const paragraphs = (r.content as string)
+          .split(/\n\n+/)
+          .map((p: string) => p.trim())
+          .filter(Boolean);
+
+        const questions: Question[] = (r.reflection_prompt as string)
+          .split("|")
+          .map((q: string, i: number) => ({ id: i + 1, text: q.trim() }))
+          .filter((q) => q.text.length > 0);
+
+        setDayReading({
+          dayNumber: dayNum,
+          totalDays: planRes.data?.total_days ?? 5,
+          title: r.title,
+          bibleReference: r.bible_reference ?? "",
+          paragraphs,
+          questions,
+          planId,
+        });
+      } catch (error) {
+        console.error("Error loading day reading:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [planId, dayNum, router]);
+
   const onScripturePointerDown = () => {
     pressTimerRef.current = setTimeout(() => setVerseCardOpen(true), 500);
   };
@@ -71,39 +101,81 @@ export default function DayReadingPage() {
     if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
   };
 
-  // Parse reference "Jean 14:27" → { book:"Jean", chapter:14, verse:27 }
   const parseRef = (ref: string) => {
-    const match = ref.match(/^(.+?)\s+(\d+):(\d+)$/);
+    const match = ref.match(/^(.+?)\s+(\d+):(\d+)/);
     if (!match) return { book: ref, chapter: 1, verse: 1 };
     return { book: match[1], chapter: parseInt(match[2]), verse: parseInt(match[3]) };
   };
-  const parsedRef = parseRef(dayReading.scripture.reference);
 
   const handleAnswerChange = (questionId: number, value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (!dayReading) return;
     setIsCompleted(true);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const nextDay = dayReading.dayNumber + 1;
+        await supabase.from("user_plan_progress").upsert(
+          {
+            user_id: user.id,
+            plan_id: dayReading.planId,
+            current_day: nextDay <= dayReading.totalDays ? nextDay : dayReading.dayNumber,
+            completed_days: dayReading.dayNumber,
+            last_read_at: new Date().toISOString(),
+            is_active: true,
+          },
+          { onConflict: "user_id,plan_id" }
+        );
+      }
+    } catch (error) {
+      console.error("Error saving progress:", error);
+    }
+
     void triggerXP("LECTURE_DAY_COMPLETED", showXPToast);
     setTimeout(() => {
-      router.push("/reading-plan/1");
+      router.push(`/reading-plan/${dayReading.planId}`);
     }, 1000);
   };
 
   const handleShare = () => {
-    // Share functionality
+    if (!dayReading) return;
     if (navigator.share) {
       navigator.share({
         title: `AGAPE - Jour ${dayReading.dayNumber}: ${dayReading.title}`,
-        text: dayReading.scripture.text,
+        text: dayReading.bibleReference,
         url: window.location.href,
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#7B6FD4] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!dayReading) {
+    return (
+      <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6">
+        <p className="text-[#666666] font-sans text-center">Contenu introuvable.</p>
+        <button
+          onClick={() => router.push("/reading-plan")}
+          className="mt-4 text-[#7B6FD4] font-sans text-sm"
+        >
+          Retour aux plans
+        </button>
+      </div>
+    );
+  }
+
+  const parsedRef = parseRef(dayReading.bibleReference);
 
   return (
     <div className="min-h-screen bg-[#141414]">
@@ -118,7 +190,7 @@ export default function DayReadingPage() {
           </h1>
         </div>
         <button
-          onClick={() => router.push("/reading-plan/1")}
+          onClick={() => router.push(`/reading-plan/${dayReading.planId}`)}
           className="flex items-center justify-center text-[#666666] hover:text-[#E8E8E8] transition-colors active:opacity-70"
         >
           <X className="w-5 h-5" />
@@ -126,7 +198,7 @@ export default function DayReadingPage() {
       </header>
 
       <main className="pt-24 pb-32 px-6 max-w-2xl mx-auto">
-        {/* Scripture Context */}
+        {/* Bible Reference */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,11 +209,11 @@ export default function DayReadingPage() {
             {t("rplan_bible_reading")}
           </span>
           <h2 className="text-[#666666] mt-1 font-sans font-medium">
-            {dayReading.scripture.reference}
+            {dayReading.bibleReference}
           </h2>
         </motion.div>
 
-        {/* Editorial Verse Card — long-press opens fullscreen */}
+        {/* Scripture Card — long-press opens fullscreen */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -152,17 +224,17 @@ export default function DayReadingPage() {
           onPointerLeave={onScripturePointerUp}
         >
           <p className="font-serif italic text-xl leading-relaxed text-[#E8E8E8] mb-4">
-            « {dayReading.scripture.text} »
+            « {dayReading.bibleReference} »
           </p>
           <span className="font-sans uppercase tracking-[0.2em] text-[11px] text-[#7B6FD4] font-bold">
-            {dayReading.scripture.reference}
+            {dayReading.bibleReference}
           </span>
           <p className="mt-3 font-sans text-[10px] text-[#444444] uppercase tracking-widest">
             {t("rplan_long_press")}
           </p>
         </motion.section>
 
-        {/* Meditation Section */}
+        {/* Meditation / Content */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -175,58 +247,57 @@ export default function DayReadingPage() {
             </span>
           </header>
           <div className="space-y-6 text-[#c9c4d4] leading-relaxed font-sans font-light text-[15px]">
-            {dayReading.meditation.map((paragraph, index) => (
+            {dayReading.paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
           </div>
         </motion.section>
 
-        {/* Questions Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mb-12"
-        >
-          <header className="mb-6">
-            <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
-              {t("rplan_questions")}
-            </span>
-          </header>
-          <div className="space-y-4">
-            {dayReading.questions.map((question) => (
-              <div key={question.id} className="bg-[#1c1c1c] p-6 rounded-xl space-y-4">
-                <p className="text-[#E8E8E8] text-sm font-sans font-medium">
-                  {question.text}
-                </p>
-                <textarea
-                  value={answers[question.id] || ""}
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  className="w-full bg-[#141414] border-none rounded-lg text-sm text-[#E8E8E8] placeholder-[#474552] focus:ring-1 focus:ring-[#7B6FD4] min-h-[100px] resize-none p-4"
-                  placeholder={
-                    question.id === 1
-                      ? t("rplan_write_thoughts")
-                      : t("rplan_personal_reflection")
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </motion.section>
+        {/* Reflection Questions */}
+        {dayReading.questions.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mb-12"
+          >
+            <header className="mb-6">
+              <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
+                {t("rplan_questions")}
+              </span>
+            </header>
+            <div className="space-y-4">
+              {dayReading.questions.map((question) => (
+                <div key={question.id} className="bg-[#1c1c1c] p-6 rounded-xl space-y-4">
+                  <p className="text-[#E8E8E8] text-sm font-sans font-medium">
+                    {question.text}
+                  </p>
+                  <textarea
+                    value={answers[question.id] || ""}
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    className="w-full bg-[#141414] border-none rounded-lg text-sm text-[#E8E8E8] placeholder-[#474552] focus:ring-1 focus:ring-[#7B6FD4] min-h-[100px] resize-none p-4"
+                    placeholder={
+                      question.id === 1
+                        ? t("rplan_write_thoughts")
+                        : t("rplan_personal_reflection")
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </motion.section>
+        )}
 
-        {/* Decorative Visual Element */}
+        {/* Decorative gradient footer */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-12 rounded-2xl overflow-hidden h-48 relative"
+          className="mt-12 rounded-2xl overflow-hidden h-24 relative"
+          style={{
+            background: "linear-gradient(135deg, #7B6FD422 0%, #7B6FD408 100%)",
+          }}
         >
-          <div
-            className="w-full h-full bg-cover bg-center opacity-40"
-            style={{
-              backgroundImage: `url(https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80)`,
-            }}
-          />
           <div className="absolute inset-0 bg-gradient-to-t from-[#141414] to-transparent" />
         </motion.div>
       </main>
@@ -261,15 +332,29 @@ export default function DayReadingPage() {
         </div>
       </footer>
 
-      {/* ── Verse Full Card (long-press on scripture) ── */}
+      {/* Verse Full Card (long-press on scripture) */}
       <VerseFullCard
         book={parsedRef.book}
         chapter={parsedRef.chapter}
         verse={parsedRef.verse}
-        text={dayReading.scripture.text}
+        text={dayReading.bibleReference}
         isOpen={verseCardOpen}
         onClose={() => setVerseCardOpen(false)}
       />
     </div>
+  );
+}
+
+export default function DayReadingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-[#7B6FD4] border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <DayReadingContent />
+    </Suspense>
   );
 }

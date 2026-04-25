@@ -17,48 +17,13 @@ interface Day {
 interface ReadingPlan {
   id: string;
   title: string;
-  subtitle: string;
   description: string;
-  duration: string;
+  total_days: number;
   category: string;
-  isAIGenerated: boolean;
-  quote: {
-    text: string;
-    reference: string;
-  };
+  is_ai_generated: boolean;
   days: Day[];
+  quoteReference: string;
 }
-
-// Mock data for the reading plan
-const mockPlan: ReadingPlan = {
-  id: "1",
-  title: "La quête de la sagesse : De la connaissance à l'illumination",
-  subtitle: "De la connaissance à l'illumination",
-  description: "Un parcours de 14 jours pour explorer la sagesse biblique et son application dans la vie quotidienne.",
-  duration: "14 Jours",
-  category: "Théologie",
-  isAIGenerated: true,
-  quote: {
-    text: "Car celui qui me trouve a trouvé la vie, Et il obtient la faveur de l'Éternel.",
-    reference: "Proverbes 8:35",
-  },
-  days: [
-    { id: 1, number: 1, title: "L'Appel", status: "completed" },
-    { id: 2, number: 2, title: "La Traversée", status: "current" },
-    { id: 3, number: 3, title: "Le Silence", status: "future" },
-    { id: 4, number: 4, title: "L'Ancre", status: "future" },
-    { id: 5, number: 5, title: "La Promesse", status: "future" },
-    { id: 6, number: 6, title: "La Foi", status: "future" },
-    { id: 7, number: 7, title: "L'Espoir", status: "future" },
-    { id: 8, number: 8, title: "La Charité", status: "future" },
-    { id: 9, number: 9, title: "La Patience", status: "future" },
-    { id: 10, number: 10, title: "L'Humilité", status: "future" },
-    { id: 11, number: 11, title: "La Gratitude", status: "future" },
-    { id: 12, number: 12, title: "Le Pardon", status: "future" },
-    { id: 13, number: 13, title: "La Joie", status: "future" },
-    { id: 14, number: 14, title: "L'Illumination", status: "future" },
-  ],
-};
 
 export default function ReadingPlanDetailPage() {
   const router = useRouter();
@@ -69,37 +34,64 @@ export default function ReadingPlanDetailPage() {
   const currentDayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const checkAuthAndLoadPlan = async () => {
+    const load = async () => {
       try {
         const supabase = createSupabaseBrowserClient();
         const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { router.push("/login"); return; }
 
-        if (!user) {
-          router.push("/login");
-          return;
-        }
+        const planId = params.id as string;
 
-        // In a real app, fetch the plan from API using params.id
-        // For now, use mock data
-        setPlan(mockPlan);
-        setLoading(false);
+        const [planRes, reflectionsRes, progressRes] = await Promise.all([
+          supabase.from("reading_plans").select("*").eq("id", planId).single(),
+          supabase.from("daily_reflections").select("day_number, title, bible_reference").eq("plan_id", planId).order("day_number"),
+          supabase.from("user_plan_progress").select("current_day, completed_days").eq("plan_id", planId).eq("user_id", user.id).maybeSingle(),
+        ]);
+
+        if (planRes.error || !planRes.data) { setLoading(false); return; }
+
+        const planData = planRes.data;
+        const reflections = reflectionsRes.data || [];
+        const currentDay = progressRes.data?.current_day ?? 1;
+
+        const days: Day[] = reflections.map((r) => ({
+          id: r.day_number,
+          number: r.day_number,
+          title: r.title,
+          status:
+            r.day_number < currentDay
+              ? "completed"
+              : r.day_number === currentDay
+              ? "current"
+              : "future",
+        }));
+
+        const firstRef = reflections[0]?.bible_reference ?? "";
+
+        setPlan({
+          id: planData.id,
+          title: planData.title,
+          description: planData.description,
+          total_days: planData.total_days,
+          category: planData.category,
+          is_ai_generated: planData.is_ai_generated,
+          days,
+          quoteReference: firstRef,
+        });
       } catch (error) {
         console.error("Error loading plan:", error);
+      } finally {
         setLoading(false);
       }
     };
 
-    checkAuthAndLoadPlan();
+    load();
   }, [router, params.id]);
 
-  // Scroll to current day when plan loads
   useEffect(() => {
     if (plan && currentDayRef.current) {
       setTimeout(() => {
-        currentDayRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
+        currentDayRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
     }
   }, [plan]);
@@ -121,9 +113,7 @@ export default function ReadingPlanDetailPage() {
   if (!plan) {
     return (
       <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6">
-        <p className="text-[#666666] font-sans text-center">
-          {t("rplan_not_found")}
-        </p>
+        <p className="text-[#666666] font-sans text-center">{t("rplan_not_found")}</p>
         <button
           onClick={() => router.push("/reading-plan")}
           className="mt-4 text-[#7B6FD4] font-sans text-sm"
@@ -136,7 +126,7 @@ export default function ReadingPlanDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#141414] pb-40">
-      {/* Header with back button */}
+      {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-[#141414]/80 backdrop-blur-xl h-16 flex items-center px-6">
         <button
           onClick={() => router.push("/reading-plan")}
@@ -157,7 +147,6 @@ export default function ReadingPlanDetailPage() {
           transition={{ duration: 0.5 }}
           className="relative bg-[#2a2040] rounded-2xl p-8 mb-8 overflow-hidden"
         >
-          {/* Decorative Greek Letter Phi */}
           <div className="absolute -right-4 -bottom-8 text-[180px] font-serif text-white/5 pointer-events-none select-none leading-none">
             φ
           </div>
@@ -166,12 +155,12 @@ export default function ReadingPlanDetailPage() {
             {/* Metadata Chips */}
             <div className="flex flex-wrap gap-2 mb-6">
               <span className="px-3 py-1 rounded-full bg-[#1c1c1c]/50 backdrop-blur-sm text-[10px] font-sans tracking-[0.15em] uppercase text-[#666666]">
-                {plan.duration}
+                {plan.total_days} Jours
               </span>
               <span className="px-3 py-1 rounded-full bg-[#1c1c1c]/50 backdrop-blur-sm text-[10px] font-sans tracking-[0.15em] uppercase text-[#666666]">
                 {plan.category}
               </span>
-              {plan.isAIGenerated && (
+              {plan.is_ai_generated && (
                 <span className="px-3 py-1 rounded-full bg-[#7B6FD4]/20 backdrop-blur-sm text-[10px] font-sans tracking-[0.15em] uppercase text-[#7B6FD4] border border-[#7B6FD4]/20">
                   {t("rplan_ai_badge")}
                 </span>
@@ -183,12 +172,14 @@ export default function ReadingPlanDetailPage() {
               {plan.title}
             </h1>
 
-            {/* Quote */}
-            <blockquote className="font-serif italic text-lg text-[#666666] border-l border-[#7B6FD4]/30 pl-4 py-1">
-              &ldquo;{plan.quote.text}&rdquo;
-              <footer className="mt-2 text-[11px] font-sans tracking-[0.15em] uppercase not-italic text-[#666666]/60">
-                — {plan.quote.reference}
-              </footer>
+            {/* Description as quote */}
+            <blockquote className="font-serif italic text-base text-[#666666] border-l border-[#7B6FD4]/30 pl-4 py-1">
+              {plan.description}
+              {plan.quoteReference && (
+                <footer className="mt-2 text-[11px] font-sans tracking-[0.15em] uppercase not-italic text-[#666666]/60">
+                  — {plan.quoteReference}
+                </footer>
+              )}
             </blockquote>
           </div>
         </motion.section>
@@ -201,11 +192,9 @@ export default function ReadingPlanDetailPage() {
           className="relative"
         >
           <div className="flex flex-col items-center gap-12 relative py-8">
-            {/* Vertical connecting line */}
             <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-[#2a2a2a] z-0" />
 
             {plan.days.map((day, index) => {
-              // Determine zigzag position
               const isLeft = index % 2 === 0;
               const isCompleted = day.status === "completed";
               const isCurrent = day.status === "current";
@@ -215,30 +204,30 @@ export default function ReadingPlanDetailPage() {
                 <div
                   key={day.id}
                   ref={isCurrent ? currentDayRef : null}
+                  onClick={() => {
+                    if (!isFuture) {
+                      router.push(`/reading-plan/day?planId=${plan.id}&day=${day.number}`);
+                    }
+                  }}
                   className={`relative z-10 flex flex-col items-center ${
                     isLeft ? "-translate-x-12 sm:-translate-x-16" : "translate-x-12 sm:translate-x-16"
-                  }`}
+                  } ${!isFuture ? "cursor-pointer" : "cursor-default"}`}
                 >
-                  {/* Day Circle */}
                   {isCompleted ? (
-                    // Completed day
                     <div className="w-16 h-16 rounded-full bg-[#7B6FD4] text-white flex items-center justify-center transition-transform active:scale-95 shadow-lg">
                       <Check className="w-6 h-6" />
                     </div>
                   ) : isCurrent ? (
-                    // Current day (larger with star)
                     <div className="w-[72px] h-[72px] rounded-full bg-[#7B6FD4] text-white flex flex-col items-center justify-center shadow-[0_0_30px_rgba(123,111,212,0.3)] ring-4 ring-[#141414] ring-offset-0">
                       <span className="text-xl font-bold font-serif">{day.number}</span>
                       <Star className="w-3 h-3 fill-current" />
                     </div>
                   ) : (
-                    // Future day
                     <div className="w-16 h-16 rounded-full bg-[#1c1c1c] border border-[#2a2a2a] text-[#444] flex items-center justify-center">
                       <span className="text-lg font-medium font-serif">{day.number}</span>
                     </div>
                   )}
 
-                  {/* Day Labels */}
                   <span
                     className={`mt-3 font-sans tracking-[0.15em] uppercase text-[10px] ${
                       isCurrent ? "text-[#7B6FD4]" : isFuture ? "text-[#666666]/40" : "text-[#666666]"
@@ -247,8 +236,12 @@ export default function ReadingPlanDetailPage() {
                     {isCurrent ? t("common_today") : `${t("rplan_day")} ${day.number}`}
                   </span>
                   <span
-                    className={`text-[12px] mt-1 ${
-                      isCurrent ? "font-bold text-[#E8E8E8]" : isFuture ? "font-medium text-[#E8E8E8]/40" : "font-medium text-[#E8E8E8]"
+                    className={`text-[12px] mt-1 text-center max-w-[100px] ${
+                      isCurrent
+                        ? "font-bold text-[#E8E8E8]"
+                        : isFuture
+                        ? "font-medium text-[#E8E8E8]/40"
+                        : "font-medium text-[#E8E8E8]"
                     }`}
                   >
                     {day.title}
@@ -262,15 +255,16 @@ export default function ReadingPlanDetailPage() {
 
       {/* Bottom Actions (Fixed) */}
       <div className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#141414] via-[#141414]/95 to-transparent z-50">
-        <div className="max-w-md mx-auto flex flex-col gap-3">
+        <div className="max-w-md mx-auto">
           <button
-            onClick={() => router.push("/reading-plan/day")}
+            onClick={() =>
+              router.push(
+                `/reading-plan/day?planId=${plan.id}&day=${getCurrentDayNumber()}`
+              )
+            }
             className="w-full h-14 bg-[#E8E8E8] text-[#141414] rounded-full font-bold text-sm tracking-wide transition-all active:scale-95 shadow-2xl"
           >
             {t("rplan_start_day")} {getCurrentDayNumber()}
-          </button>
-          <button className="w-full h-12 bg-transparent text-[#E8E8E8] rounded-full font-sans tracking-[0.15em] uppercase text-[11px] transition-all hover:bg-[#1c1c1c]/30 active:opacity-70">
-            {t("rplan_overview")}
           </button>
         </div>
       </div>
