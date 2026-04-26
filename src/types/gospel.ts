@@ -10,6 +10,7 @@ export interface GospelTrack {
   audio_url: string;
   cover_url?: string;
   lyrics?: string;
+  lyrics_offset?: number;
   genre: string;
   language: string;
   status: GospelStatus;

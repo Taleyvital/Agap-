@@ -19,6 +19,7 @@ type MyTrack = {
   status: "pending" | "approved" | "rejected";
   rejection_reason: string | null;
   lyrics: string | null;
+  lyrics_offset: number;
   duration_seconds: number;
   unique_plays: number;      // écoutes uniques (user × jour)
   unique_listeners: number;  // auditeurs distincts
@@ -57,6 +58,7 @@ export default function GospelPage() {
   const [showDrawer, setShowDrawer]       = useState(false);
   const [editingTrack, setEditingTrack]   = useState<MyTrack | null>(null);
   const [lyricsValue, setLyricsValue]     = useState("");
+  const [offsetValue, setOffsetValue]     = useState(0);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [saving, setSaving]               = useState(false);
   const [drawerMsg, setDrawerMsg]         = useState<{ text: string; ok: boolean } | null>(null);
@@ -96,7 +98,7 @@ export default function GospelPage() {
 
     const { data: tracksData } = await supabase
       .from("gospel_tracks")
-      .select("id,title,artist_name,cover_url,status,rejection_reason,lyrics,duration_seconds,submitted_at,published_at")
+      .select("id,title,artist_name,cover_url,status,rejection_reason,lyrics,lyrics_offset,duration_seconds,submitted_at,published_at")
       .eq("artist_id", user.id)
       .order("submitted_at", { ascending: false });
 
@@ -160,6 +162,7 @@ export default function GospelPage() {
   const startEdit = (track: MyTrack) => {
     setEditingTrack(track);
     setLyricsValue(track.lyrics ?? "");
+    setOffsetValue(track.lyrics_offset ?? 0);
     setDrawerMsg(null);
     setTimeout(() => lyricsRef.current?.focus(), 200);
   };
@@ -171,12 +174,12 @@ export default function GospelPage() {
       const res = await fetch(`/api/gospel/tracks/${editingTrack.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lyrics: lyricsValue }),
+        body: JSON.stringify({ lyrics: lyricsValue, lyrics_offset: offsetValue }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setMyTracks((prev) =>
-        prev.map((t) => t.id === editingTrack.id ? { ...t, lyrics: lyricsValue, status: json.resubmitted ? "pending" : t.status } : t)
+        prev.map((t) => t.id === editingTrack.id ? { ...t, lyrics: lyricsValue, lyrics_offset: offsetValue, status: json.resubmitted ? "pending" : t.status } : t)
       );
       setDrawerMsg({ text: json.resubmitted ? "Paroles mises à jour — track resoumise pour validation" : "Paroles sauvegardées", ok: true });
       setEditingTrack(null);
@@ -366,12 +369,32 @@ export default function GospelPage() {
                     className="flex-1 px-5 py-4"
                     style={{ overflowY: "scroll", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                   >
+                    {/* Intro offset */}
+                    <div className="mb-4 rounded-xl bg-bg-primary px-4 py-3">
+                      <p className="font-sans text-[11px] uppercase tracking-widest text-text-secondary mb-2">
+                        Début des paroles (secondes d&apos;intro)
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min={0}
+                          max={300}
+                          value={offsetValue}
+                          onChange={(e) => setOffsetValue(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+                          className="w-24 rounded-lg bg-bg-secondary border border-separator px-3 py-2 font-sans text-[14px] text-text-primary text-center focus:outline-none focus:border-accent"
+                        />
+                        <p className="font-sans text-[12px] text-text-tertiary leading-snug">
+                          Si ton instru dure 30s avant les paroles, écris 30
+                        </p>
+                      </div>
+                    </div>
+
                     <textarea
                       ref={lyricsRef}
                       value={lyricsValue}
                       onChange={(e) => setLyricsValue(e.target.value)}
                       maxLength={3000}
-                      rows={14}
+                      rows={12}
                       placeholder="Écris les paroles ici…"
                       className="w-full rounded-xl bg-bg-primary px-4 py-3 font-sans text-[14px] text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-1 focus:ring-accent resize-none"
                     />

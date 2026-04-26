@@ -10,7 +10,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
   const body = await req.json();
-  const { lyrics } = body;
+  const { lyrics, lyrics_offset } = body;
 
   const service = createSupabaseServiceClient();
 
@@ -26,6 +26,9 @@ export async function PATCH(
   }
 
   const updates: Record<string, unknown> = { lyrics };
+  if (lyrics_offset !== undefined) {
+    updates.lyrics_offset = Math.max(0, Math.floor(Number(lyrics_offset) || 0));
+  }
   // If track was approved, re-submit for review
   if (track.status === "approved") {
     updates.status = "pending";

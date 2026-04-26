@@ -75,9 +75,15 @@ export default function GospelPlayerPage({ params }: PageProps) {
   };
 
   const lyricsLines = (displayTrack?.lyrics ?? "").split("\n").filter(Boolean);
+  const lyricsOffset = displayTrack?.lyrics_offset ?? 0;
+  const lyricsStarted = displayTime >= lyricsOffset;
+  const lyricsWindow  = Math.max(1, displayDur - lyricsOffset);
   const currentLineIdx =
-    displayDur > 0 && lyricsLines.length > 0
-      ? Math.floor((displayTime / displayDur) * lyricsLines.length)
+    lyricsStarted && lyricsLines.length > 0
+      ? Math.min(
+          lyricsLines.length - 1,
+          Math.floor(((displayTime - lyricsOffset) / lyricsWindow) * lyricsLines.length),
+        )
       : -1;
 
   if (loading) {
