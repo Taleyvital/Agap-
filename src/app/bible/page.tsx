@@ -21,7 +21,6 @@ import { SendFlameSheet } from "@/components/ui/SendFlameSheet";
 import { BiblicalObjectSheet } from "@/components/ui/BiblicalObjectSheet";
 import { annotateText, type BiblicalObject } from "@/lib/biblicalObjects";
 import { useLanguage } from "@/lib/i18n";
-import { getVerseInterlinear, type WordToken } from "@/lib/strong";
 
 // Livres de l'Ancien Testament (bookid 1–39) et Nouveau Testament (40–66)
 const AT_MAX_ID = 39;
@@ -39,70 +38,6 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ");
 }
 
-function StrongChips({
-  bookId, chapter, verse, tokens, loading, onLoad, onLoadingChange, onExplore,
-}: {
-  bookId: number;
-  chapter: number;
-  verse: number;
-  tokens: Record<string, WordToken[]>;
-  loading: Record<string, boolean>;
-  onLoad: (key: string, words: WordToken[]) => void;
-  onLoadingChange: (key: string, val: boolean) => void;
-  onExplore: (number: string) => void;
-}) {
-  const key = `${bookId}-${chapter}-${verse}`;
-  const words = tokens[key];
-  const isLoading = loading[key];
-
-  useEffect(() => {
-    if (words !== undefined || isLoading) return;
-    onLoadingChange(key, true);
-    void getVerseInterlinear(bookId, chapter, verse).then((w) => {
-      onLoad(key, w);
-      onLoadingChange(key, false);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
-  if (isLoading) {
-    return (
-      <div className="mt-2 ml-[2.1rem] flex flex-wrap gap-1.5">
-        {[60, 48, 72, 52].map((w) => (
-          <div key={w} className="h-7 rounded-full bg-bg-secondary animate-pulse" style={{ width: w }} />
-        ))}
-      </div>
-    );
-  }
-
-  if (!words || words.length === 0) return null;
-
-  return (
-    <div className="mt-2 ml-[2.1rem] flex flex-wrap gap-1.5">
-      {words.map((token, i) => (
-        <button
-          key={i}
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (token.strong) onExplore(token.strong);
-          }}
-          disabled={!token.strong}
-          className={`flex flex-col items-center rounded-full px-3 py-1 border transition-all text-left ${
-            token.strong
-              ? "border-accent/30 bg-accent/10 hover:bg-accent/15 active:scale-95 cursor-pointer"
-              : "border-separator bg-bg-secondary cursor-default opacity-60"
-          }`}
-        >
-          <span className="font-sans text-[11px] text-text-primary leading-tight">{token.word}</span>
-          {token.strong && (
-            <span className="font-sans text-[9px] text-accent/70 leading-none mt-0.5">{token.strong}</span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function BiblePageContent() {
   const { showXPToast } = useXPToast();
@@ -146,8 +81,6 @@ function BiblePageContent() {
 
   // Strong concordance state
   const [strongMode, setStrongMode] = useState(false);
-  const [strongTokens, setStrongTokens] = useState<Record<string, WordToken[]>>({});
-  const [strongLoading, setStrongLoading] = useState<Record<string, boolean>>({});
 
   // Translation + compare state
   const [translationSheetOpen, setTranslationSheetOpen] = useState(false);
@@ -1056,45 +989,54 @@ function BiblePageContent() {
                                   className={`text-text-primary ${verseBold ? "font-bold" : ""}`}
                                   style={{ fontSize: `${fontSize}px`, lineHeight: 1.85, fontFamily, letterSpacing: `${letterSpacing}em` }}
                                 >
-                                  {annotateText(stripHtml(row.text), language as "fr" | "en" | "pt" | "es").map((seg, i) =>
-                                    seg.object ? (
-                                      <span
-                                        key={i}
-                                        className="border-b border-dotted border-[#7B6FD4] text-[#c4b5ff] cursor-pointer active:opacity-70"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setDetectedObjects([seg.object!]);
-                                          setObjectSheetOpen(true);
-                                        }}
-                                      >
-                                        {seg.text}
-                                      </span>
-                                    ) : (
-                                      <span key={i}>{seg.text}</span>
+                                  {strongMode ? (
+                                    // Strong mode: each word is tappable
+                                    stripHtml(row.text).split(/(\s+)/).map((segment, i) =>
+                                      /\S/.test(segment) ? (
+                                        <span
+                                          key={i}
+                                          className="border-b border-dotted border-accent/60 cursor-pointer hover:text-accent active:opacity-70 transition-colors"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const isOT = bookId! <= AT_MAX_ID;
+                                            const ref = `${selectedBook?.name ?? ""} ${chapter}:${row.verse}`;
+                                            const params = new URLSearchParams({
+                                              word: segment,
+                                              ref,
+                                              text: stripHtml(row.text),
+                                              lang: isOT ? "hebrew" : "greek",
+                                            });
+                                            router.push(`/bible/strong?${params.toString()}`);
+                                          }}
+                                        >
+                                          {segment}
+                                        </span>
+                                      ) : (
+                                        <span key={i}>{segment}</span>
+                                      )
+                                    )
+                                  ) : (
+                                    // Normal mode: biblical objects highlighted
+                                    annotateText(stripHtml(row.text), language as "fr" | "en" | "pt" | "es").map((seg, i) =>
+                                      seg.object ? (
+                                        <span
+                                          key={i}
+                                          className="border-b border-dotted border-[#7B6FD4] text-[#c4b5ff] cursor-pointer active:opacity-70"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDetectedObjects([seg.object!]);
+                                            setObjectSheetOpen(true);
+                                          }}
+                                        >
+                                          {seg.text}
+                                        </span>
+                                      ) : (
+                                        <span key={i}>{seg.text}</span>
+                                      )
                                     )
                                   )}
                                 </span>
                               </p>
-                              {/* Strong word chips */}
-                              {strongMode && (
-                                <StrongChips
-                                  bookId={bookId!}
-                                  chapter={chapter!}
-                                  verse={row.verse}
-                                  tokens={strongTokens}
-                                  loading={strongLoading}
-                                  onLoad={(key, words) =>
-                                    setStrongTokens((prev) => ({ ...prev, [key]: words }))
-                                  }
-                                  onLoadingChange={(key, val) =>
-                                    setStrongLoading((prev) => ({ ...prev, [key]: val }))
-                                  }
-                                  onExplore={(number) => {
-                                    void triggerXP("STRONG_WORD_EXPLORED", showXPToast);
-                                    router.push(`/bible/strong/${number}`);
-                                  }}
-                                />
-                              )}
 
                               {active && (
                                 <motion.div
