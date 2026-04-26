@@ -18,10 +18,12 @@ export function PremiumPaywall({ onClose }: PremiumPaywallProps) {
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
       style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+      onClick={onClose}
     >
       <div
         className="w-full max-w-[430px] rounded-t-3xl px-6 pb-10 pt-8"
         style={{ backgroundColor: "#1c1c1c", border: "0.5px solid #2a2a2a" }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Handle */}
         <div className="mb-6 flex justify-center">
