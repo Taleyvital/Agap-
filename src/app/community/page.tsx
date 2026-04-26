@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2 } from "lucide-react";
+import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2, Camera } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -63,6 +63,10 @@ export default function CommunityPage() {
   const [composerCategory, setComposerCategory] = useState<"testimony" | "prayer">("testimony");
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [ownAvatarUrl, setOwnAvatarUrl] = useState<string | null>(null);
+  const [ownInitial, setOwnInitial] = useState("");
+  const [avatarConsent, setAvatarConsent] = useState<"yes" | "no" | null>(null);
+  const [showConsentSheet, setShowConsentSheet] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   // Delete menu state
@@ -80,6 +84,31 @@ export default function CommunityPage() {
     void supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUserId(user.id);
+
+        // Fetch own avatar + check consent
+        void supabase
+          .from("profiles")
+          .select("avatar_url, first_name, anonymous_name")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => {
+            if (data) {
+              const url = (data.avatar_url as string | null) ?? null;
+              const initial = ((data.first_name as string | null) ?? (data.anonymous_name as string | null) ?? "A").charAt(0).toUpperCase();
+              setOwnAvatarUrl(url);
+              setOwnInitial(initial);
+              // Ask for consent only if user has an avatar and was never asked
+              if (url) {
+                const stored = localStorage.getItem("community-avatar-consent") as "yes" | "no" | null;
+                if (stored) {
+                  setAvatarConsent(stored);
+                } else {
+                  setShowConsentSheet(true);
+                }
+              }
+            }
+          });
+
         void supabase
           .from("verse_messages")
           .select("*", { count: "exact", head: true })
@@ -296,8 +325,14 @@ export default function CommunityPage() {
         {/* HEADER */}
         <header className="px-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 flex items-center justify-center rounded-full bg-bg-tertiary border border-separator">
-              <User className="h-5 w-5 text-text-primary" />
+            <div className="relative h-9 w-9 rounded-full overflow-hidden bg-bg-tertiary border border-separator shrink-0">
+              {ownAvatarUrl ? (
+                <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="36px" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center font-serif text-sm italic text-text-primary">
+                  {ownInitial || <User className="h-4 w-4" />}
+                </span>
+              )}
             </div>
           </div>
           <button type="button" className="text-accent" aria-label="Notifications">
@@ -400,11 +435,15 @@ export default function CommunityPage() {
                   {/* Post Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      {/* Avatar - placeholder initial */}
-                      <div className="h-10 w-10 flex items-center justify-center rounded-full bg-bg-tertiary">
-                        <span className="font-sans text-sm font-semibold text-text-primary">
-                          {post.author.charAt(0).toUpperCase()}
-                        </span>
+                      {/* Avatar */}
+                      <div className="relative h-10 w-10 rounded-full overflow-hidden bg-bg-tertiary shrink-0 border border-separator">
+                        {post.isMine && avatarConsent === "yes" && ownAvatarUrl ? (
+                          <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="40px" />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center font-sans text-sm font-semibold text-text-primary">
+                            {post.author.charAt(0).toUpperCase()}
+                          </span>
+                        )}
                       </div>
                       <div>
                         {/* Title Row */}
@@ -644,6 +683,73 @@ export default function CommunityPage() {
         ) : null}
 
       </div>
+
+      {/* ── Consent sheet : afficher sa photo en community ─── */}
+      <AnimatePresence>
+        {showConsentSheet && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary px-6 pb-10 pt-7 shadow-2xl"
+            >
+              <div className="mb-5 flex justify-center">
+                <div className="h-1 w-10 rounded-full bg-separator" />
+              </div>
+
+              {/* Avatar preview */}
+              <div className="flex justify-center mb-5">
+                <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-accent shadow-lg shadow-accent/20">
+                  {ownAvatarUrl && (
+                    <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="80px" />
+                  )}
+                </div>
+              </div>
+
+              <h2 className="text-center font-serif text-xl italic text-text-primary mb-2">
+                Afficher votre photo ?
+              </h2>
+              <p className="text-center font-sans text-sm text-text-secondary leading-relaxed mb-7">
+                Voulez-vous afficher votre photo de profil sur vos publications dans la communauté ?
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem("community-avatar-consent", "yes");
+                    setAvatarConsent("yes");
+                    setShowConsentSheet(false);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 font-sans text-sm font-semibold text-white"
+                >
+                  <Camera className="h-4 w-4" />
+                  Oui, afficher ma photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem("community-avatar-consent", "no");
+                    setAvatarConsent("no");
+                    setShowConsentSheet(false);
+                  }}
+                  className="w-full rounded-2xl border border-separator bg-bg-tertiary py-3.5 font-sans text-sm text-text-secondary"
+                >
+                  Rester anonyme
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </AppShell>
   );
 }

@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, Search, X, Send, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -263,6 +264,7 @@ export default function ConversationPage() {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherName, setOtherName] = useState("");
+  const [otherAvatarUrl, setOtherAvatarUrl] = useState<string | null>(null);
   const [streakCount, setStreakCount] = useState(0);
   const [thread, setThread] = useState<ThreadItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -297,11 +299,16 @@ export default function ConversationPage() {
       if (!user) { router.push("/login"); return; }
       if (mounted) setCurrentUserId(user.id);
 
-      const [profileRes, streakRes, verseMsgsRes, chatMsgsRes] = await Promise.all([
+      const [profileRes, avatarRes, streakRes, verseMsgsRes, chatMsgsRes] = await Promise.all([
         supabase
           .from("user_profiles_public")
           .select("first_name")
           .eq("user_id", otherId)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", otherId)
           .maybeSingle(),
         supabase
           .from("verse_streaks")
@@ -329,6 +336,7 @@ export default function ConversationPage() {
       if (!mounted) return;
 
       if (profileRes.data) setOtherName(profileRes.data.first_name as string);
+      if (avatarRes.data) setOtherAvatarUrl((avatarRes.data.avatar_url as string | null) ?? null);
       setStreakCount((streakRes.data?.streak_count as number) ?? 0);
 
       const verseItems: VerseMessage[] = (verseMsgsRes.data ?? []).map((m) => ({
@@ -508,6 +516,15 @@ export default function ConversationPage() {
             className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary shrink-0">
             <ArrowLeft className="h-4 w-4" />
           </button>
+          <div className="relative h-8 w-8 rounded-full overflow-hidden bg-bg-secondary border border-separator shrink-0">
+            {otherAvatarUrl ? (
+              <Image src={otherAvatarUrl} alt={otherName} fill className="object-cover" sizes="32px" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center font-serif text-xs italic text-text-secondary">
+                {otherName.charAt(0).toUpperCase() || "?"}
+              </span>
+            )}
+          </div>
           <div className="flex-1">
             <p className="font-sans text-sm text-text-primary font-medium">{otherName || "…"}</p>
           </div>

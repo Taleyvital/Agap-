@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
@@ -15,6 +16,7 @@ interface MutualFriend {
   userId: string;
   firstName: string;
   avatarLevel: number;
+  avatarUrl: string | null;
   streakCount: number;
   lastVerseRef: string | null;
   lastVerseText: string | null;
@@ -34,15 +36,20 @@ function FlameIcon({ streak, size = 20 }: { streak: number; size?: number }) {
   );
 }
 
-function TreeAvatar({ level, size = 48 }: { level: number; size?: number }) {
-  const colors = ["#7B6FD4", "#9D93E8", "#6DB88F", "#E8C84A", "#E87A4A", "#E84A6D", "#FFFFFF"];
-  const color = colors[Math.min(level - 1, colors.length - 1)];
+function ContactAvatar({ avatarUrl, firstName, size = 48 }: { avatarUrl: string | null; firstName: string; size?: number }) {
+  const initial = (firstName ?? "?").charAt(0).toUpperCase();
   return (
     <div
-      className="rounded-full flex items-center justify-center shrink-0"
-      style={{ width: size, height: size, background: `${color}22`, border: `1.5px solid ${color}55`, fontSize: size * 0.42 }}
+      className="rounded-full flex items-center justify-center shrink-0 overflow-hidden relative bg-bg-secondary"
+      style={{ width: size, height: size, border: "1.5px solid rgba(123,111,212,0.3)" }}
     >
-      🌿
+      {avatarUrl ? (
+        <Image src={avatarUrl} alt={firstName} fill className="object-cover" sizes={`${size}px`} />
+      ) : (
+        <span className="font-serif italic text-text-secondary" style={{ fontSize: size * 0.38 }}>
+          {initial}
+        </span>
+      )}
     </div>
   );
 }
@@ -156,11 +163,18 @@ export default function MessagesPage() {
 
       if (mutualIds.length === 0) { setLoading(false); return; }
 
-      // Get profiles
-      const { data: profiles } = await supabase
-        .from("user_profiles_public")
-        .select("user_id, first_name, avatar_level")
-        .in("user_id", mutualIds);
+      // Get profiles (public view) + avatar_url from profiles table
+      const [{ data: profiles }, { data: avatarRows }] = await Promise.all([
+        supabase
+          .from("user_profiles_public")
+          .select("user_id, first_name, avatar_level")
+          .in("user_id", mutualIds),
+        supabase
+          .from("profiles")
+          .select("id, avatar_url")
+          .in("id", mutualIds),
+      ]);
+      const avatarMap = new Map((avatarRows ?? []).map((r) => [r.id as string, r.avatar_url as string | null]));
 
       // Get streaks
       const { data: streaks } = await supabase
@@ -199,6 +213,7 @@ export default function MessagesPage() {
           userId: pid,
           firstName: profile.first_name as string,
           avatarLevel: profile.avatar_level as number,
+          avatarUrl: avatarMap.get(pid) ?? null,
           streakCount: streakMap.get(pid) ?? 0,
           lastVerseRef: lastMsgRes.data?.verse_ref ?? null,
           lastVerseText: lastMsgRes.data?.verse_text ?? null,
@@ -275,7 +290,7 @@ export default function MessagesPage() {
                   className="flex items-center gap-3 rounded-2xl px-4 py-3 border border-separator bg-bg-secondary active:bg-bg-tertiary transition-colors"
                 >
                   <div className="relative">
-                    <TreeAvatar level={conv.avatarLevel} size={48} />
+                    <ContactAvatar avatarUrl={conv.avatarUrl} firstName={conv.firstName} size={48} />
                     {conv.unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white">
                         {conv.unreadCount > 9 ? "9+" : conv.unreadCount}

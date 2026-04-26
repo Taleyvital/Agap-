@@ -245,10 +245,9 @@ export default function ProfilePage() {
       setUploading(true);
       const supabase = createSupabaseBrowserClient();
 
-      // 1. Upload file
+      // 1. Upload file — path is relative inside the "avatars" bucket
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}/${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
@@ -272,8 +271,9 @@ export default function ProfilePage() {
       // 4. Update local state
       setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
     } catch (error) {
-      console.error("Error uploading avatar:", error);
-      alert("Erreur lors de l'envoi de la photo.");
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("Error uploading avatar:", msg);
+      alert("Erreur : " + msg);
     } finally {
       setUploading(false);
     }
