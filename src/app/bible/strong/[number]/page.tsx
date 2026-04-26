@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, BookOpen, Sparkles, Volume2 } from "lucide-react";
+import { ChevronLeft, BookOpen, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { getStrongDefinition, getStrongVerses } from "@/lib/strong";
