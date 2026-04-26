@@ -11,6 +11,7 @@ import {
   Camera,
   Check,
   ChevronRight,
+  Crown,
   Eye,
   EyeOff,
   FileText,
@@ -30,6 +31,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/AppShell";
+import { PremiumPaywall } from "@/components/ui/PremiumPaywall";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import Image from "next/image";
 import { useRef } from "react";
@@ -74,6 +76,7 @@ export default function ProfilePage() {
   const [initial, setInitial] = useState("");
   const [since, setSince] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [themeSheetOpen, setThemeSheetOpen]     = useState(false);
   const [pwSheetOpen, setPwSheetOpen]           = useState(false);
   const [pwCurrent, setPwCurrent]               = useState("");
@@ -591,8 +594,29 @@ export default function ProfilePage() {
           </button>
         </motion.div>
 
+        {/* ── Premium ───────────────────────────────── */}
+        <motion.div {...stagger(6)} className="mt-6">
+          <button
+            type="button"
+            onClick={() => setShowPaywall(true)}
+            className="relative flex w-full items-center gap-3 overflow-hidden rounded-2xl px-4 py-4"
+            style={{ background: "linear-gradient(135deg, #7B6FD4 0%, #5B5099 100%)" }}
+          >
+            {/* Glow */}
+            <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-xl" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
+              <Crown className="h-4.5 w-4.5 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-sans text-sm font-semibold text-white">Passer à Premium</p>
+              <p className="font-sans text-[11px] text-white/60">Gospel, parcours exclusifs, IA illimitée</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-white/60" />
+          </button>
+        </motion.div>
+
         {/* ── Sign out ──────────────────────────────── */}
-        <motion.div {...stagger(6)} className="mt-3">
+        <motion.div {...stagger(7)} className="mt-3">
           <button
             type="button"
             onClick={() => void signOut()}
@@ -605,7 +629,7 @@ export default function ProfilePage() {
 
         {/* ── Admin links ──────────────────────────── */}
         {profile?.is_admin && (
-          <motion.div {...stagger(6)} className="mt-4 flex flex-col gap-2">
+          <motion.div {...stagger(8)} className="mt-4 flex flex-col gap-2">
             <Link
               href="/admin/gospel"
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#7B6FD4]/20 bg-[#7B6FD4]/5 py-3.5 font-sans text-sm text-[#7B6FD4]/80 transition-colors hover:bg-[#7B6FD4]/10"
@@ -629,6 +653,9 @@ export default function ProfilePage() {
         </p>
 
       </div>
+
+      {/* ── Premium Paywall ──────────────────────────── */}
+      {showPaywall && <PremiumPaywall onClose={() => setShowPaywall(false)} />}
 
       {/* ── Settings Bottom Sheet ────────────────────── */}
       <AnimatePresence>
