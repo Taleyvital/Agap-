@@ -338,7 +338,7 @@ export default function AdminReadingPlanPage() {
             ) : plans.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-16 text-center">
                 <BookOpen className="h-10 w-10 text-[#2a2a2a]" />
-                <p className="font-sans text-sm text-[#666666]">Aucun plan pour l'instant</p>
+                <p className="font-sans text-sm text-[#666666]">Aucun plan pour l&apos;instant</p>
                 <button type="button" onClick={openCreatePlan}
                   className="mt-2 rounded-2xl bg-[#7B6FD4] px-5 py-2.5 font-sans text-sm text-white">
                   Créer le premier plan
