@@ -67,6 +67,7 @@ export default function CommunityPage() {
   const [ownInitial, setOwnInitial] = useState("");
   const [avatarConsent, setAvatarConsent] = useState<"yes" | "no" | null>(null);
   const [showConsentSheet, setShowConsentSheet] = useState(false);
+  const [showAvatarToggleSheet, setShowAvatarToggleSheet] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   // Delete menu state
@@ -325,7 +326,12 @@ export default function CommunityPage() {
         {/* HEADER */}
         <header className="px-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative h-9 w-9 rounded-full overflow-hidden bg-bg-tertiary border border-separator shrink-0">
+            <button
+              type="button"
+              onClick={() => ownAvatarUrl ? setShowAvatarToggleSheet(true) : null}
+              className="relative h-9 w-9 rounded-full overflow-hidden bg-bg-tertiary border border-separator shrink-0 active:opacity-70 transition-opacity"
+              aria-label="Visibilité de ma photo"
+            >
               {ownAvatarUrl ? (
                 <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="36px" />
               ) : (
@@ -333,7 +339,14 @@ export default function CommunityPage() {
                   {ownInitial || <User className="h-4 w-4" />}
                 </span>
               )}
-            </div>
+              {/* Indicateur de statut */}
+              {ownAvatarUrl && (
+                <span
+                  className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-bg-primary"
+                  style={{ background: avatarConsent === "yes" ? "#7B6FD4" : "#666666" }}
+                />
+              )}
+            </button>
           </div>
           <button type="button" className="text-accent" aria-label="Notifications">
             <Bell className="h-5 w-5 fill-accent" />
@@ -683,6 +696,87 @@ export default function CommunityPage() {
         ) : null}
 
       </div>
+
+      {/* ── Toggle sheet : changer la visibilité de la photo ── */}
+      <AnimatePresence>
+        {showAvatarToggleSheet && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAvatarToggleSheet(false)}
+              className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary px-6 pb-10 pt-7 shadow-2xl"
+            >
+              <div className="mb-5 flex justify-center">
+                <div className="h-1 w-10 rounded-full bg-separator" />
+              </div>
+
+              {/* Avatar preview */}
+              <div className="flex justify-center mb-5">
+                <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-separator">
+                  {ownAvatarUrl && (
+                    <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="64px" />
+                  )}
+                </div>
+              </div>
+
+              <h2 className="text-center font-serif text-xl italic text-text-primary mb-1">
+                Photo dans la communauté
+              </h2>
+              <p className="text-center font-sans text-xs text-text-tertiary mb-6">
+                {avatarConsent === "yes"
+                  ? "Votre photo est visible sur vos publications."
+                  : "Vous apparaissez de façon anonyme."}
+              </p>
+
+              <div className="flex flex-col gap-3">
+                {avatarConsent !== "yes" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem("community-avatar-consent", "yes");
+                      setAvatarConsent("yes");
+                      setShowAvatarToggleSheet(false);
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 font-sans text-sm font-semibold text-white"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Afficher ma photo
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem("community-avatar-consent", "no");
+                      setAvatarConsent("no");
+                      setShowAvatarToggleSheet(false);
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-separator bg-bg-tertiary py-3.5 font-sans text-sm font-semibold text-text-primary"
+                  >
+                    <User className="h-4 w-4" />
+                    Redevenir anonyme
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowAvatarToggleSheet(false)}
+                  className="w-full rounded-2xl py-3 font-sans text-xs text-text-tertiary"
+                >
+                  Annuler
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Consent sheet : afficher sa photo en community ─── */}
       <AnimatePresence>

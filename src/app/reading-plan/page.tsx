@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, BookOpen } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -15,6 +16,7 @@ interface ReadingPlan {
   total_days: number;
   category: string;
   is_ai_generated: boolean;
+  image_url: string | null;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -165,17 +167,18 @@ export default function ReadingPlanPage() {
                       onClick={() => router.push(`/reading-plan/${plan.id}`)}
                       className="group relative flex flex-col bg-bg-secondary rounded-[16px] overflow-hidden border border-separator hover:bg-bg-tertiary transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-sm"
                     >
-                      {/* Gradient Header */}
+                      {/* Gradient Header or Cover Image */}
                       <div
                         className="h-36 w-full relative flex items-center justify-center"
-                        style={{
+                        style={!plan.image_url ? {
                           background: `linear-gradient(135deg, ${accentColor}22 0%, ${accentColor}08 100%)`,
-                        }}
+                        } : undefined}
                       >
-                        <BookOpen
-                          className="w-12 h-12 opacity-20"
-                          style={{ color: accentColor }}
-                        />
+                        {plan.image_url ? (
+                          <Image src={plan.image_url} alt={plan.title} fill className="object-cover" sizes="430px" />
+                        ) : (
+                          <BookOpen className="w-12 h-12 opacity-20" style={{ color: accentColor }} />
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1c1c1c] to-transparent" />
 
                         {/* Category Tag */}

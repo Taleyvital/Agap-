@@ -603,15 +603,22 @@ export default function ProfilePage() {
           </button>
         </motion.div>
 
-        {/* ── Admin link ───────────────────────────── */}
+        {/* ── Admin links ──────────────────────────── */}
         {profile?.is_admin && (
-          <motion.div {...stagger(6)} className="mt-4">
+          <motion.div {...stagger(6)} className="mt-4 flex flex-col gap-2">
             <Link
               href="/admin/gospel"
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#7B6FD4]/20 bg-[#7B6FD4]/5 py-3.5 font-sans text-sm text-[#7B6FD4]/80 transition-colors hover:bg-[#7B6FD4]/10"
             >
               <Settings className="h-4 w-4" />
               Dashboard Admin Gospel
+            </Link>
+            <Link
+              href="/admin/reading-plan"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#7B6FD4]/20 bg-[#7B6FD4]/5 py-3.5 font-sans text-sm text-[#7B6FD4]/80 transition-colors hover:bg-[#7B6FD4]/10"
+            >
+              <BookOpen className="h-4 w-4" />
+              Dashboard Admin Plans
             </Link>
           </motion.div>
         )}
