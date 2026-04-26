@@ -191,7 +191,8 @@ export default function AdminReadingPlanPage() {
       }
       setPlanSheet("closed");
     } catch (e) {
-      alert("Erreur : " + (e instanceof Error ? e.message : String(e)));
+      const msg = (e instanceof Error ? e.message : (e as { message?: string })?.message) ?? JSON.stringify(e);
+      alert("Erreur : " + msg);
     } finally {
       setPlanSaving(false);
     }
@@ -264,7 +265,8 @@ export default function AdminReadingPlanPage() {
       }
       setDaySheet("closed");
     } catch (e) {
-      alert("Erreur : " + (e instanceof Error ? e.message : String(e)));
+      const msg = (e instanceof Error ? e.message : (e as { message?: string })?.message) ?? JSON.stringify(e);
+      alert("Erreur : " + msg);
     } finally {
       setDaySaving(false);
     }
