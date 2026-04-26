@@ -50,17 +50,15 @@ export default function AdminGospelPage() {
     setLoading(false);
   };
 
-  const togglePreview = async (track: GospelTrack) => {
-    // Stop current if any
-    if (previewAudio) { previewAudio.pause(); previewAudio.src = ""; }
-    if (previewId === track.id) { setPreviewId(null); setPreviewAudio(null); return; }
+  const togglePreview = (track: GospelTrack & { audio_url?: string }) => {
+    // Stop current
+    if (previewAudio) { previewAudio.pause(); previewAudio.src = ""; setPreviewAudio(null); }
+    if (previewId === track.id) { setPreviewId(null); return; }
 
-    // Fetch signed URL
-    const res  = await fetch(`/api/gospel/tracks/${track.id}`);
-    const data = await res.json();
-    const url  = data.track?.audio_url;
+    const url = track.audio_url;
     if (!url) return;
 
+    // Créer + jouer immédiatement dans le même tick (requis sur iOS Safari)
     const audio = new Audio(url);
     audio.play().catch(() => {});
     audio.onended = () => { setPreviewId(null); setPreviewAudio(null); };
@@ -264,8 +262,8 @@ function AdminTrackCard({
         {/* Preview button */}
         <button
           onClick={onPreview}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-          style={{ backgroundColor: "rgba(123,111,212,0.15)" }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90"
+          style={{ backgroundColor: isPreviewPlaying ? "rgba(123,111,212,0.35)" : "rgba(123,111,212,0.15)" }}
         >
           {isPreviewPlaying
             ? <Pause className="h-4 w-4" style={{ color: "#7B6FD4" }} />
@@ -273,6 +271,26 @@ function AdminTrackCard({
           }
         </button>
       </div>
+
+      {/* Playing indicator */}
+      {isPreviewPlaying && (
+        <div className="mt-3 flex items-center gap-2 px-1">
+          <div className="flex items-end gap-[3px] h-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="w-[3px] rounded-full"
+                style={{
+                  backgroundColor: "#7B6FD4",
+                  height: `${[60, 100, 80, 40][i - 1]}%`,
+                  animation: `bounce ${0.4 + i * 0.1}s ease-in-out infinite alternate`,
+                }}
+              />
+            ))}
+          </div>
+          <span className="font-sans text-[11px] text-[#7B6FD4]">Lecture en cours…</span>
+        </div>
+      )}
 
       {/* Action buttons — only for pending */}
       {status === "pending" && (

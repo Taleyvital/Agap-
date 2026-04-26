@@ -29,5 +29,19 @@ export async function GET(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ tracks: tracks ?? [] });
+  // Générer les URLs audio signées pour tous les tracks (1h)
+  const tracksWithAudio = await Promise.all(
+    (tracks ?? []).map(async (track) => {
+      let audioUrl = track.audio_url as string | null;
+      if (audioUrl && !audioUrl.startsWith("http")) {
+        const { data: signed } = await service.storage
+          .from("gospel-audio")
+          .createSignedUrl(audioUrl, 3600);
+        if (signed?.signedUrl) audioUrl = signed.signedUrl;
+      }
+      return { ...track, audio_url: audioUrl };
+    })
+  );
+
+  return NextResponse.json({ tracks: tracksWithAudio });
 }
