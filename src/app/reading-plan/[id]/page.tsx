@@ -127,19 +127,25 @@ export default function ReadingPlanDetailPage() {
   return (
     <div className="min-h-screen bg-[#141414] pb-40">
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-[#141414]/80 backdrop-blur-xl h-16 flex items-center px-6">
+      <header
+        className="fixed top-0 w-full z-50 bg-[#141414]/80 backdrop-blur-xl flex items-end px-6 pb-3"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)", minHeight: "64px" }}
+      >
         <button
           onClick={() => router.push("/reading-plan")}
           className="flex items-center gap-2 text-[#7B6FD4] font-medium text-sm transition-opacity active:opacity-70"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="font-sans tracking-wide uppercase text-[11px]">
-            ← {t("rplan_back")}
+            {t("rplan_back")}
           </span>
         </button>
       </header>
 
-      <main className="pt-24 px-6 max-w-2xl mx-auto">
+      <main
+        className="px-6 max-w-2xl mx-auto"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 80px)" }}
+      >
         {/* Hero Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
