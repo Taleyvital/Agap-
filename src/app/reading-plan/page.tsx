@@ -17,6 +17,7 @@ interface ReadingPlan {
   category: string;
   is_ai_generated: boolean;
   image_url: string | null;
+  author: string | null;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -204,9 +205,14 @@ export default function ReadingPlanPage() {
 
                       {/* Content */}
                       <div className="p-5">
-                        <h5 className="font-serif text-xl text-text-primary mb-2 italic">
+                        <h5 className="font-serif text-xl text-text-primary mb-1 italic">
                           {plan.title}
                         </h5>
+                        {plan.author && (
+                          <p className="mb-2 font-sans text-[10px] uppercase tracking-[0.15em] text-text-tertiary/50">
+                            par {plan.author}
+                          </p>
+                        )}
                         <p className="text-text-secondary text-sm font-sans line-clamp-2">
                           {plan.description}
                         </p>

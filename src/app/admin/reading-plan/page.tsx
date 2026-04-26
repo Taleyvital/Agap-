@@ -18,6 +18,7 @@ interface Plan {
   total_days: number;
   category: string | null;
   image_url: string | null;
+  author: string | null;
   is_ai_generated: boolean;
   created_at: string;
 }
@@ -67,7 +68,7 @@ export default function AdminReadingPlanPage() {
 
   // Plan form sheet
   const [planSheet, setPlanSheet] = useState<"closed" | "create" | "edit">("closed");
-  const [planForm, setPlanForm] = useState({ title: "", description: "", category: "", total_days: 7, image_url: "" });
+  const [planForm, setPlanForm] = useState({ title: "", description: "", category: "", total_days: 7, image_url: "", author: "" });
   const [planImageFile, setPlanImageFile] = useState<File | null>(null);
   const [planImagePreview, setPlanImagePreview] = useState<string | null>(null);
   const [planSaving, setPlanSaving] = useState(false);
@@ -145,7 +146,7 @@ export default function AdminReadingPlanPage() {
 
   // ── Plan CRUD ───────────────────────────────────────────────────────────────
   const openCreatePlan = () => {
-    setPlanForm({ title: "", description: "", category: CATEGORIES[0], total_days: 7, image_url: "" });
+    setPlanForm({ title: "", description: "", category: CATEGORIES[0], total_days: 7, image_url: "", author: "" });
     setPlanImageFile(null); setPlanImagePreview(null);
     setPlanSheet("create");
   };
@@ -157,6 +158,7 @@ export default function AdminReadingPlanPage() {
       category: plan.category ?? "",
       total_days: plan.total_days,
       image_url: plan.image_url ?? "",
+      author: (plan as Plan & { author?: string }).author ?? "",
     });
     setPlanImageFile(null);
     setPlanImagePreview(plan.image_url ?? null);
@@ -178,6 +180,7 @@ export default function AdminReadingPlanPage() {
         category: planForm.category || null,
         total_days: planForm.total_days,
         image_url: imageUrl || null,
+        author: planForm.author.trim() || null,
       };
 
       if (planSheet === "create") {
@@ -554,6 +557,18 @@ export default function AdminReadingPlanPage() {
                   value={planForm.title}
                   onChange={(e) => setPlanForm((p) => ({ ...p, title: e.target.value }))}
                   placeholder="Ex : La paix dans la tempête"
+                  className="w-full rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3 font-sans text-sm text-[#E8E8E8] placeholder:text-[#666666] focus:border-[#7B6FD4] focus:outline-none"
+                />
+              </div>
+
+              {/* Author */}
+              <div>
+                <p className="mb-1.5 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Auteur</p>
+                <input
+                  type="text"
+                  value={planForm.author}
+                  onChange={(e) => setPlanForm((p) => ({ ...p, author: e.target.value }))}
+                  placeholder="Ex : Pasteur Jean Dupont"
                   className="w-full rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3 font-sans text-sm text-[#E8E8E8] placeholder:text-[#666666] focus:border-[#7B6FD4] focus:outline-none"
                 />
               </div>

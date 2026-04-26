@@ -21,6 +21,7 @@ interface ReadingPlan {
   total_days: number;
   category: string;
   is_ai_generated: boolean;
+  author: string | null;
   days: Day[];
   quoteReference: string;
 }
@@ -75,6 +76,7 @@ export default function ReadingPlanDetailPage() {
           total_days: planData.total_days,
           category: planData.category,
           is_ai_generated: planData.is_ai_generated,
+          author: planData.author ?? null,
           days,
           quoteReference: firstRef,
         });
@@ -174,9 +176,16 @@ export default function ReadingPlanDetailPage() {
             </div>
 
             {/* Title */}
-            <h1 className="font-serif italic text-2xl mb-6 text-[#E8E8E8] leading-tight">
+            <h1 className="font-serif italic text-2xl mb-2 text-[#E8E8E8] leading-tight">
               {plan.title}
             </h1>
+
+            {/* Author — discret */}
+            {plan.author && (
+              <p className="mb-5 font-sans text-[10px] uppercase tracking-[0.18em] text-[#666666]/60">
+                par {plan.author}
+              </p>
+            )}
 
             {/* Description as quote */}
             <blockquote className="font-serif italic text-base text-[#666666] border-l border-[#7B6FD4]/30 pl-4 py-1">
