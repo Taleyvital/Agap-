@@ -68,7 +68,7 @@ function StoriesContent() {
             Bible Immersive
           </h1>
           <p style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "#666", fontStyle: "italic", marginTop: 6 }}>
-            Vis la Parole de l'intérieur
+            Vis la Parole de l&apos;intérieur
           </p>
         </div>
 
@@ -118,7 +118,7 @@ function StoriesContent() {
               </div>
               <div>
                 <p style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "#E8E8E8", margin: 0 }}>Ton histoire personnalisée</p>
-                <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "#555", margin: 0 }}>L'IA compose le récit en ~10 secondes</p>
+                <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "#555", margin: 0 }}>L&apos;IA compose le récit en ~10 secondes</p>
               </div>
             </div>
 

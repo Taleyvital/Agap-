@@ -4,7 +4,6 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Share2, X } from "lucide-react";
-import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 
 // ── Types ─────────────────────────────────────────────────────
 interface BibleStory {
@@ -39,8 +38,6 @@ function StoryPlayerContent() {
   const params       = useParams();
   const searchParams = useSearchParams();
   const router       = useRouter();
-  const { showXPToast } = useXPToast();
-
   const passageRef = decodeURIComponent(params.passageRef as string);
   const character  = searchParams.get("character") ?? "";
   const language   = searchParams.get("language")  ?? "fr";
@@ -121,7 +118,7 @@ function StoryPlayerContent() {
         throw new Error(data.error ?? "Génération échouée");
       }
 
-      const { story: s, cached } = (await res.json()) as {
+      const { story: s } = (await res.json()) as {
         story: BibleStory & { audio_url: string | null };
         cached: boolean;
       };
@@ -211,7 +208,7 @@ function StoryPlayerContent() {
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    isPlaying ? audio.pause() : audio.play();
+    if (isPlaying) { audio.pause(); } else { void audio.play(); }
   };
 
   const seek = (delta: number) => {
@@ -237,7 +234,6 @@ function StoryPlayerContent() {
   const shareCardRef = useRef<HTMLDivElement>(null);
 
   const handleShare = async () => {
-    const quote = story?.quote ?? story?.narrative_text?.slice(0, 120) ?? "";
     if (!shareCardRef.current) return;
 
     try {
@@ -615,7 +611,7 @@ function StoryPlayerContent() {
           {displayCharacter}
         </h1>
         <p style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "#ccc", textAlign: "center", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
-          "{story?.quote ?? story?.narrative_text?.slice(0, 130) ?? ""}"
+          &quot;{story?.quote ?? story?.narrative_text?.slice(0, 130) ?? ""}&quot;
         </p>
         <p style={{ fontFamily: "var(--font-sans)", fontSize: 10, color: "#444", margin: 0 }}>
           {passageRef}
@@ -644,7 +640,7 @@ function StoryPlayerContent() {
                 {displayCharacter}
               </p>
               <p style={{ fontFamily: "var(--font-serif)", fontSize: 14, color: "#999", fontStyle: "italic", lineHeight: 1.6, margin: "0 0 20px" }}>
-                "{story?.quote ?? story?.narrative_text?.slice(0, 180) ?? ""}"
+                &quot;{story?.quote ?? story?.narrative_text?.slice(0, 180) ?? ""}&quot;
               </p>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "#555", margin: 0 }}>
                 AGAPE · Bible Immersive · {passageRef}
