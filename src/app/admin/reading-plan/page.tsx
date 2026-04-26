@@ -181,12 +181,14 @@ export default function AdminReadingPlanPage() {
       };
 
       if (planSheet === "create") {
-        const { data, error } = await supabase.from("reading_plans").insert(payload).select().single();
+        const { data, error } = await supabase.from("reading_plans").insert(payload).select().maybeSingle();
         if (error) throw error;
+        if (!data) throw new Error("Aucune donnée retournée — vérifiez les policies RLS.");
         setPlans((prev) => [data as Plan, ...prev]);
       } else if (selectedPlan) {
-        const { data, error } = await supabase.from("reading_plans").update(payload).eq("id", selectedPlan.id).select().single();
+        const { data, error } = await supabase.from("reading_plans").update(payload).eq("id", selectedPlan.id).select().maybeSingle();
         if (error) throw error;
+        if (!data) throw new Error("Mise à jour bloquée — vérifiez les policies RLS.");
         setPlans((prev) => prev.map((p) => p.id === selectedPlan.id ? data as Plan : p));
       }
       setPlanSheet("closed");
@@ -255,12 +257,14 @@ export default function AdminReadingPlanPage() {
       };
 
       if (daySheet === "create") {
-        const { data, error } = await supabase.from("daily_reflections").insert(payload).select().single();
+        const { data, error } = await supabase.from("daily_reflections").insert(payload).select().maybeSingle();
         if (error) throw error;
+        if (!data) throw new Error("Aucune donnée retournée — vérifiez les policies RLS.");
         setDays((prev) => [...prev, data as Day].sort((a, b) => a.day_number - b.day_number));
       } else if (editingDay) {
-        const { data, error } = await supabase.from("daily_reflections").update(payload).eq("id", editingDay.id).select().single();
+        const { data, error } = await supabase.from("daily_reflections").update(payload).eq("id", editingDay.id).select().maybeSingle();
         if (error) throw error;
+        if (!data) throw new Error("Mise à jour bloquée — vérifiez les policies RLS.");
         setDays((prev) => prev.map((d) => d.id === editingDay.id ? data as Day : d).sort((a, b) => a.day_number - b.day_number));
       }
       setDaySheet("closed");
