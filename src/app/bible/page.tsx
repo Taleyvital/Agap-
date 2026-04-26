@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
-import { ChevronLeft, ChevronRight, BookOpen, Palette, StickyNote, Pencil, Sparkles, Check, Flame } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Palette, StickyNote, Pencil, Sparkles, Check, Flame, Mic } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
@@ -699,6 +699,33 @@ function BiblePageContent() {
                 }}
               >
                 Strong
+              </button>
+            )}
+
+            {/* Mode Histoire button */}
+            {view === "verses" && (
+              <button
+                type="button"
+                onClick={() => router.push("/bible/stories")}
+                style={{
+                  background:     "#1c1c1c",
+                  border:         "0.5px solid rgba(123,111,212,0.3)",
+                  borderRadius:   "10px",
+                  color:          "#7B6FD4",
+                  fontFamily:     "var(--font-sans)",
+                  fontSize:       "12px",
+                  padding:        "5px 10px",
+                  cursor:         "pointer",
+                  letterSpacing:  "0.05em",
+                  textTransform:  "uppercase",
+                  display:        "flex",
+                  alignItems:     "center",
+                  gap:            "5px",
+                  flexShrink:     0,
+                }}
+              >
+                <Mic size={12} />
+                Histoire
               </button>
             )}
 

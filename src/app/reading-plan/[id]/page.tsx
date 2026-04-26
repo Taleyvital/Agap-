@@ -32,6 +32,7 @@ export default function ReadingPlanDetailPage() {
   const { t } = useLanguage();
   const [plan, setPlan] = useState<ReadingPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPlanCompleted, setIsPlanCompleted] = useState(false);
   const currentDayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function ReadingPlanDetailPage() {
         const planData = planRes.data;
         const reflections = reflectionsRes.data || [];
         const currentDay = progressRes.data?.current_day ?? 1;
+        const planCompleted = currentDay > planData.total_days;
 
         const days: Day[] = reflections.map((r) => ({
           id: r.day_number,
@@ -69,6 +71,7 @@ export default function ReadingPlanDetailPage() {
 
         const firstRef = reflections[0]?.bible_reference ?? "";
 
+        setIsPlanCompleted(planCompleted);
         setPlan({
           id: planData.id,
           title: planData.title,
@@ -271,16 +274,25 @@ export default function ReadingPlanDetailPage() {
       {/* Bottom Actions (Fixed) */}
       <div className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#141414] via-[#141414]/95 to-transparent z-50">
         <div className="max-w-md mx-auto">
-          <button
-            onClick={() =>
-              router.push(
-                `/reading-plan/day?planId=${plan.id}&day=${getCurrentDayNumber()}`
-              )
-            }
-            className="w-full h-14 bg-[#E8E8E8] text-[#141414] rounded-full font-bold text-sm tracking-wide transition-all active:scale-95 shadow-2xl"
-          >
-            {t("rplan_start_day")} {getCurrentDayNumber()}
-          </button>
+          {isPlanCompleted ? (
+            <div className="w-full h-14 bg-[#7B6FD4]/20 border border-[#7B6FD4]/40 rounded-full flex items-center justify-center gap-2">
+              <Check className="w-5 h-5 text-[#7B6FD4]" />
+              <span className="font-sans font-semibold text-sm tracking-wide text-[#7B6FD4]">
+                {t("rplan_completed")}
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={() =>
+                router.push(
+                  `/reading-plan/day?planId=${plan.id}&day=${getCurrentDayNumber()}`
+                )
+              }
+              className="w-full h-14 bg-[#E8E8E8] text-[#141414] rounded-full font-bold text-sm tracking-wide transition-all active:scale-95 shadow-2xl"
+            >
+              {t("rplan_start_day")} {getCurrentDayNumber()}
+            </button>
+          )}
         </div>
       </div>
     </div>

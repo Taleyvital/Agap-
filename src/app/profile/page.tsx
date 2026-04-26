@@ -177,7 +177,8 @@ export default function ProfilePage() {
           .from("user_plan_progress")
           .select("plan_id, current_day, completed_days, reading_plans(title, total_days)")
           .eq("user_id", user.id)
-          .eq("is_active", true)
+          .order("last_read_at", { ascending: false })
+          .limit(1)
           .maybeSingle();
         if (progressData) {
           const plan = (Array.isArray(progressData.reading_plans) ? progressData.reading_plans[0] : progressData.reading_plans) as { title: string; total_days: number } | null;
@@ -471,7 +472,7 @@ export default function ProfilePage() {
         {/* ── Reading progress ──────────────────────── */}
         <motion.div {...stagger(2)} className="mt-5 rounded-2xl border border-separator bg-bg-secondary p-5">
           {activePlan ? (() => {
-            const pct = Math.round((activePlan.currentDay - 1) / activePlan.totalDays * 100);
+            const pct = Math.min(100, Math.round((activePlan.currentDay - 1) / activePlan.totalDays * 100));
             return (
               <>
                 <div className="flex items-start justify-between">

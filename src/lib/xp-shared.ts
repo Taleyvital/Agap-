@@ -22,6 +22,9 @@ export const XP_VALUES: Record<string, number> = {
   GOSPEL_TRACK_UPLOADED:   100,
   // Strong Concordance
   STRONG_WORD_EXPLORED:     10,
+  // Bible Immersive — Mode Histoire
+  STORY_LISTENED_COMPLETE:  40,
+  STORY_GENERATED:          20,
 };
 
 export const LEVELS = [

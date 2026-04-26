@@ -120,14 +120,15 @@ function DayReadingContent() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const nextDay = dayReading.dayNumber + 1;
+        const isLastDay = dayReading.dayNumber >= dayReading.totalDays;
         await supabase.from("user_plan_progress").upsert(
           {
             user_id: user.id,
             plan_id: dayReading.planId,
-            current_day: nextDay <= dayReading.totalDays ? nextDay : dayReading.dayNumber,
+            current_day: nextDay,
             completed_days: dayReading.dayNumber,
             last_read_at: new Date().toISOString(),
-            is_active: true,
+            is_active: !isLastDay,
           },
           { onConflict: "user_id,plan_id" }
         );
