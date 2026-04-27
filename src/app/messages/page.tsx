@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -21,6 +21,12 @@ interface MutualFriend {
   lastVerseRef: string | null;
   lastVerseText: string | null;
   unreadCount: number;
+}
+
+interface PendingFollower {
+  userId: string;
+  firstName: string;
+  avatarUrl: string | null;
 }
 
 function FlameIcon({ streak, size = 20 }: { streak: number; size?: number }) {
@@ -128,38 +134,122 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
 export default function MessagesPage() {
   const router = useRouter();
   const [conversations, setConversations] = useState<MutualFriend[]>([]);
+  const [pendingFollowers, setPendingFollowers] = useState<PendingFollower[]>([]);
+  const [followingBack, setFollowingBack] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const currentUserIdRef = useRef<string | null>(null);
+  const iFollowRef = useRef<Set<string>>(new Set());
+
+  const ignorePending = (userId: string) => {
+    const ignored = JSON.parse(localStorage.getItem("ignored-followers") ?? "[]") as string[];
+    localStorage.setItem("ignored-followers", JSON.stringify([...ignored, userId]));
+    setPendingFollowers((prev) => prev.filter((p) => p.userId !== userId));
+  };
+
+  const followBack = async (target: PendingFollower) => {
+    const uid = currentUserIdRef.current;
+    if (!uid) return;
+    setFollowingBack((prev) => new Set(prev).add(target.userId));
+    const supabase = createSupabaseBrowserClient();
+    await supabase.from("follows").insert({ follower_id: uid, following_id: target.userId });
+    iFollowRef.current.add(target.userId);
+    setPendingFollowers((prev) => prev.filter((p) => p.userId !== target.userId));
+    setFollowingBack((prev) => { const s = new Set(prev); s.delete(target.userId); return s; });
+    // Add new mutual to conversations list
+    setConversations((prev) => [
+      {
+        userId: target.userId,
+        firstName: target.firstName,
+        avatarLevel: 1,
+        avatarUrl: target.avatarUrl,
+        streakCount: 0,
+        lastVerseRef: null,
+        lastVerseText: null,
+        unreadCount: 0,
+      },
+      ...prev,
+    ]);
+  };
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
+      currentUserIdRef.current = user.id;
 
       // Show onboarding on first visit
       const seen = localStorage.getItem("flames-onboarding-seen");
       if (!seen) setShowOnboarding(true);
 
-      // Get who I follow
-      const { data: myFollows } = await supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", user.id);
+      const ignoredSet = new Set(
+        JSON.parse(localStorage.getItem("ignored-followers") ?? "[]") as string[]
+      );
+
+      // Get who I follow + who follows me (parallel)
+      const [{ data: myFollows }, { data: theirFollows }] = await Promise.all([
+        supabase.from("follows").select("following_id").eq("follower_id", user.id),
+        supabase.from("follows").select("follower_id").eq("following_id", user.id),
+      ]);
 
       const iFollow = new Set((myFollows ?? []).map((r) => r.following_id as string));
+      iFollowRef.current = iFollow;
+      const followsMe = (theirFollows ?? []).map((r) => r.follower_id as string);
+
+      // Pending = follows me but I don't follow back (and not ignored)
+      const pendingIds = followsMe.filter((id) => !iFollow.has(id) && !ignoredSet.has(id));
+      if (pendingIds.length > 0) {
+        const [{ data: pendingProfiles }, { data: pendingAvatars }] = await Promise.all([
+          supabase.from("user_profiles_public").select("user_id, first_name").in("user_id", pendingIds),
+          supabase.from("profiles").select("id, avatar_url").in("id", pendingIds),
+        ]);
+        const avatarMap = new Map((pendingAvatars ?? []).map((r) => [r.id as string, r.avatar_url as string | null]));
+        setPendingFollowers(
+          (pendingProfiles ?? []).map((p) => ({
+            userId: p.user_id as string,
+            firstName: p.first_name as string,
+            avatarUrl: avatarMap.get(p.user_id as string) ?? null,
+          }))
+        );
+      }
+
+      // Realtime: new follower while on this page
+      supabase
+        .channel(`follows-incoming-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "follows", filter: `following_id=eq.${user.id}` },
+          async (payload) => {
+            const newFollowerId = (payload.new as { follower_id: string }).follower_id;
+            const ignored = new Set(
+              JSON.parse(localStorage.getItem("ignored-followers") ?? "[]") as string[]
+            );
+            if (ignored.has(newFollowerId) || iFollowRef.current.has(newFollowerId)) return;
+            const [profileRes, avatarRes] = await Promise.all([
+              supabase.from("user_profiles_public").select("first_name").eq("user_id", newFollowerId).maybeSingle(),
+              supabase.from("profiles").select("avatar_url").eq("id", newFollowerId).maybeSingle(),
+            ]);
+            if (!profileRes.data) return;
+            setPendingFollowers((prev) => {
+              if (prev.some((p) => p.userId === newFollowerId)) return prev;
+              return [
+                {
+                  userId: newFollowerId,
+                  firstName: profileRes.data!.first_name as string,
+                  avatarUrl: (avatarRes.data?.avatar_url as string | null) ?? null,
+                },
+                ...prev,
+              ];
+            });
+          }
+        )
+        .subscribe();
+
       if (iFollow.size === 0) { setLoading(false); return; }
 
-      // Get who follows me back (mutual)
-      const { data: theirFollows } = await supabase
-        .from("follows")
-        .select("follower_id")
-        .eq("following_id", user.id)
-        .in("follower_id", Array.from(iFollow));
-
-      const mutualIds = (theirFollows ?? [])
-        .map((r) => r.follower_id as string)
-        .filter((id) => iFollow.has(id));
+      // Mutual = I follow them AND they follow me
+      const mutualIds = followsMe.filter((id) => iFollow.has(id));
 
       if (mutualIds.length === 0) { setLoading(false); return; }
 
@@ -254,7 +344,63 @@ export default function MessagesPage() {
           </div>
         )}
 
-        {!loading && conversations.length === 0 && (
+        {/* Pending follow requests */}
+        <AnimatePresence>
+          {pendingFollowers.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mb-5"
+            >
+              <p className="font-sans text-[10px] uppercase tracking-widest text-text-tertiary mb-2.5">
+                Demandes de connexion · {pendingFollowers.length}
+              </p>
+              <div className="flex flex-col gap-2">
+                {pendingFollowers.map((p) => (
+                  <motion.div
+                    key={p.userId}
+                    layout
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    className="flex items-center gap-3 rounded-2xl border border-accent/25 bg-bg-secondary px-4 py-3"
+                  >
+                    <ContactAvatar avatarUrl={p.avatarUrl} firstName={p.firstName} size={44} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-sans text-sm font-medium text-text-primary">{p.firstName}</p>
+                      <p className="font-sans text-[11px] text-text-tertiary">veut se connecter avec toi 🔥</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => void followBack(p)}
+                        disabled={followingBack.has(p.userId)}
+                        className="flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 font-sans text-xs font-medium text-white disabled:opacity-60"
+                      >
+                        {followingBack.has(p.userId) ? (
+                          <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        ) : (
+                          "Suivre"
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => ignorePending(p.userId)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-tertiary font-sans text-xs text-text-tertiary hover:text-text-primary transition-colors"
+                        aria-label="Ignorer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {!loading && conversations.length === 0 && pendingFollowers.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

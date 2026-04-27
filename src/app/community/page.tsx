@@ -69,6 +69,7 @@ export default function CommunityPage() {
   const [showConsentSheet, setShowConsentSheet] = useState(false);
   const [showAvatarToggleSheet, setShowAvatarToggleSheet] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [pendingFollowCount, setPendingFollowCount] = useState(0);
 
   // Delete menu state
   const [deleteMenuOpen, setDeleteMenuOpen] = useState<string | null>(null);
@@ -124,6 +125,21 @@ export default function CommunityPage() {
           .eq("receiver_id", user.id)
           .is("read_at", null)
           .then(({ count }) => setUnreadMessages(count ?? 0));
+
+        // Pending follow requests badge
+        void Promise.all([
+          supabase.from("follows").select("follower_id").eq("following_id", user.id),
+          supabase.from("follows").select("following_id").eq("follower_id", user.id),
+        ]).then(([{ data: followers }, { data: following }]) => {
+          const iFollowSet = new Set((following ?? []).map((r) => r.following_id as string));
+          const ignored = new Set(
+            JSON.parse(localStorage.getItem("ignored-followers") ?? "[]") as string[]
+          );
+          const pending = (followers ?? []).filter(
+            (r) => !iFollowSet.has(r.follower_id as string) && !ignored.has(r.follower_id as string)
+          ).length;
+          setPendingFollowCount(pending);
+        });
       }
       
       void supabase
@@ -421,9 +437,9 @@ export default function CommunityPage() {
           >
             <span>
               Flammes 🔥
-              {unreadMessages > 0 && (
+              {(unreadMessages + pendingFollowCount) > 0 && (
                 <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white align-middle">
-                  {unreadMessages > 9 ? "9+" : unreadMessages}
+                  {(unreadMessages + pendingFollowCount) > 9 ? "9+" : (unreadMessages + pendingFollowCount)}
                 </span>
               )}
             </span>
