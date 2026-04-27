@@ -73,6 +73,14 @@ export default function CommunityPage() {
   // Delete menu state
   const [deleteMenuOpen, setDeleteMenuOpen] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Report menu state
+  const [reportMenuOpen, setReportMenuOpen] = useState<string | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
+  const [reportDone, setReportDone] = useState<string | null>(null);
+
+  // Share feedback
+  const [shareCopied, setShareCopied] = useState<string | null>(null);
   
   // Image Upload State
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -309,6 +317,40 @@ export default function CommunityPage() {
     }
   };
 
+  const reportPost = async (postId: string) => {
+    setReporting(postId);
+    try {
+      await fetch("/api/community/posts/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      }).catch(() => null);
+      setReportDone(postId);
+      setTimeout(() => {
+        setReportMenuOpen(null);
+        setReportDone(null);
+      }, 1500);
+    } finally {
+      setReporting(null);
+    }
+  };
+
+  const sharePost = async (post: Post) => {
+    const text = post.content || post.quote || "";
+    const shareText = `${post.author} — ${text}\n\nPartagé depuis AGAPE`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: shareText });
+      } catch {
+        // User cancelled — ignore
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      setShareCopied(post.id);
+      setTimeout(() => setShareCopied(null), 2000);
+    }
+  };
+
   const visiblePosts = filter === "all"
     ? posts
     : posts.filter((p) =>
@@ -519,9 +561,50 @@ export default function CommunityPage() {
                           </AnimatePresence>
                         </>
                       ) : (
-                        <button className="rounded-full p-2 text-text-tertiary transition-colors hover:bg-bg-tertiary hover:text-text-primary">
-                          <MoreHorizontal className="h-5 w-5" />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setReportMenuOpen(reportMenuOpen === post.id ? null : post.id)}
+                            className="rounded-full p-2 text-text-tertiary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
+                          >
+                            <MoreHorizontal className="h-5 w-5" />
+                          </button>
+
+                          <AnimatePresence>
+                            {reportMenuOpen === post.id && (
+                              <>
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-separator bg-bg-secondary shadow-lg"
+                                >
+                                  {reportDone === post.id ? (
+                                    <div className="flex items-center gap-2 px-4 py-3 font-sans text-sm text-text-secondary">
+                                      <span>✓</span> Signalement envoyé
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => void reportPost(post.id)}
+                                      disabled={reporting === post.id}
+                                      className="flex w-full items-center gap-3 px-4 py-3 font-sans text-sm text-danger transition-colors hover:bg-danger/10"
+                                    >
+                                      {reporting === post.id ? (
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-danger border-t-transparent" />
+                                      ) : (
+                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 3l18 18M10.5 10.5A3 3 0 0015 6H6l4.5 4.5z"/><path d="M6 6l-3 15 9-4.5"/></svg>
+                                      )}
+                                      Signaler
+                                    </button>
+                                  )}
+                                </motion.div>
+                                <div
+                                  className="fixed inset-0 z-10"
+                                  onClick={() => setReportMenuOpen(null)}
+                                />
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </>
                       )}
                     </div>
                   </div>
@@ -568,12 +651,25 @@ export default function CommunityPage() {
 
                     {/* Right side stuff */}
                     <div className="flex items-center gap-3">
-                      {/* Share Button (only if no image, or as per original design) */}
-                      {!post.image && !post.urgent && (
-                        <button className="text-text-secondary hover:text-text-primary transition-colors">
-                          <Share2 className="h-5 w-5" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => void sharePost(post)}
+                        className="relative flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors"
+                        aria-label="Partager"
+                      >
+                        <Share2 className="h-5 w-5" />
+                        <AnimatePresence>
+                          {shareCopied === post.id && (
+                            <motion.span
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-bg-tertiary px-2 py-0.5 font-sans text-[10px] text-text-primary shadow"
+                            >
+                              Copié !
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </button>
                     </div>
                   </div>
                 </div>
