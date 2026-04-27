@@ -472,6 +472,19 @@ export default function ConversationPage() {
     if (!content || !currentUserId || sendingChat) return;
     setSendingChat(true);
     setChatInput("");
+
+    // Affichage optimiste immédiat
+    const tempId = `temp-${Date.now()}`;
+    const tempMsg: ChatMessage = {
+      id: tempId,
+      kind: "chat",
+      senderId: currentUserId,
+      content,
+      readAt: null,
+      createdAt: new Date().toISOString(),
+    };
+    setThread((prev) => [...prev, tempMsg]);
+
     try {
       const res = await fetch("/api/chat/send", {
         method: "POST",
@@ -479,19 +492,24 @@ export default function ConversationPage() {
         body: JSON.stringify({ receiverId: otherId, content }),
       });
       const data = await res.json() as { ok: boolean; messageId: string; createdAt: string };
-      if (!data.ok) return;
 
-      setThread((prev) => [
-        ...prev,
-        {
-          id: data.messageId,
-          kind: "chat",
-          senderId: currentUserId,
-          content,
-          readAt: null,
-          createdAt: data.createdAt ?? new Date().toISOString(),
-        },
-      ]);
+      if (data.ok) {
+        // Remplacer le message temporaire par l'ID réel
+        setThread((prev) =>
+          prev.map((m) =>
+            m.id === tempId
+              ? { ...tempMsg, id: data.messageId, createdAt: data.createdAt ?? tempMsg.createdAt }
+              : m,
+          ),
+        );
+      } else {
+        // Échec : retirer le message optimiste
+        setThread((prev) => prev.filter((m) => m.id !== tempId));
+        setChatInput(content);
+      }
+    } catch {
+      setThread((prev) => prev.filter((m) => m.id !== tempId));
+      setChatInput(content);
     } finally {
       setSendingChat(false);
     }
