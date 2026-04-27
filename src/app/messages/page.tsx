@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { UserPlus } from "lucide-react";
+import { ArrowLeft, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -138,6 +138,7 @@ export default function MessagesPage() {
   const [followingBack, setFollowingBack] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeTab, setActiveTab] = useState<"conversations" | "demandes">("conversations");
   const currentUserIdRef = useRef<string | null>(null);
   const iFollowRef = useRef<Set<string>>(new Set());
 
@@ -328,15 +329,55 @@ export default function MessagesPage() {
       <div className="px-5 pt-6 pb-32">
 
         {/* Header */}
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="font-serif text-[22px] italic text-text-primary">Messages</h1>
+        <header className="flex items-center gap-3 mb-5">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary shrink-0"
+            aria-label="Retour"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <h1 className="font-serif text-[22px] italic text-text-primary flex-1">Flammes</h1>
           <Link
             href="/community/search"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-secondary border border-separator text-text-secondary shrink-0"
+            aria-label="Trouver des amis"
           >
             <UserPlus className="h-4 w-4" />
           </Link>
         </header>
+
+        {/* Tabs */}
+        <div className="flex border-b border-separator mb-5">
+          <button
+            type="button"
+            onClick={() => setActiveTab("conversations")}
+            className="relative mr-6 pb-3 font-sans text-sm font-semibold uppercase tracking-widest transition-colors"
+            style={{ color: activeTab === "conversations" ? "#E8E8E8" : "#666666" }}
+          >
+            Conversations
+            {activeTab === "conversations" && (
+              <motion.div layoutId="msg-tab-underline" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-accent" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("demandes")}
+            className="relative pb-3 font-sans text-sm font-semibold uppercase tracking-widest transition-colors"
+            style={{ color: activeTab === "demandes" ? "#E8E8E8" : "#666666" }}
+          >
+            Demandes
+            {pendingFollowers.length > 0 && (
+              <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white align-middle">
+                {pendingFollowers.length > 9 ? "9+" : pendingFollowers.length}
+              </span>
+            )}
+            {activeTab === "demandes" && (
+              <motion.div layoutId="msg-tab-underline" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-accent" />
+            )}
+          </button>
+        </div>
 
         {loading && (
           <div className="flex justify-center py-12">
@@ -344,85 +385,98 @@ export default function MessagesPage() {
           </div>
         )}
 
-        {/* Pending follow requests */}
-        <AnimatePresence>
-          {pendingFollowers.length > 0 && (
+        {/* Tab: Demandes */}
+        <AnimatePresence mode="wait">
+          {activeTab === "demandes" && !loading && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mb-5"
+              key="demandes"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.18 }}
             >
-              <p className="font-sans text-[10px] uppercase tracking-widest text-text-tertiary mb-2.5">
-                Demandes de connexion · {pendingFollowers.length}
-              </p>
-              <div className="flex flex-col gap-2">
-                {pendingFollowers.map((p) => (
-                  <motion.div
-                    key={p.userId}
-                    layout
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    className="flex items-center gap-3 rounded-2xl border border-accent/25 bg-bg-secondary px-4 py-3"
-                  >
-                    <ContactAvatar avatarUrl={p.avatarUrl} firstName={p.firstName} size={44} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-sans text-sm font-medium text-text-primary">{p.firstName}</p>
-                      <p className="font-sans text-[11px] text-text-tertiary">veut se connecter avec toi 🔥</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => void followBack(p)}
-                        disabled={followingBack.has(p.userId)}
-                        className="flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 font-sans text-xs font-medium text-white disabled:opacity-60"
-                      >
-                        {followingBack.has(p.userId) ? (
-                          <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                        ) : (
-                          "Suivre"
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => ignorePending(p.userId)}
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-tertiary font-sans text-xs text-text-tertiary hover:text-text-primary transition-colors"
-                        aria-label="Ignorer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              {pendingFollowers.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 pt-16 text-center">
+                  <span className="text-4xl">🤝</span>
+                  <p className="font-serif italic text-text-secondary text-lg">Aucune demande</p>
+                  <p className="font-sans text-xs text-text-tertiary max-w-[240px]">
+                    Quand quelqu&apos;un te suit, tu pourras accepter et allumer une flamme ensemble.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {pendingFollowers.map((p) => (
+                    <motion.div
+                      key={p.userId}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex items-center gap-3 rounded-2xl border border-accent/25 bg-bg-secondary px-4 py-3"
+                    >
+                      <ContactAvatar avatarUrl={p.avatarUrl} firstName={p.firstName} size={44} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-sans text-sm font-medium text-text-primary">{p.firstName}</p>
+                        <p className="font-sans text-[11px] text-text-tertiary">veut se connecter avec toi 🔥</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => void followBack(p)}
+                          disabled={followingBack.has(p.userId)}
+                          className="flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 font-sans text-xs font-medium text-white disabled:opacity-60"
+                        >
+                          {followingBack.has(p.userId) ? (
+                            <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                          ) : (
+                            "Suivre"
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => ignorePending(p.userId)}
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-tertiary font-sans text-xs text-text-tertiary hover:text-text-primary transition-colors"
+                          aria-label="Ignorer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {!loading && conversations.length === 0 && pendingFollowers.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-4 pt-16"
-          >
-            <span className="text-5xl">🔥</span>
-            <p className="font-serif text-lg italic text-text-secondary text-center">
-              Aucune conversation active
-            </p>
-            <p className="font-sans text-xs text-text-tertiary text-center max-w-[260px]">
-              Suis des amis et attendez qu&apos;ils te suivent en retour pour commencer à échanger des versets.
-            </p>
-            <Link
-              href="/community/search"
-              className="mt-2 rounded-2xl bg-accent px-5 py-2.5 font-sans text-sm text-white"
+        {/* Tab: Conversations */}
+        <AnimatePresence mode="wait">
+          {activeTab === "conversations" && !loading && (
+            <motion.div
+              key="conversations"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.18 }}
             >
-              Trouver des amis
-            </Link>
-          </motion.div>
-        )}
-
-        {!loading && conversations.length > 0 && (
+              {conversations.length === 0 && (
+                <motion.div className="flex flex-col items-center gap-4 pt-16">
+                  <span className="text-5xl">🔥</span>
+                  <p className="font-serif text-lg italic text-text-secondary text-center">
+                    Aucune conversation active
+                  </p>
+                  <p className="font-sans text-xs text-text-tertiary text-center max-w-[260px]">
+                    Suis des amis et attendez qu&apos;ils te suivent en retour pour commencer à échanger des versets.
+                  </p>
+                  <Link
+                    href="/community/search"
+                    className="mt-2 rounded-2xl bg-accent px-5 py-2.5 font-sans text-sm text-white"
+                  >
+                    Trouver des amis
+                  </Link>
+                </motion.div>
+              )}
+              {conversations.length > 0 && (
           <div className="flex flex-col gap-1">
             {conversations.map((conv, i) => (
               <motion.div
@@ -468,7 +522,10 @@ export default function MessagesPage() {
               </motion.div>
             ))}
           </div>
-        )}
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence>
