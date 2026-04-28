@@ -35,7 +35,7 @@ async function fetchAvatarData(userId: string): Promise<AvatarData> {
 
   const p = profileRes.data;
   return {
-    mode: ((p?.avatar_display_mode as string) ?? "avatar") as AvatarDisplayMode,
+    mode: ((p?.avatar_display_mode as string) ?? "initial") as AvatarDisplayMode,
     avatarUrl: (p?.avatar_url as string | null) ?? null,
     initial: ((p?.first_name as string | null) ?? (p?.anonymous_name as string | null) ?? "A")
       .charAt(0)
@@ -62,7 +62,7 @@ export function UserAvatar({ userId, size = 40, className }: Props) {
     gcTime: 1000 * 60 * 60,
   });
 
-  const mode = data?.mode ?? "avatar";
+  const mode = data?.mode ?? "initial";
   const avatarUrl = data?.avatarUrl ?? null;
   const initial = data?.initial ?? "A";
   const config = data?.config ?? {};

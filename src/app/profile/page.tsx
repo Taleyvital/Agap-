@@ -77,7 +77,7 @@ export default function ProfilePage() {
   const [activePlan, setActivePlan] = useState<{ title: string; currentDay: number; totalDays: number; planId: string } | null>(null);
   const [topFlames, setTopFlames] = useState<{ userId: string; firstName: string; streakCount: number }[]>([]);
   const [since, setSince] = useState("");
-  const [displayMode, setDisplayMode] = useState<AvatarDisplayMode>("avatar");
+  const [displayMode, setDisplayMode] = useState<AvatarDisplayMode>("initial");
   const [uploading, setUploading] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -138,7 +138,7 @@ export default function ProfilePage() {
         .single();
       if (data) {
         setProfile(data);
-        setDisplayMode((data.avatar_display_mode as AvatarDisplayMode | null) ?? "avatar");
+        setDisplayMode((data.avatar_display_mode as AvatarDisplayMode | null) ?? "initial");
         setVerseFontSize(data.verse_font_size ?? 16);
         setVerseBold(data.verse_bold ?? false);
         if (data.verse_font_family) setVerseFontFamily(data.verse_font_family);
