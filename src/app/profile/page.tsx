@@ -36,7 +36,7 @@ import { PremiumPaywall } from "@/components/ui/PremiumPaywall";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { UserAvatar, invalidateAvatarCache, type AvatarDisplayMode } from "@/components/UserAvatar";
+import { UserAvatar, setAvatarCacheMode, type AvatarDisplayMode } from "@/components/UserAvatar";
 import { useLanguage, LANGUAGE_OPTIONS, type AppLanguage } from "@/lib/i18n";
 import { getFlameColorHex } from "@/lib/flames";
 
@@ -251,7 +251,7 @@ export default function ProfilePage() {
     setDisplayMode(mode);
     const sb = createSupabaseBrowserClient();
     await sb.from("profiles").update({ avatar_display_mode: mode }).eq("id", user.id);
-    invalidateAvatarCache(qc, user.id);
+    setAvatarCacheMode(qc, user.id, mode);
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,7 +268,7 @@ export default function ProfilePage() {
       await sb.from("profiles").update({ avatar_url: publicUrl, avatar_display_mode: "photo" }).eq("id", user.id);
       setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
       setDisplayMode("photo");
-      invalidateAvatarCache(qc, user.id);
+      setAvatarCacheMode(qc, user.id, "photo", publicUrl);
     } catch (err) {
       alert("Erreur upload : " + (err instanceof Error ? err.message : String(err)));
     } finally {

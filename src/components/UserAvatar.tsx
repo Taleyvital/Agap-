@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import AvatarBuilder, { type AvatarConfig } from "./AvatarBuilder";
 
 export type AvatarDisplayMode = "avatar" | "photo" | "initial";
 
-interface AvatarData {
+export interface AvatarData {
   mode: AvatarDisplayMode;
   avatarUrl: string | null;
   initial: string;
@@ -57,7 +57,9 @@ export function UserAvatar({ userId, size = 40, className }: Props) {
   const { data } = useQuery<AvatarData>({
     queryKey: ["avatar", userId],
     queryFn: () => fetchAvatarData(userId),
+    // Keep indefinitely cached — updates happen via setAvatarCacheMode()
     staleTime: Infinity,
+    gcTime: 1000 * 60 * 60,
   });
 
   const mode = data?.mode ?? "avatar";
@@ -114,10 +116,29 @@ export function UserAvatar({ userId, size = 40, className }: Props) {
   );
 }
 
-/** Invalidate a user's avatar cache after any save */
-export function invalidateAvatarCache(
-  queryClient: import("@tanstack/react-query").QueryClient,
+/**
+ * Immediately update the avatar cache for a user — no network request.
+ * All mounted <UserAvatar userId={userId}> re-render instantly.
+ */
+export function setAvatarCacheMode(
+  queryClient: QueryClient,
   userId: string,
+  mode: AvatarDisplayMode,
+  avatarUrl?: string | null,
 ) {
+  const existing = queryClient.getQueryData<AvatarData>(["avatar", userId]);
+  queryClient.setQueryData<AvatarData>(["avatar", userId], {
+    mode: "avatar",
+    avatarUrl: null,
+    initial: "A",
+    config: {},
+    ...(existing ?? {}),
+    mode,
+    ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+  });
+}
+
+/** Force a full re-fetch from Supabase (e.g. after SVG avatar config save) */
+export function invalidateAvatarCache(queryClient: QueryClient, userId: string) {
   void queryClient.invalidateQueries({ queryKey: ["avatar", userId] });
 }

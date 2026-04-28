@@ -258,6 +258,7 @@ export default function CommunityPage() {
             id: data.id || Date.now().toString(),
             author: "Toi",
             avatar: "",
+            authorId: userId ?? undefined,
             category: composerCategory === "prayer" ? t("community_category_prayer") : t("community_category_testimony"),
             time: t("community_just_now"),
             content: text,
