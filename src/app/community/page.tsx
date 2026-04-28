@@ -104,17 +104,13 @@ export default function CommunityPage() {
           .single()
           .then(({ data }) => {
             if (data) {
-              const url = (data.avatar_url as string | null) ?? null;
-              setOwnAvatarUrl(url);
-              // Ask for consent only if user has an avatar and was never asked
-              if (url) {
-                const stored = localStorage.getItem("community-avatar-consent") as "yes" | "no" | null;
-                if (stored) {
-                  setAvatarConsent(stored);
-                } else {
-                  setShowConsentSheet(true);
-                }
-              }
+              setOwnAvatarUrl((data.avatar_url as string | null) ?? null);
+            }
+            const stored = localStorage.getItem("community-avatar-consent") as "yes" | "no" | null;
+            if (stored) {
+              setAvatarConsent(stored);
+            } else {
+              setShowConsentSheet(true);
             }
           });
 
@@ -387,7 +383,7 @@ export default function CommunityPage() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => null}
+              onClick={() => setShowAvatarToggleSheet(true)}
               className="relative h-9 w-9 rounded-full overflow-hidden border border-separator shrink-0"
               aria-label="Mon avatar"
             >
@@ -834,19 +830,17 @@ export default function CommunityPage() {
 
               {/* Avatar preview */}
               <div className="flex justify-center mb-5">
-                <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-separator">
-                  {ownAvatarUrl && (
-                    <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="64px" />
-                  )}
+                <div className="rounded-full overflow-hidden border-2 border-separator" style={{ width: 64, height: 64 }}>
+                  {userId && <UserAvatar userId={userId} size={64} />}
                 </div>
               </div>
 
               <h2 className="text-center font-serif text-xl italic text-text-primary mb-1">
-                Photo dans la communauté
+                Profil dans la communauté
               </h2>
               <p className="text-center font-sans text-xs text-text-tertiary mb-6">
                 {avatarConsent === "yes"
-                  ? "Votre photo est visible sur vos publications."
+                  ? "Votre avatar est visible sur vos publications."
                   : "Vous apparaissez de façon anonyme."}
               </p>
 
@@ -861,8 +855,8 @@ export default function CommunityPage() {
                     }}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 font-sans text-sm font-semibold text-white"
                   >
-                    <Camera className="h-4 w-4" />
-                    Afficher ma photo
+                    <User className="h-4 w-4" />
+                    Afficher mon profil
                   </button>
                 ) : (
                   <button
@@ -914,18 +908,16 @@ export default function CommunityPage() {
 
               {/* Avatar preview */}
               <div className="flex justify-center mb-5">
-                <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-accent shadow-lg shadow-accent/20">
-                  {ownAvatarUrl && (
-                    <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="80px" />
-                  )}
+                <div className="rounded-full overflow-hidden border-2 border-accent shadow-lg shadow-accent/20" style={{ width: 80, height: 80 }}>
+                  {userId && <UserAvatar userId={userId} size={80} />}
                 </div>
               </div>
 
               <h2 className="text-center font-serif text-xl italic text-text-primary mb-2">
-                Afficher votre photo ?
+                Afficher votre profil ?
               </h2>
               <p className="text-center font-sans text-sm text-text-secondary leading-relaxed mb-7">
-                Voulez-vous afficher votre photo de profil sur vos publications dans la communauté ?
+                Voulez-vous afficher votre avatar sur vos publications dans la communauté ?
               </p>
 
               <div className="flex flex-col gap-3">
@@ -938,8 +930,8 @@ export default function CommunityPage() {
                   }}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 font-sans text-sm font-semibold text-white"
                 >
-                  <Camera className="h-4 w-4" />
-                  Oui, afficher ma photo
+                  <User className="h-4 w-4" />
+                  Oui, afficher mon profil
                 </button>
                 <button
                   type="button"
