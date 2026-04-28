@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   Bell,
   BookOpen,
+  Camera,
   Check,
   ChevronRight,
   Crown,
@@ -33,7 +34,9 @@ import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/AppShell";
 import { PremiumPaywall } from "@/components/ui/PremiumPaywall";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
-import { UserAvatar } from "@/components/UserAvatar";
+import { useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { UserAvatar, invalidateAvatarCache, type AvatarDisplayMode } from "@/components/UserAvatar";
 import { useLanguage, LANGUAGE_OPTIONS, type AppLanguage } from "@/lib/i18n";
 import { getFlameColorHex } from "@/lib/flames";
 
@@ -42,6 +45,7 @@ interface Profile {
   anonymous_name: string | null;
   created_at: string | null;
   avatar_url: string | null;
+  avatar_display_mode: string | null;
   verse_font_size: number | null;
   verse_bold: boolean | null;
   verse_font_family: string | null;
@@ -73,7 +77,11 @@ export default function ProfilePage() {
   const [activePlan, setActivePlan] = useState<{ title: string; currentDay: number; totalDays: number; planId: string } | null>(null);
   const [topFlames, setTopFlames] = useState<{ userId: string; firstName: string; streakCount: number }[]>([]);
   const [since, setSince] = useState("");
+  const [displayMode, setDisplayMode] = useState<AvatarDisplayMode>("avatar");
+  const [uploading, setUploading] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const qc = useQueryClient();
   const [themeSheetOpen, setThemeSheetOpen]     = useState(false);
   const [pwSheetOpen, setPwSheetOpen]           = useState(false);
   const [pwCurrent, setPwCurrent]               = useState("");
@@ -124,11 +132,12 @@ export default function ProfilePage() {
       setUser(user);
       const { data } = await supabase
         .from("profiles")
-        .select("first_name, anonymous_name, created_at, avatar_url, verse_font_size, verse_bold, verse_font_family, verse_letter_spacing, app_language, is_admin")
+        .select("first_name, anonymous_name, created_at, avatar_url, avatar_display_mode, verse_font_size, verse_bold, verse_font_family, verse_letter_spacing, app_language, is_admin")
         .eq("id", user.id)
         .single();
       if (data) {
         setProfile(data);
+        setDisplayMode((data.avatar_display_mode as AvatarDisplayMode | null) ?? "avatar");
         setVerseFontSize(data.verse_font_size ?? 16);
         setVerseBold(data.verse_bold ?? false);
         if (data.verse_font_family) setVerseFontFamily(data.verse_font_family);
@@ -236,6 +245,36 @@ export default function ProfilePage() {
     router.replace("/login");
   };
 
+  const saveDisplayMode = async (mode: AvatarDisplayMode) => {
+    if (!user) return;
+    setDisplayMode(mode);
+    const sb = createSupabaseBrowserClient();
+    await sb.from("profiles").update({ avatar_display_mode: mode }).eq("id", user.id);
+    invalidateAvatarCache(qc, user.id);
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploading(true);
+    try {
+      const sb = createSupabaseBrowserClient();
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await sb.storage.from("avatars").upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = sb.storage.from("avatars").getPublicUrl(filePath);
+      await sb.from("profiles").update({ avatar_url: publicUrl, avatar_display_mode: "photo" }).eq("id", user.id);
+      setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
+      setDisplayMode("photo");
+      invalidateAvatarCache(qc, user.id);
+    } catch (err) {
+      alert("Erreur upload : " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const saveVerseSettings = useCallback(async () => {
     if (!user) return;
     try {
@@ -319,10 +358,10 @@ export default function ProfilePage() {
 
         {/* ── Avatar + Identity ─────────────────────── */}
         <motion.div {...stagger(0)} className="mt-8 flex flex-col items-center">
-          {/* Avatar + edit button */}
+          {/* Avatar display */}
           <div className="relative">
             <div
-              className="rounded-full overflow-hidden shadow-xl"
+              className="rounded-full overflow-hidden"
               style={{
                 width: 112, height: 112,
                 boxShadow: "0 0 0 3px rgba(123,111,212,0.45), 0 8px 24px rgba(0,0,0,0.6)",
@@ -330,17 +369,74 @@ export default function ProfilePage() {
             >
               {user && <UserAvatar userId={user.id} size={112} />}
             </div>
-            <Link
-              href="/profile/avatar"
-              className="absolute bottom-0 right-0 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-bg-primary bg-accent text-white shadow-lg transition-all active:scale-90"
-              aria-label="Personnaliser l'avatar"
-            >
-              <Palette className="h-4 w-4" />
-            </Link>
+
+            {/* Upload button — visible in photo mode */}
+            {displayMode === "photo" && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-bg-primary bg-accent text-white shadow-lg transition-all active:scale-90"
+                aria-label="Changer la photo"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+              </button>
+            )}
+
+            {/* Edit avatar button — visible in avatar mode */}
+            {displayMode === "avatar" && (
+              <Link
+                href="/profile/avatar"
+                className="absolute bottom-0 right-0 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-bg-primary bg-accent text-white shadow-lg transition-all active:scale-90"
+                aria-label="Personnaliser l'avatar"
+              >
+                <Palette className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
+
+          {/* Mode selector */}
+          <div className="mt-4 flex gap-2">
+            {(
+              [
+                { mode: "avatar" as const,  label: "Avatar",  icon: <Palette className="h-3.5 w-3.5" /> },
+                { mode: "photo"   as const, label: "Photo",   icon: <Camera className="h-3.5 w-3.5" /> },
+                { mode: "initial" as const, label: "Initiale", icon: <span className="font-serif italic text-[13px] font-bold leading-none">{displayName.charAt(0)}</span> },
+              ] as const
+            ).map(({ mode, label, icon }) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => {
+                  if (mode === "photo" && !profile?.avatar_url) {
+                    fileInputRef.current?.click();
+                  } else {
+                    void saveDisplayMode(mode);
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 font-sans text-[11px] font-medium transition-all"
+                style={{
+                  background: displayMode === mode ? "#7B6FD4" : "var(--bg-secondary, #1c1c1c)",
+                  color: displayMode === mode ? "white" : "var(--text-secondary, #888)",
+                  border: displayMode === mode ? "none" : "1px solid var(--separator, #2a2a2a)",
+                }}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Name */}
-          <p className="mt-5 font-serif text-2xl italic text-text-primary">{displayName}</p>
+          <p className="mt-4 font-serif text-2xl italic text-text-primary">{displayName}</p>
 
           {/* Since */}
           {since && (

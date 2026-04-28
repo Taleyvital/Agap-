@@ -1,48 +1,123 @@
 "use client";
 
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import AvatarBuilder, { type AvatarConfig } from "./AvatarBuilder";
+
+export type AvatarDisplayMode = "avatar" | "photo" | "initial";
+
+interface AvatarData {
+  mode: AvatarDisplayMode;
+  avatarUrl: string | null;
+  initial: string;
+  config: AvatarConfig;
+}
 
 interface Props {
   userId: string;
   size?: number;
   className?: string;
-  /** Pass config directly (skip fetch) — used when you already have it */
-  config?: AvatarConfig;
 }
 
-async function fetchConfig(userId: string): Promise<AvatarConfig> {
+async function fetchAvatarData(userId: string): Promise<AvatarData> {
   const sb = createSupabaseBrowserClient();
-  const { data } = await sb
-    .from("avatar_customization")
-    .select("skin_tone,eye_shape,eye_color,eyebrow_style,nose_shape,mouth_style,hair_style,hair_color,beard_style,accessory,background_color")
-    .eq("user_id", userId)
-    .maybeSingle();
-  return (data as AvatarConfig | null) ?? {};
+  const [profileRes, configRes] = await Promise.all([
+    sb.from("profiles")
+      .select("avatar_url, first_name, anonymous_name, avatar_display_mode")
+      .eq("id", userId)
+      .maybeSingle(),
+    sb.from("avatar_customization")
+      .select("skin_tone,eye_shape,eye_color,eyebrow_style,nose_shape,mouth_style,hair_style,hair_color,beard_style,accessory,background_color")
+      .eq("user_id", userId)
+      .maybeSingle(),
+  ]);
+
+  const p = profileRes.data;
+  return {
+    mode: ((p?.avatar_display_mode as string) ?? "avatar") as AvatarDisplayMode,
+    avatarUrl: (p?.avatar_url as string | null) ?? null,
+    initial: ((p?.first_name as string | null) ?? (p?.anonymous_name as string | null) ?? "A")
+      .charAt(0)
+      .toUpperCase(),
+    config: (configRes.data as AvatarConfig | null) ?? {},
+  };
 }
 
-export function UserAvatar({ userId, size = 40, className, config: propConfig }: Props) {
-  const { data: fetchedConfig } = useQuery({
+const wrapStyle = (size: number): React.CSSProperties => ({
+  width: size,
+  height: size,
+  borderRadius: "50%",
+  overflow: "hidden",
+  flexShrink: 0,
+  display: "inline-block",
+});
+
+export function UserAvatar({ userId, size = 40, className }: Props) {
+  const { data } = useQuery<AvatarData>({
     queryKey: ["avatar", userId],
-    queryFn: () => fetchConfig(userId),
+    queryFn: () => fetchAvatarData(userId),
     staleTime: Infinity,
-    enabled: !propConfig,
   });
 
-  const config = propConfig ?? fetchedConfig ?? {};
+  const mode = data?.mode ?? "avatar";
+  const avatarUrl = data?.avatarUrl ?? null;
+  const initial = data?.initial ?? "A";
+  const config = data?.config ?? {};
 
+  if (mode === "photo" && avatarUrl) {
+    return (
+      <div className={className} style={wrapStyle(size)}>
+        <Image
+          src={avatarUrl}
+          alt=""
+          width={size}
+          height={size}
+          style={{ objectFit: "cover", width: size, height: size }}
+        />
+      </div>
+    );
+  }
+
+  if (mode === "initial") {
+    return (
+      <div
+        className={className}
+        style={{
+          ...wrapStyle(size),
+          background: "#1c1c1c",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-serif, serif)",
+            fontSize: size * 0.42,
+            color: "#E8E8E8",
+            fontStyle: "italic",
+            lineHeight: 1,
+          }}
+        >
+          {initial}
+        </span>
+      </div>
+    );
+  }
+
+  // default: SVG avatar
   return (
-    <div
-      className={className}
-      style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, display: "inline-block" }}
-    >
+    <div className={className} style={wrapStyle(size)}>
       <AvatarBuilder config={config} size={size} />
     </div>
   );
 }
 
-/** Invalidate a user's avatar cache (call after saving) */
-export function invalidateAvatarCache(queryClient: import("@tanstack/react-query").QueryClient, userId: string) {
+/** Invalidate a user's avatar cache after any save */
+export function invalidateAvatarCache(
+  queryClient: import("@tanstack/react-query").QueryClient,
+  userId: string,
+) {
   void queryClient.invalidateQueries({ queryKey: ["avatar", userId] });
 }
