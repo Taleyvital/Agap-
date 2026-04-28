@@ -30,10 +30,9 @@ interface PendingFollower {
 }
 
 function FlameIcon({ streak, size = 20 }: { streak: number; size?: number }) {
-  const color = getFlameColorHex(streak);
   return (
     <Flame
-      style={{ color, filter: streak >= 30 ? "drop-shadow(0 0 4px #ffffff88)" : "none", flexShrink: 0 }}
+      style={{ color: "#7B6FD4", flexShrink: 0 }}
       width={size}
       height={size}
     />

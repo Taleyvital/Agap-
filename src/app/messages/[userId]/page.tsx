@@ -36,12 +36,11 @@ interface ChatMessage {
 type ThreadItem = VerseMessage | ChatMessage;
 
 function FlameIcon({ streak }: { streak: number }) {
-  const color = getFlameColorHex(streak);
   return (
     <Flame
       width={20}
       height={20}
-      style={{ color, filter: streak >= 30 ? "drop-shadow(0 0 4px #ffffff88)" : "none", flexShrink: 0 }}
+      style={{ color: "#7B6FD4", flexShrink: 0 }}
     />
   );
 }
