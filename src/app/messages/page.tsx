@@ -201,16 +201,15 @@ export default function MessagesPage() {
       // Pending = follows me but I don't follow back (and not ignored)
       const pendingIds = followsMe.filter((id) => !iFollow.has(id) && !ignoredSet.has(id));
       if (pendingIds.length > 0) {
-        const [{ data: pendingProfiles }, { data: pendingAvatars }] = await Promise.all([
-          supabase.from("user_profiles_public").select("user_id, first_name").in("user_id", pendingIds),
-          supabase.from("profiles").select("id, avatar_url").in("id", pendingIds),
-        ]);
-        const avatarMap = new Map((pendingAvatars ?? []).map((r) => [r.id as string, r.avatar_url as string | null]));
+        const { data: pendingProfiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, anonymous_name, avatar_url")
+          .in("id", pendingIds);
         setPendingFollowers(
           (pendingProfiles ?? []).map((p) => ({
-            userId: p.user_id as string,
-            firstName: p.first_name as string,
-            avatarUrl: avatarMap.get(p.user_id as string) ?? null,
+            userId: p.id as string,
+            firstName: ((p.first_name as string | null) ?? (p.anonymous_name as string | null) ?? "?"),
+            avatarUrl: (p.avatar_url as string | null) ?? null,
           }))
         );
       }
@@ -227,18 +226,19 @@ export default function MessagesPage() {
               JSON.parse(localStorage.getItem("ignored-followers") ?? "[]") as string[]
             );
             if (ignored.has(newFollowerId) || iFollowRef.current.has(newFollowerId)) return;
-            const [profileRes, avatarRes] = await Promise.all([
-              supabase.from("user_profiles_public").select("first_name").eq("user_id", newFollowerId).maybeSingle(),
-              supabase.from("profiles").select("avatar_url").eq("id", newFollowerId).maybeSingle(),
-            ]);
-            if (!profileRes.data) return;
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("first_name, anonymous_name, avatar_url")
+              .eq("id", newFollowerId)
+              .maybeSingle();
+            if (!profileData) return;
             setPendingFollowers((prev) => {
               if (prev.some((p) => p.userId === newFollowerId)) return prev;
               return [
                 {
                   userId: newFollowerId,
-                  firstName: profileRes.data!.first_name as string,
-                  avatarUrl: (avatarRes.data?.avatar_url as string | null) ?? null,
+                  firstName: ((profileData.first_name as string | null) ?? (profileData.anonymous_name as string | null) ?? "?"),
+                  avatarUrl: (profileData.avatar_url as string | null) ?? null,
                 },
                 ...prev,
               ];
