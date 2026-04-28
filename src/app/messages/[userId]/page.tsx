@@ -215,11 +215,11 @@ function VersePicker({ onClose, onSend, sending }: VersePickerProps) {
 
           {step === "compose" && selectedBook && selectedVerse && (
             <div className="flex flex-col gap-4">
-              <div className="rounded-2xl border border-separator bg-bg-tertiary px-4 py-3">
-                <p className="font-sans text-[10px] text-accent uppercase tracking-wider mb-1">
+              <div className="rounded-2xl px-4 py-3" style={{ background: "#1c1c1c", border: "1px solid #2a2a2a" }}>
+                <p className="font-sans text-[10px] uppercase tracking-wider mb-1" style={{ color: "#7B6FD4" }}>
                   {selectedBook.name} {chapter}:{selectedVerse.verse}
                 </p>
-                <p className="font-serif text-sm italic text-text-primary leading-relaxed">
+                <p className="font-serif text-sm italic leading-relaxed" style={{ color: "#E8E8E8" }}>
                   {selectedVerse.text}
                 </p>
               </div>
@@ -604,15 +604,15 @@ export default function ConversationPage() {
                         <p className="font-sans text-[11px] uppercase tracking-wider mb-1" style={{ color: "#7B6FD4" }}>
                           {item.verseRef}
                         </p>
-                        <p className="font-serif text-sm italic text-text-primary leading-relaxed">
+                        <p className="font-serif text-sm italic leading-relaxed" style={{ color: "#E8E8E8" }}>
                           {item.verseText}
                         </p>
                         {item.message && (
-                          <p className="font-sans text-[13px] text-text-secondary mt-2 leading-snug">
+                          <p className="font-sans text-[13px] mt-2 leading-snug" style={{ color: "#aaaaaa" }}>
                             {item.message}
                           </p>
                         )}
-                        <p className="font-sans text-[11px] text-text-tertiary mt-1.5 text-right">
+                        <p className="font-sans text-[11px] mt-1.5 text-right" style={{ color: "#666666" }}>
                           {formatTime(item.createdAt)}
                         </p>
                       </div>
