@@ -487,7 +487,7 @@ export default function MessagesPage() {
                 </motion.div>
               )}
               {conversations.length > 0 && (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             {conversations.map((conv, i) => (
               <motion.div
                 key={conv.userId}
@@ -497,10 +497,10 @@ export default function MessagesPage() {
               >
                 <Link
                   href={`/messages/${conv.userId}`}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 border border-separator bg-bg-secondary active:bg-bg-tertiary transition-colors"
+                  className="flex items-center gap-4 rounded-2xl px-4 py-4 border border-separator bg-bg-secondary active:bg-bg-tertiary transition-colors"
                 >
-                  <div className="relative">
-                    <ContactAvatar avatarUrl={conv.avatarUrl} firstName={conv.firstName} size={48} />
+                  <div className="relative shrink-0">
+                    <ContactAvatar avatarUrl={conv.avatarUrl} firstName={conv.firstName} size={56} />
                     {conv.unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white">
                         {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
@@ -508,20 +508,20 @@ export default function MessagesPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-sans text-sm text-text-primary">{conv.firstName}</p>
+                    <p className="font-sans text-base font-semibold text-text-primary mb-0.5">{conv.firstName}</p>
                     {conv.lastVerseRef ? (
-                      <p className="font-sans text-xs text-text-tertiary truncate">
+                      <p className="font-sans text-sm text-text-tertiary truncate">
                         {conv.lastVerseRef} — {conv.lastVerseText}
                       </p>
                     ) : (
-                      <p className="font-sans text-xs text-text-tertiary">Aucun message encore</p>
+                      <p className="font-sans text-sm text-text-tertiary">Aucun message encore</p>
                     )}
                   </div>
                   <div className="flex flex-col items-center gap-0.5 shrink-0">
-                    <FlameIcon streak={conv.streakCount} size={20} />
+                    <FlameIcon streak={conv.streakCount} size={24} />
                     {conv.streakCount > 0 && (
                       <span
-                        className="font-sans text-[11px] font-semibold"
+                        className="font-sans text-xs font-semibold"
                         style={{ color: getFlameColorHex(conv.streakCount) }}
                       >
                         {conv.streakCount}
