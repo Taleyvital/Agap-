@@ -131,12 +131,16 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Module-level cache — survives navigation without persisting auth data to storage
+let _cachedConversations: MutualFriend[] | null = null;
+let _cachedPending: PendingFollower[] | null = null;
+
 export default function MessagesPage() {
   const router = useRouter();
-  const [conversations, setConversations] = useState<MutualFriend[]>([]);
-  const [pendingFollowers, setPendingFollowers] = useState<PendingFollower[]>([]);
+  const [conversations, setConversations] = useState<MutualFriend[]>(_cachedConversations ?? []);
+  const [pendingFollowers, setPendingFollowers] = useState<PendingFollower[]>(_cachedPending ?? []);
   const [followingBack, setFollowingBack] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(_cachedConversations === null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [activeTab, setActiveTab] = useState<"conversations" | "demandes">("conversations");
   const currentUserIdRef = useRef<string | null>(null);
@@ -155,32 +159,38 @@ export default function MessagesPage() {
     const supabase = createSupabaseBrowserClient();
     await supabase.from("follows").insert({ follower_id: uid, following_id: target.userId });
     iFollowRef.current.add(target.userId);
-    setPendingFollowers((prev) => prev.filter((p) => p.userId !== target.userId));
+    setPendingFollowers((prev) => {
+      const next = prev.filter((p) => p.userId !== target.userId);
+      _cachedPending = next;
+      return next;
+    });
     setFollowingBack((prev) => { const s = new Set(prev); s.delete(target.userId); return s; });
-    // Add new mutual to conversations list
-    setConversations((prev) => [
-      {
-        userId: target.userId,
-        firstName: target.firstName,
-        avatarLevel: 1,
-        avatarUrl: target.avatarUrl,
-        streakCount: 0,
-        lastVerseRef: null,
-        lastVerseText: null,
-        unreadCount: 0,
-      },
-      ...prev,
-    ]);
+    const newFriend: MutualFriend = {
+      userId: target.userId,
+      firstName: target.firstName,
+      avatarLevel: 1,
+      avatarUrl: target.avatarUrl,
+      streakCount: 0,
+      lastVerseRef: null,
+      lastVerseText: null,
+      unreadCount: 0,
+    };
+    setConversations((prev) => {
+      const next = [newFriend, ...prev];
+      _cachedConversations = next;
+      return next;
+    });
   };
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
       currentUserIdRef.current = user.id;
 
-      // Show onboarding on first visit
       const seen = localStorage.getItem("flames-onboarding-seen");
       if (!seen) setShowOnboarding(true);
 
@@ -188,7 +198,7 @@ export default function MessagesPage() {
         JSON.parse(localStorage.getItem("ignored-followers") ?? "[]") as string[]
       );
 
-      // Get who I follow + who follows me (parallel)
+      // Fetch follows both directions in parallel
       const [{ data: myFollows }, { data: theirFollows }] = await Promise.all([
         supabase.from("follows").select("following_id").eq("follower_id", user.id),
         supabase.from("follows").select("follower_id").eq("following_id", user.id),
@@ -198,25 +208,27 @@ export default function MessagesPage() {
       iFollowRef.current = iFollow;
       const followsMe = (theirFollows ?? []).map((r) => r.follower_id as string);
 
-      // Pending = follows me but I don't follow back (and not ignored)
+      // Pending demandes: follows me but I don't follow back
       const pendingIds = followsMe.filter((id) => !iFollow.has(id) && !ignoredSet.has(id));
       if (pendingIds.length > 0) {
         const { data: pendingProfiles } = await supabase
           .from("profiles")
           .select("id, first_name, anonymous_name, avatar_url")
           .in("id", pendingIds);
-        setPendingFollowers(
-          (pendingProfiles ?? []).map((p) => ({
-            userId: p.id as string,
-            firstName: ((p.first_name as string | null) ?? (p.anonymous_name as string | null) ?? "?"),
-            avatarUrl: (p.avatar_url as string | null) ?? null,
-          }))
-        );
+        const pending = (pendingProfiles ?? []).map((p) => ({
+          userId: p.id as string,
+          firstName: ((p.first_name as string | null) ?? (p.anonymous_name as string | null) ?? "?"),
+          avatarUrl: (p.avatar_url as string | null) ?? null,
+        }));
+        _cachedPending = pending;
+        setPendingFollowers(pending);
+      } else {
+        _cachedPending = [];
       }
 
       // Realtime: new follower while on this page
-      supabase
-        .channel(`follows-incoming-${user.id}`)
+      channel = supabase.channel(`follows-incoming-${user.id}`);
+      channel
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "follows", filter: `following_id=eq.${user.id}` },
@@ -232,46 +244,36 @@ export default function MessagesPage() {
               .eq("id", newFollowerId)
               .maybeSingle();
             if (!profileData) return;
+            const newPending = {
+              userId: newFollowerId,
+              firstName: ((profileData.first_name as string | null) ?? (profileData.anonymous_name as string | null) ?? "?"),
+              avatarUrl: (profileData.avatar_url as string | null) ?? null,
+            };
             setPendingFollowers((prev) => {
               if (prev.some((p) => p.userId === newFollowerId)) return prev;
-              return [
-                {
-                  userId: newFollowerId,
-                  firstName: ((profileData.first_name as string | null) ?? (profileData.anonymous_name as string | null) ?? "?"),
-                  avatarUrl: (profileData.avatar_url as string | null) ?? null,
-                },
-                ...prev,
-              ];
+              const next = [newPending, ...prev];
+              _cachedPending = next;
+              return next;
             });
           }
         )
         .subscribe();
 
-      if (iFollow.size === 0) { setLoading(false); return; }
-
-      // Mutual = I follow them AND they follow me
+      // Mutual friends: I follow them AND they follow me
       const mutualIds = followsMe.filter((id) => iFollow.has(id));
-
       if (mutualIds.length === 0) { setLoading(false); return; }
 
-      // Get profiles (public view) + avatar_url from profiles table
-      const [{ data: profiles }, { data: avatarRows }] = await Promise.all([
-        supabase
-          .from("user_profiles_public")
-          .select("user_id, first_name, avatar_level")
-          .in("user_id", mutualIds),
+      // Fetch mutual profiles + streaks in parallel (profiles only, no user_profiles_public)
+      const [{ data: mutualProfiles }, { data: streaks }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, avatar_url")
+          .select("id, first_name, anonymous_name, avatar_url")
           .in("id", mutualIds),
+        supabase
+          .from("verse_streaks")
+          .select("user_a, user_b, streak_count")
+          .or(`user_a.eq.${user.id},user_b.eq.${user.id}`),
       ]);
-      const avatarMap = new Map((avatarRows ?? []).map((r) => [r.id as string, r.avatar_url as string | null]));
-
-      // Get streaks
-      const { data: streaks } = await supabase
-        .from("verse_streaks")
-        .select("user_a, user_b, streak_count")
-        .or(`user_a.eq.${user.id},user_b.eq.${user.id}`);
 
       const streakMap = new Map<string, number>();
       for (const s of streaks ?? []) {
@@ -279,44 +281,47 @@ export default function MessagesPage() {
         streakMap.set(other, s.streak_count as number);
       }
 
-      // Get last message + unread count per conversation
-      const convList: MutualFriend[] = [];
-      for (const profile of profiles ?? []) {
-        const pid = profile.user_id as string;
+      // Fetch last message + unread for ALL conversations in parallel
+      const convResults = await Promise.all(
+        (mutualProfiles ?? []).map(async (profile) => {
+          const pid = profile.id as string;
+          const [lastMsgRes, unreadRes] = await Promise.all([
+            supabase
+              .from("verse_messages")
+              .select("verse_ref, verse_text")
+              .or(`and(sender_id.eq.${user.id},receiver_id.eq.${pid}),and(sender_id.eq.${pid},receiver_id.eq.${user.id})`)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            supabase
+              .from("verse_messages")
+              .select("*", { count: "exact", head: true })
+              .eq("sender_id", pid)
+              .eq("receiver_id", user.id)
+              .is("read_at", null),
+          ]);
+          return {
+            userId: pid,
+            firstName: ((profile.first_name as string | null) ?? (profile.anonymous_name as string | null) ?? "?"),
+            avatarLevel: 1,
+            avatarUrl: (profile.avatar_url as string | null) ?? null,
+            streakCount: streakMap.get(pid) ?? 0,
+            lastVerseRef: lastMsgRes.data?.verse_ref ?? null,
+            lastVerseText: lastMsgRes.data?.verse_text ?? null,
+            unreadCount: unreadRes.count ?? 0,
+          } satisfies MutualFriend;
+        })
+      );
 
-        const [lastMsgRes, unreadRes] = await Promise.all([
-          supabase
-            .from("verse_messages")
-            .select("verse_ref, verse_text")
-            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${pid}),and(sender_id.eq.${pid},receiver_id.eq.${user.id})`)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabase
-            .from("verse_messages")
-            .select("*", { count: "exact", head: true })
-            .eq("sender_id", pid)
-            .eq("receiver_id", user.id)
-            .is("read_at", null),
-        ]);
-
-        convList.push({
-          userId: pid,
-          firstName: profile.first_name as string,
-          avatarLevel: profile.avatar_level as number,
-          avatarUrl: avatarMap.get(pid) ?? null,
-          streakCount: streakMap.get(pid) ?? 0,
-          lastVerseRef: lastMsgRes.data?.verse_ref ?? null,
-          lastVerseText: lastMsgRes.data?.verse_text ?? null,
-          unreadCount: unreadRes.count ?? 0,
-        });
-      }
-
-      // Sort by streak desc, then alphabetically
-      convList.sort((a, b) => b.streakCount - a.streakCount || a.firstName.localeCompare(b.firstName));
-      setConversations(convList);
+      convResults.sort((a, b) => b.streakCount - a.streakCount || a.firstName.localeCompare(b.firstName));
+      _cachedConversations = convResults;
+      setConversations(convResults);
       setLoading(false);
     })();
+
+    return () => {
+      if (channel) void supabase.removeChannel(channel);
+    };
   }, [router]);
 
   const handleCloseOnboarding = () => {
