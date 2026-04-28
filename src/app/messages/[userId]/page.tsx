@@ -38,13 +38,11 @@ type ThreadItem = VerseMessage | ChatMessage;
 function FlameIcon({ streak }: { streak: number }) {
   const color = getFlameColorHex(streak);
   return (
-    <motion.span
-      animate={{ rotate: [0, -4, 4, -4, 0], scale: [1, 1.06, 1, 1.06, 1] }}
-      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-      style={{ display: "inline-block", color, filter: streak >= 30 ? "drop-shadow(0 0 4px #ffffff88)" : "none" }}
-    >
-      🔥
-    </motion.span>
+    <Flame
+      width={20}
+      height={20}
+      style={{ color, filter: streak >= 30 ? "drop-shadow(0 0 4px #ffffff88)" : "none", flexShrink: 0 }}
+    />
   );
 }
 

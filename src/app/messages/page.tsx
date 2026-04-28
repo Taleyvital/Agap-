@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft, UserPlus, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -32,13 +32,11 @@ interface PendingFollower {
 function FlameIcon({ streak, size = 20 }: { streak: number; size?: number }) {
   const color = getFlameColorHex(streak);
   return (
-    <motion.span
-      animate={{ rotate: [0, -4, 4, -4, 0], scale: [1, 1.05, 1, 1.05, 1] }}
-      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-      style={{ display: "inline-block", fontSize: size, color, filter: streak >= 30 ? "drop-shadow(0 0 4px #ffffff88)" : "none" }}
-    >
-      🔥
-    </motion.span>
+    <Flame
+      style={{ color, filter: streak >= 30 ? "drop-shadow(0 0 4px #ffffff88)" : "none", flexShrink: 0 }}
+      width={size}
+      height={size}
+    />
   );
 }
 
