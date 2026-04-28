@@ -8,7 +8,6 @@ import Link from "next/link";
 import {
   Bell,
   BookOpen,
-  Camera,
   Check,
   ChevronRight,
   Crown,
@@ -23,6 +22,7 @@ import {
   MessageCircle,
   Monitor,
   Moon,
+  Palette,
   Settings,
   Shield,
   Sun,
@@ -33,8 +33,7 @@ import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/AppShell";
 import { PremiumPaywall } from "@/components/ui/PremiumPaywall";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
-import Image from "next/image";
-import { useRef } from "react";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useLanguage, LANGUAGE_OPTIONS, type AppLanguage } from "@/lib/i18n";
 import { getFlameColorHex } from "@/lib/flames";
 
@@ -73,9 +72,7 @@ export default function ProfilePage() {
   const [versesRead, setVersesRead] = useState(0);
   const [activePlan, setActivePlan] = useState<{ title: string; currentDay: number; totalDays: number; planId: string } | null>(null);
   const [topFlames, setTopFlames] = useState<{ userId: string; firstName: string; streakCount: number }[]>([]);
-  const [initial, setInitial] = useState("");
   const [since, setSince] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [themeSheetOpen, setThemeSheetOpen]     = useState(false);
   const [pwSheetOpen, setPwSheetOpen]           = useState(false);
@@ -91,7 +88,6 @@ export default function ProfilePage() {
   const [verseBold, setVerseBold] = useState(false);
   const [verseFontFamily, setVerseFontFamily] = useState("var(--font-serif)");
   const [verseLetterSpacing, setVerseLetterSpacing] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
 
@@ -133,7 +129,6 @@ export default function ProfilePage() {
         .single();
       if (data) {
         setProfile(data);
-        setInitial((data.first_name ?? data.anonymous_name ?? "A").charAt(0).toUpperCase());
         setVerseFontSize(data.verse_font_size ?? 16);
         setVerseBold(data.verse_bold ?? false);
         if (data.verse_font_family) setVerseFontFamily(data.verse_font_family);
@@ -241,48 +236,6 @@ export default function ProfilePage() {
     router.replace("/login");
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    try {
-      setUploading(true);
-      const supabase = createSupabaseBrowserClient();
-
-      // 1. Upload file — path is relative inside the "avatars" bucket
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // 2. Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      // 3. Update profile
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_url: publicUrl })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
-
-      // 4. Update local state
-      setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error("Error uploading avatar:", msg);
-      alert("Erreur : " + msg);
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const saveVerseSettings = useCallback(async () => {
     if (!user) return;
     try {
@@ -366,68 +319,24 @@ export default function ProfilePage() {
 
         {/* ── Avatar + Identity ─────────────────────── */}
         <motion.div {...stagger(0)} className="mt-8 flex flex-col items-center">
-          {/* Avatar container */}
-          <div className="relative group overflow-visible">
-            {/* Main Avatar Clickable Area */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="relative h-28 w-28 rounded-full transition-all duration-300 active:scale-95 focus:outline-none"
-              aria-label="Changer la photo de profil"
-            >
-              {/* Gradient ring */}
-              <div
-                className="absolute inset-0 rounded-full animate-pulse-slow shadow-xl shadow-accent/10"
-                style={{
-                  background: "conic-gradient(from 180deg, #7B6FD4, #9D93E8, #5B5099, #7B6FD4)",
-                  padding: "4px",
-                }}
-              >
-                <div className="h-full w-full rounded-full bg-bg-primary" />
-              </div>
-              
-              {/* Avatar content */}
-              <div className="absolute inset-[6px] overflow-hidden rounded-full bg-bg-secondary flex items-center justify-center">
-                {profile?.avatar_url ? (
-                  <Image 
-                    src={profile.avatar_url} 
-                    alt={displayName} 
-                    fill 
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                ) : (
-                  <span className="font-serif text-4xl italic text-text-primary">{initial}</span>
-                )}
-                
-                {/* Hover overlay (subtle) */}
-                <div className={`absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${uploading ? 'opacity-100' : ''}`}>
-                  {uploading && <Loader2 className="h-8 w-8 animate-spin text-white" />}
-                </div>
-              </div>
-            </button>
-
-            {/* Camera Trigger Button (Icon) */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
+          {/* Avatar + edit button */}
+          <div className="relative">
+            <div
+              className="rounded-full overflow-hidden shadow-xl"
+              style={{
+                width: 112, height: 112,
+                boxShadow: "0 0 0 3px rgba(123,111,212,0.45), 0 8px 24px rgba(0,0,0,0.6)",
               }}
-              className="absolute bottom-1 right-1 z-20 flex h-9 w-9 items-center justify-center rounded-full border-2 border-bg-primary bg-accent text-white shadow-lg transition-all duration-300 hover:bg-accent-light hover:scale-110 active:scale-90"
-              aria-label="Prendre une photo"
             >
-              <Camera className="h-4.5 w-4.5" />
-            </button>
-
-            {/* Hidden Input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleAvatarUpload}
-              accept="image/*"
-              className="hidden"
-              aria-hidden="true"
-            />
+              {user && <UserAvatar userId={user.id} size={112} />}
+            </div>
+            <Link
+              href="/profile/avatar"
+              className="absolute bottom-0 right-0 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-bg-primary bg-accent text-white shadow-lg transition-all active:scale-90"
+              aria-label="Personnaliser l'avatar"
+            >
+              <Palette className="h-4 w-4" />
+            </Link>
           </div>
 
           {/* Name */}

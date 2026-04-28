@@ -1,41 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { BookOpen, Home, Users, Flame, User, Music2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
+import { UserAvatar } from "@/components/UserAvatar";
 
-// Module-level cache to avoid re-fetching on every navigation
-let _avatarUrl: string | null | undefined = undefined;
-let _initial = "";
+// Module-level cache — one fetch per session
+let _userId: string | null | undefined = undefined;
 
 export function BottomNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(_avatarUrl ?? null);
-  const [initial, setInitial] = useState(_initial);
+  const [userId, setUserId] = useState<string | null>(_userId ?? null);
 
   useEffect(() => {
-    if (_avatarUrl !== undefined) return;
-    const supabase = createSupabaseBrowserClient();
-    void supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      void supabase
-        .from("profiles")
-        .select("avatar_url, first_name, anonymous_name")
-        .eq("id", user.id)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            _avatarUrl = (data.avatar_url as string | null) ?? null;
-            _initial = ((data.first_name as string | null) ?? (data.anonymous_name as string | null) ?? "A").charAt(0).toUpperCase();
-            setAvatarUrl(_avatarUrl);
-            setInitial(_initial);
-          }
-        });
+    if (_userId !== undefined) return;
+    const sb = createSupabaseBrowserClient();
+    void sb.auth.getUser().then(({ data: { user } }) => {
+      _userId = user?.id ?? null;
+      setUserId(_userId);
     });
   }, []);
 
@@ -66,18 +52,18 @@ export function BottomNav() {
           >
             {href === "/profile" ? (
               <div
-                className="relative h-6 w-6 shrink-0 rounded-full overflow-hidden bg-bg-secondary"
+                className="relative h-6 w-6 shrink-0 rounded-full overflow-hidden"
                 style={{
                   border: active ? "2px solid rgb(var(--color-accent))" : "1.5px solid rgb(var(--separator))",
                   boxSizing: "border-box",
                 }}
               >
-                {avatarUrl ? (
-                  <Image src={avatarUrl} alt="" fill className="object-cover" sizes="24px" />
+                {userId ? (
+                  <UserAvatar userId={userId} size={24} />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center font-serif text-[9px] italic text-text-primary">
-                    {initial || <User className="h-3 w-3" />}
-                  </span>
+                  <div className="flex h-full w-full items-center justify-center bg-bg-secondary">
+                    <User className="h-3 w-3" />
+                  </div>
                 )}
               </div>
             ) : (

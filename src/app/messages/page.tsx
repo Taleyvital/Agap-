@@ -5,12 +5,12 @@ export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft, UserPlus, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { getFlameColorHex } from "@/lib/flames";
+import { UserAvatar } from "@/components/UserAvatar";
 
 interface MutualFriend {
   userId: string;
@@ -29,7 +29,7 @@ interface PendingFollower {
   avatarUrl: string | null;
 }
 
-function FlameIcon({ streak, size = 20 }: { streak: number; size?: number }) {
+function FlameIcon({ size = 20 }: { streak?: number; size?: number }) {
   return (
     <Flame
       style={{ color: "#7B6FD4", flexShrink: 0 }}
@@ -39,20 +39,13 @@ function FlameIcon({ streak, size = 20 }: { streak: number; size?: number }) {
   );
 }
 
-function ContactAvatar({ avatarUrl, firstName, size = 48 }: { avatarUrl: string | null; firstName: string; size?: number }) {
-  const initial = (firstName ?? "?").charAt(0).toUpperCase();
+function ContactAvatar({ userId, size = 48 }: { userId: string; firstName?: string; size?: number }) {
   return (
     <div
-      className="rounded-full flex items-center justify-center shrink-0 overflow-hidden relative bg-bg-secondary"
+      className="rounded-full shrink-0 overflow-hidden"
       style={{ width: size, height: size, border: "1.5px solid rgba(123,111,212,0.3)" }}
     >
-      {avatarUrl ? (
-        <Image src={avatarUrl} alt={firstName} fill className="object-cover" sizes={`${size}px`} />
-      ) : (
-        <span className="font-serif italic text-text-secondary" style={{ fontSize: size * 0.38 }}>
-          {initial}
-        </span>
-      )}
+      <UserAvatar userId={userId} size={size} />
     </div>
   );
 }
@@ -421,7 +414,7 @@ export default function MessagesPage() {
                       exit={{ opacity: 0, x: 20 }}
                       className="flex items-center gap-3 rounded-2xl border border-accent/25 bg-bg-secondary px-4 py-3"
                     >
-                      <ContactAvatar avatarUrl={p.avatarUrl} firstName={p.firstName} size={44} />
+                      <ContactAvatar userId={p.userId} firstName={p.firstName} size={44} />
                       <div className="flex-1 min-w-0">
                         <p className="font-sans text-sm font-medium text-text-primary">{p.firstName}</p>
                         <p className="font-sans text-[11px] text-text-tertiary">veut se connecter avec toi 🔥</p>
@@ -497,7 +490,7 @@ export default function MessagesPage() {
                   className="flex items-center gap-4 rounded-2xl px-4 py-4 border border-separator bg-bg-secondary active:bg-bg-tertiary transition-colors"
                 >
                   <div className="relative shrink-0">
-                    <ContactAvatar avatarUrl={conv.avatarUrl} firstName={conv.firstName} size={56} />
+                    <ContactAvatar userId={conv.userId} firstName={conv.firstName} size={56} />
                     {conv.unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-sans text-[9px] font-bold text-white">
                         {conv.unreadCount > 9 ? "9+" : conv.unreadCount}

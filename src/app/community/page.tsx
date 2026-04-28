@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2, Camera } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -17,6 +18,7 @@ interface Post {
   id: string;
   author: string;
   avatar: string;
+  authorId?: string;
   category?: string;
   time: string;
   content?: string;
@@ -29,7 +31,7 @@ interface Post {
   imageBadge?: string;
   recentAmens?: string[];
   plusAmens?: number;
-  isMine?: boolean; // Whether this post belongs to the current user
+  isMine?: boolean;
 }
 
 interface SupabasePostRow {
@@ -64,7 +66,6 @@ export default function CommunityPage() {
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [ownAvatarUrl, setOwnAvatarUrl] = useState<string | null>(null);
-  const [ownInitial, setOwnInitial] = useState("");
   const [avatarConsent, setAvatarConsent] = useState<"yes" | "no" | null>(null);
   const [showConsentSheet, setShowConsentSheet] = useState(false);
   const [showAvatarToggleSheet, setShowAvatarToggleSheet] = useState(false);
@@ -104,9 +105,7 @@ export default function CommunityPage() {
           .then(({ data }) => {
             if (data) {
               const url = (data.avatar_url as string | null) ?? null;
-              const initial = ((data.first_name as string | null) ?? (data.anonymous_name as string | null) ?? "A").charAt(0).toUpperCase();
               setOwnAvatarUrl(url);
-              setOwnInitial(initial);
               // Ask for consent only if user has an avatar and was never asked
               if (url) {
                 const stored = localStorage.getItem("community-avatar-consent") as "yes" | "no" | null;
@@ -173,6 +172,7 @@ export default function CommunityPage() {
               id: String(row.id),
               author: row.anonymous_name || t("community_default_author"),
               avatar: "",
+              authorId: row.user_id,
               category: row.category === "prayer" ? t("community_category_prayer") : t("community_category_testimony"),
               time: created,
               content: String(row.content ?? ""),
@@ -386,15 +386,15 @@ export default function CommunityPage() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => ownAvatarUrl ? setShowAvatarToggleSheet(true) : null}
-              className="relative h-9 w-9 rounded-full overflow-hidden bg-bg-tertiary border border-separator shrink-0 active:opacity-70 transition-opacity"
-              aria-label="Visibilité de ma photo"
+              onClick={() => null}
+              className="relative h-9 w-9 rounded-full overflow-hidden border border-separator shrink-0"
+              aria-label="Mon avatar"
             >
-              {ownAvatarUrl ? (
-                <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="36px" />
+              {userId ? (
+                <UserAvatar userId={userId} size={36} />
               ) : (
-                <span className="flex h-full w-full items-center justify-center font-serif text-sm italic text-text-primary">
-                  {ownInitial || <User className="h-4 w-4" />}
+                <span className="flex h-full w-full items-center justify-center bg-bg-tertiary font-serif text-sm italic text-text-primary">
+                  <User className="h-4 w-4" />
                 </span>
               )}
               {/* Indicateur de statut */}
@@ -507,11 +507,11 @@ export default function CommunityPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       {/* Avatar */}
-                      <div className="relative h-10 w-10 rounded-full overflow-hidden bg-bg-tertiary shrink-0 border border-separator">
-                        {post.isMine && avatarConsent === "yes" && ownAvatarUrl ? (
-                          <Image src={ownAvatarUrl} alt="" fill className="object-cover" sizes="40px" />
+                      <div className="rounded-full overflow-hidden shrink-0 border border-separator" style={{ width: 40, height: 40 }}>
+                        {post.authorId ? (
+                          <UserAvatar userId={post.authorId} size={40} />
                         ) : (
-                          <span className="flex h-full w-full items-center justify-center font-sans text-sm font-semibold text-text-primary">
+                          <span className="flex h-full w-full items-center justify-center bg-bg-tertiary font-sans text-sm font-semibold text-text-primary">
                             {post.author.charAt(0).toUpperCase()}
                           </span>
                         )}

@@ -35,6 +35,7 @@ interface ChatMessage {
 
 type ThreadItem = VerseMessage | ChatMessage;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function FlameIcon({ streak }: { streak: number }) {
   return (
     <Flame

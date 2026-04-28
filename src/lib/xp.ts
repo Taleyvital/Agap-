@@ -2,6 +2,26 @@
 import { createSupabaseServiceClient } from "./supabase-server";
 import { XP_VALUES, getLevelForXP } from "./xp-shared";
 
+const COIN_REWARDS: Record<string, number> = {
+  LECTURE_DAY_COMPLETED:   10,
+  PRAYER_TIMER_COMPLETED:   5,
+  VERSE_ANNOTATED:          3,
+  COMMUNITY_POST_PUBLISHED: 5,
+  STREAK_7_DAYS:           50,
+  STREAK_30_DAYS:         200,
+  ONBOARDING_COMPLETED:   100,
+  GOSPEL_TRACK_PLAYED:      2,
+  STORY_LISTENED_COMPLETE: 15,
+  STRONG_WORD_EXPLORED:     3,
+};
+
+export async function awardCoins(userId: string, actionType: string) {
+  const coins = COIN_REWARDS[actionType];
+  if (!coins) return;
+  const supabase = createSupabaseServiceClient();
+  await supabase.rpc("increment_coins", { p_user_id: userId, p_amount: coins });
+}
+
 export type { XPResult } from "./xp-shared";
 export { XP_VALUES, LEVELS, getLevelForXP, getNextLevel } from "./xp-shared";
 
@@ -66,6 +86,10 @@ export async function awardXP(userId: string, actionType: string) {
     last_activity_date: streakUpdated ? today : (lastDate ?? today),
     updated_at:         new Date().toISOString(),
   });
+
+  // Award coins in parallel (fire-and-forget; never blocks XP result)
+  const coinActions = [actionType, ...(streakBonusType ? [streakBonusType] : [])];
+  await Promise.all(coinActions.map((a) => awardCoins(userId, a)));
 
   return {
     xpEarned,
