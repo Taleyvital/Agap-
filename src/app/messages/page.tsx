@@ -212,13 +212,13 @@ export default function MessagesPage() {
       const pendingIds = followsMe.filter((id) => !iFollow.has(id) && !ignoredSet.has(id));
       if (pendingIds.length > 0) {
         const { data: pendingProfiles } = await supabase
-          .from("profiles")
-          .select("id, first_name, anonymous_name, avatar_url")
-          .in("id", pendingIds);
+          .from("user_profiles_public")
+          .select("user_id, first_name")
+          .in("user_id", pendingIds);
         const pending = (pendingProfiles ?? []).map((p) => ({
-          userId: p.id as string,
-          firstName: ((p.first_name as string | null) ?? (p.anonymous_name as string | null) ?? "?"),
-          avatarUrl: (p.avatar_url as string | null) ?? null,
+          userId: p.user_id as string,
+          firstName: p.first_name as string,
+          avatarUrl: null,
         }));
         _cachedPending = pending;
         setPendingFollowers(pending);
@@ -239,15 +239,15 @@ export default function MessagesPage() {
             );
             if (ignored.has(newFollowerId) || iFollowRef.current.has(newFollowerId)) return;
             const { data: profileData } = await supabase
-              .from("profiles")
-              .select("first_name, anonymous_name, avatar_url")
-              .eq("id", newFollowerId)
+              .from("user_profiles_public")
+              .select("first_name")
+              .eq("user_id", newFollowerId)
               .maybeSingle();
             if (!profileData) return;
             const newPending = {
               userId: newFollowerId,
-              firstName: ((profileData.first_name as string | null) ?? (profileData.anonymous_name as string | null) ?? "?"),
-              avatarUrl: (profileData.avatar_url as string | null) ?? null,
+              firstName: profileData.first_name as string,
+              avatarUrl: null,
             };
             setPendingFollowers((prev) => {
               if (prev.some((p) => p.userId === newFollowerId)) return prev;
@@ -263,17 +263,22 @@ export default function MessagesPage() {
       const mutualIds = followsMe.filter((id) => iFollow.has(id));
       if (mutualIds.length === 0) { setLoading(false); return; }
 
-      // Fetch mutual profiles + streaks in parallel (profiles only, no user_profiles_public)
-      const [{ data: mutualProfiles }, { data: streaks }] = await Promise.all([
+      // Fetch mutual profiles + streaks in parallel
+      const [{ data: mutualProfiles }, { data: avatarRows }, { data: streaks }] = await Promise.all([
+        supabase
+          .from("user_profiles_public")
+          .select("user_id, first_name, avatar_level")
+          .in("user_id", mutualIds),
         supabase
           .from("profiles")
-          .select("id, first_name, anonymous_name, avatar_url")
+          .select("id, avatar_url")
           .in("id", mutualIds),
         supabase
           .from("verse_streaks")
           .select("user_a, user_b, streak_count")
           .or(`user_a.eq.${user.id},user_b.eq.${user.id}`),
       ]);
+      const avatarMap = new Map((avatarRows ?? []).map((r) => [r.id as string, r.avatar_url as string | null]));
 
       const streakMap = new Map<string, number>();
       for (const s of streaks ?? []) {
@@ -284,7 +289,7 @@ export default function MessagesPage() {
       // Fetch last message + unread for ALL conversations in parallel
       const convResults = await Promise.all(
         (mutualProfiles ?? []).map(async (profile) => {
-          const pid = profile.id as string;
+          const pid = profile.user_id as string;
           const [lastMsgRes, unreadRes] = await Promise.all([
             supabase
               .from("verse_messages")
@@ -302,9 +307,9 @@ export default function MessagesPage() {
           ]);
           return {
             userId: pid,
-            firstName: ((profile.first_name as string | null) ?? (profile.anonymous_name as string | null) ?? "?"),
-            avatarLevel: 1,
-            avatarUrl: (profile.avatar_url as string | null) ?? null,
+            firstName: profile.first_name as string,
+            avatarLevel: profile.avatar_level as number,
+            avatarUrl: avatarMap.get(pid) ?? null,
             streakCount: streakMap.get(pid) ?? 0,
             lastVerseRef: lastMsgRes.data?.verse_ref ?? null,
             lastVerseText: lastMsgRes.data?.verse_text ?? null,

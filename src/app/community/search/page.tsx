@@ -13,16 +13,18 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 interface PublicProfile {
   user_id: string;
   first_name: string;
+  avatar_level: number;
 }
 
-function TreeAvatar({ name, size = 40 }: { name: string; size?: number }) {
-  const initial = (name ?? "?").charAt(0).toUpperCase();
+function TreeAvatar({ level, size = 40 }: { level: number; size?: number }) {
+  const colors = ["#7B6FD4", "#9D93E8", "#6DB88F", "#E8C84A", "#E87A4A", "#E84A6D", "#FFFFFF"];
+  const color = colors[Math.min(level - 1, colors.length - 1)];
   return (
     <div
       className="rounded-full flex items-center justify-center shrink-0 font-serif italic text-white"
-      style={{ width: size, height: size, background: "#7B6FD422", border: "1.5px solid #7B6FD455", fontSize: size * 0.4 }}
+      style={{ width: size, height: size, background: `${color}22`, border: `1.5px solid ${color}55`, fontSize: size * 0.4 }}
     >
-      {initial}
+      🌿
     </div>
   );
 }
@@ -56,17 +58,12 @@ export default function CommunitySearchPage() {
     setLoading(true);
     const supabase = createSupabaseBrowserClient();
     const { data } = await supabase
-      .from("profiles")
-      .select("id, first_name, anonymous_name")
-      .or(`first_name.ilike.%${q}%,anonymous_name.ilike.%${q}%`)
-      .neq("id", currentUserId)
+      .from("user_profiles_public")
+      .select("user_id, first_name, avatar_level")
+      .ilike("first_name", `%${q}%`)
+      .neq("user_id", currentUserId)
       .limit(20);
-    setResults(
-      (data ?? []).map((p) => ({
-        user_id: p.id as string,
-        first_name: ((p.first_name as string | null) ?? (p.anonymous_name as string | null) ?? "?"),
-      }))
-    );
+    setResults((data ?? []) as PublicProfile[]);
     setLoading(false);
   }, [currentUserId]);
 
@@ -141,7 +138,7 @@ export default function CommunitySearchPage() {
               transition={{ delay: i * 0.04 }}
               className="flex items-center gap-3 rounded-2xl border border-separator bg-bg-secondary px-4 py-3 mb-2"
             >
-              <TreeAvatar name={profile.first_name} size={40} />
+              <TreeAvatar level={profile.avatar_level} size={40} />
               <span className="flex-1 font-sans text-sm text-text-primary">{profile.first_name}</span>
               <button
                 type="button"
