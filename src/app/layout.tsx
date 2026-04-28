@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { XPToastProvider } from "@/components/providers/XPToastProvider";
 import { LanguageProvider } from "@/lib/i18n";
 import { GospelPlayerProvider } from "@/components/providers/GospelPlayerProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { NavigationProgress } from "@/components/ui/NavigationProgress";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,7 +62,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} min-h-screen bg-[#141414] font-sans antialiased`}
       >
-        <ThemeProvider><LanguageProvider><GospelPlayerProvider><XPToastProvider>{children}</XPToastProvider></GospelPlayerProvider></LanguageProvider></ThemeProvider>
+        <QueryProvider><ThemeProvider><LanguageProvider><GospelPlayerProvider><XPToastProvider><NavigationProgress />{children}</XPToastProvider></GospelPlayerProvider></LanguageProvider></ThemeProvider></QueryProvider>
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {

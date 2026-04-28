@@ -60,6 +60,7 @@ export function BottomNav() {
           <Link
             key={href}
             href={href}
+            prefetch={true}
             className="flex flex-1 flex-col items-center gap-1 py-3 transition-colors"
             style={{ color: active ? "rgb(var(--text-primary))" : "rgb(var(--text-tertiary))" }}
           >

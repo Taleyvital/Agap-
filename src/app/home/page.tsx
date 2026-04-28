@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, Bird } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { FadeUp } from "@/components/home/HomeMotion";
@@ -77,38 +78,39 @@ function parseReference(reference: string): { book: string; chapter: number; ver
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [profile, setProfile] = useState<{ first_name: string | null; anonymous_name: string | null } | null>(null);
   const [isVerseModalOpen, setIsVerseModalOpen] = useState(false);
   const [dailyImage, setDailyImage] = useState<string | null>(null);
   const { t } = useLanguage();
-  
+
   // Get the daily verse
   const dailyVerse = getDailyVerse();
   const parsedRef = parseReference(dailyVerse.reference);
-  
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    
+
     const checkAuth = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) {
-        window.location.href = "/login";
+        router.replace("/login");
         return;
       }
       setUser(authUser);
-      
+
       const { data: profileData } = await supabase
         .from("profiles")
         .select("first_name, anonymous_name")
         .eq("id", authUser.id)
         .maybeSingle();
-      
+
       if (!profileData) {
-        window.location.href = "/onboarding";
+        router.replace("/onboarding");
         return;
       }
-      
+
       setProfile(profileData);
     };
     

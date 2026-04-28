@@ -16,6 +16,7 @@ import {
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
+import { cacheBibleChapter, getCachedChapter } from "@/lib/bible-cache";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { SendFlameSheet } from "@/components/ui/SendFlameSheet";
 import { BiblicalObjectSheet } from "@/components/ui/BiblicalObjectSheet";
@@ -304,11 +305,26 @@ function BiblePageContent() {
 
   // ── Load chapter ───────────────────────────
   const loadChapter = useCallback(async (trans: string, bid: number, ch: number) => {
-    setLoading(true);
     setErr(null);
+    // Show cached content instantly if available
+    const cached = await getCachedChapter(trans, bid, ch);
+    if (cached) {
+      setVerses(cached);
+      setLoading(false);
+      // Refresh in background without showing spinner
+      getChapter(trans, bid, ch)
+        .then((fresh) => {
+          setVerses(fresh);
+          void cacheBibleChapter(trans, bid, ch, fresh);
+        })
+        .catch(() => {/* keep cached */});
+      return;
+    }
+    setLoading(true);
     try {
       const data = await getChapter(trans, bid, ch);
       setVerses(data);
+      void cacheBibleChapter(trans, bid, ch, data);
     } catch {
       setErr("Impossible de charger ce chapitre.");
       setVerses([]);
