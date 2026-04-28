@@ -128,7 +128,6 @@ export function setAvatarCacheMode(
 ) {
   const existing = queryClient.getQueryData<AvatarData>(["avatar", userId]);
   queryClient.setQueryData<AvatarData>(["avatar", userId], {
-    mode: "avatar",
     avatarUrl: null,
     initial: "A",
     config: {},
