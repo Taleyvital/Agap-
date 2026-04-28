@@ -79,6 +79,7 @@ export default function ProfilePage() {
   const [since, setSince] = useState("");
   const [displayMode, setDisplayMode] = useState<AvatarDisplayMode>("avatar");
   const [uploading, setUploading] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
@@ -403,37 +404,16 @@ export default function ProfilePage() {
             onChange={handleAvatarUpload}
           />
 
-          {/* Mode selector */}
-          <div className="mt-4 flex gap-2">
-            {(
-              [
-                { mode: "avatar" as const,  label: "Avatar",  icon: <Palette className="h-3.5 w-3.5" /> },
-                { mode: "photo"   as const, label: "Photo",   icon: <Camera className="h-3.5 w-3.5" /> },
-                { mode: "initial" as const, label: "Initiale", icon: <span className="font-serif italic text-[13px] font-bold leading-none">{displayName.charAt(0)}</span> },
-              ] as const
-            ).map(({ mode, label, icon }) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => {
-                  if (mode === "photo" && !profile?.avatar_url) {
-                    fileInputRef.current?.click();
-                  } else {
-                    void saveDisplayMode(mode);
-                  }
-                }}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 font-sans text-[11px] font-medium transition-all"
-                style={{
-                  background: displayMode === mode ? "#7B6FD4" : "var(--bg-secondary, #1c1c1c)",
-                  color: displayMode === mode ? "white" : "var(--text-secondary, #888)",
-                  border: displayMode === mode ? "none" : "1px solid var(--separator, #2a2a2a)",
-                }}
-              >
-                {icon}
-                {label}
-              </button>
-            ))}
-          </div>
+          {/* Modifier button */}
+          <button
+            type="button"
+            onClick={() => setAvatarMenuOpen(true)}
+            className="mt-4 flex items-center gap-1.5 rounded-full px-4 py-1.5 font-sans text-[11px] font-medium transition-all active:scale-95"
+            style={{ background: "var(--bg-secondary, #1c1c1c)", color: "var(--text-secondary, #888)", border: "1px solid var(--separator, #2a2a2a)" }}
+          >
+            <Camera className="h-3.5 w-3.5" />
+            Modifier
+          </button>
 
           {/* Name */}
           <p className="mt-4 font-serif text-2xl italic text-text-primary">{displayName}</p>
@@ -662,6 +642,130 @@ export default function ProfilePage() {
 
       {/* ── Premium Paywall ──────────────────────────── */}
       {showPaywall && <PremiumPaywall onClose={() => setShowPaywall(false)} />}
+
+      {/* ── Avatar Menu Bottom Sheet ─────────────────── */}
+      <AnimatePresence>
+        {avatarMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setAvatarMenuOpen(false)}
+              className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed bottom-0 left-0 right-0 z-[61] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary px-6 pb-10 pt-5"
+            >
+              {/* Handle */}
+              <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-separator" />
+
+              <p className="mb-4 font-sans text-[10px] uppercase tracking-[0.2em] text-text-tertiary">
+                Afficher comme
+              </p>
+
+              <div className="flex flex-col gap-2">
+                {/* Avatar SVG */}
+                <button
+                  type="button"
+                  onClick={() => { void saveDisplayMode("avatar"); setAvatarMenuOpen(false); }}
+                  className="flex items-center gap-4 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]"
+                  style={{
+                    background: displayMode === "avatar" ? "rgba(123,111,212,0.12)" : "var(--bg-primary, #141414)",
+                    borderColor: displayMode === "avatar" ? "#7B6FD4" : "var(--separator, #2a2a2a)",
+                  }}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: "#1a1830" }}>
+                    <Palette className="h-5 w-5 text-[#7B6FD4]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-sans text-sm font-medium text-text-primary">Avatar personnalisé</p>
+                    <p className="font-sans text-[11px] text-text-tertiary">Ton visage SVG unique</p>
+                  </div>
+                  {displayMode === "avatar" && <Check className="h-4 w-4 text-[#7B6FD4]" />}
+                </button>
+
+                {/* Photo */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAvatarMenuOpen(false);
+                    if (profile?.avatar_url) {
+                      void saveDisplayMode("photo");
+                    } else {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  className="flex items-center gap-4 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]"
+                  style={{
+                    background: displayMode === "photo" ? "rgba(123,111,212,0.12)" : "var(--bg-primary, #141414)",
+                    borderColor: displayMode === "photo" ? "#7B6FD4" : "var(--separator, #2a2a2a)",
+                  }}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full overflow-hidden" style={{ background: "#1c1c1c" }}>
+                    {profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Camera className="h-5 w-5 text-text-secondary" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-sans text-sm font-medium text-text-primary">
+                      {profile?.avatar_url ? "Ma photo" : "Ajouter une photo"}
+                    </p>
+                    <p className="font-sans text-[11px] text-text-tertiary">
+                      {profile?.avatar_url ? "Changer de photo" : "Importer depuis ta galerie"}
+                    </p>
+                  </div>
+                  {displayMode === "photo" && <Check className="h-4 w-4 text-[#7B6FD4]" />}
+                </button>
+
+                {/* Initiale */}
+                <button
+                  type="button"
+                  onClick={() => { void saveDisplayMode("initial"); setAvatarMenuOpen(false); }}
+                  className="flex items-center gap-4 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.98]"
+                  style={{
+                    background: displayMode === "initial" ? "rgba(123,111,212,0.12)" : "var(--bg-primary, #141414)",
+                    borderColor: displayMode === "initial" ? "#7B6FD4" : "var(--separator, #2a2a2a)",
+                  }}
+                >
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                    style={{ background: "#1c1c1c" }}
+                  >
+                    <span className="font-serif text-xl italic text-text-primary">
+                      {displayName.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-sans text-sm font-medium text-text-primary">Initiale</p>
+                    <p className="font-sans text-[11px] text-text-tertiary">Juste la première lettre</p>
+                  </div>
+                  {displayMode === "initial" && <Check className="h-4 w-4 text-[#7B6FD4]" />}
+                </button>
+              </div>
+
+              {/* Si mode photo actif : option changer la photo */}
+              {displayMode === "photo" && profile?.avatar_url && (
+                <button
+                  type="button"
+                  onClick={() => { setAvatarMenuOpen(false); fileInputRef.current?.click(); }}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-separator bg-bg-primary py-3 font-sans text-sm text-text-secondary transition-all active:scale-[0.98]"
+                >
+                  <Camera className="h-4 w-4" />
+                  Changer de photo
+                </button>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Settings Bottom Sheet ────────────────────── */}
       <AnimatePresence>
