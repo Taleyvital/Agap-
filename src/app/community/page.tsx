@@ -254,7 +254,7 @@ export default function CommunityPage() {
             id: data.id || Date.now().toString(),
             author: "Toi",
             avatar: "",
-            authorId: userId ?? undefined,
+            authorId: avatarConsent === "yes" ? (userId ?? undefined) : undefined,
             category: composerCategory === "prayer" ? t("community_category_prayer") : t("community_category_testimony"),
             time: t("community_just_now"),
             content: text,
@@ -505,7 +505,7 @@ export default function CommunityPage() {
                     <div className="flex items-center gap-3">
                       {/* Avatar */}
                       <div className="rounded-full overflow-hidden shrink-0 border border-separator" style={{ width: 40, height: 40 }}>
-                        {post.authorId ? (
+                        {post.authorId && (!post.isMine || avatarConsent === "yes") ? (
                           <UserAvatar userId={post.authorId} size={40} />
                         ) : (
                           <span className="flex h-full w-full items-center justify-center bg-bg-tertiary font-sans text-sm font-semibold text-text-primary">

@@ -87,7 +87,7 @@ export function UserAvatar({ userId, size = 40, className }: Props) {
         className={className}
         style={{
           ...wrapStyle(size),
-          background: "var(--bg-tertiary, #2a2a2a)",
+          background: "#f0f0f0",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -97,7 +97,7 @@ export function UserAvatar({ userId, size = 40, className }: Props) {
           style={{
             fontFamily: "var(--font-serif, serif)",
             fontSize: size * 0.42,
-            color: "var(--text-primary, #E8E8E8)",
+            color: "#333333",
             fontStyle: "italic",
             lineHeight: 1,
           }}
