@@ -18,6 +18,7 @@ interface Props {
   userId: string;
   size?: number;
   className?: string;
+  fallbackInitial?: string;
 }
 
 async function fetchAvatarData(userId: string): Promise<AvatarData> {
@@ -53,7 +54,7 @@ const wrapStyle = (size: number): React.CSSProperties => ({
   display: "inline-block",
 });
 
-export function UserAvatar({ userId, size = 40, className }: Props) {
+export function UserAvatar({ userId, size = 40, className, fallbackInitial }: Props) {
   const { data } = useQuery<AvatarData>({
     queryKey: ["avatar", userId],
     queryFn: () => fetchAvatarData(userId),
@@ -64,7 +65,7 @@ export function UserAvatar({ userId, size = 40, className }: Props) {
 
   const mode = data?.mode ?? "initial";
   const avatarUrl = data?.avatarUrl ?? null;
-  const initial = data?.initial ?? "A";
+  const initial = data?.initial ?? (fallbackInitial ? fallbackInitial.charAt(0).toUpperCase() : "A");
   const config = data?.config ?? {};
 
   if (mode === "photo" && avatarUrl) {

@@ -506,7 +506,7 @@ export default function CommunityPage() {
                       {/* Avatar */}
                       <div className="rounded-full overflow-hidden shrink-0 border border-separator" style={{ width: 40, height: 40 }}>
                         {post.authorId && (!post.isMine || avatarConsent === "yes") ? (
-                          <UserAvatar userId={post.authorId} size={40} />
+                          <UserAvatar userId={post.authorId} size={40} fallbackInitial={post.author} />
                         ) : (
                           <span className="flex h-full w-full items-center justify-center bg-bg-tertiary font-sans text-sm font-semibold text-text-primary">
                             {post.author.charAt(0).toUpperCase()}

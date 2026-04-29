@@ -39,13 +39,13 @@ function FlameIcon({ size = 20 }: { streak?: number; size?: number }) {
   );
 }
 
-function ContactAvatar({ userId, size = 48 }: { userId: string; firstName?: string; size?: number }) {
+function ContactAvatar({ userId, firstName, size = 48 }: { userId: string; firstName?: string; size?: number }) {
   return (
     <div
       className="rounded-full shrink-0 overflow-hidden"
       style={{ width: size, height: size, border: "1.5px solid rgba(123,111,212,0.3)" }}
     >
-      <UserAvatar userId={userId} size={size} />
+      <UserAvatar userId={userId} size={size} fallbackInitial={firstName} />
     </div>
   );
 }
