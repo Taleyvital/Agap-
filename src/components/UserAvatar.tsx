@@ -65,7 +65,9 @@ export function UserAvatar({ userId, size = 40, className, fallbackInitial }: Pr
 
   const mode = data?.mode ?? "initial";
   const avatarUrl = data?.avatarUrl ?? null;
-  const initial = data?.initial ?? (fallbackInitial ? fallbackInitial.charAt(0).toUpperCase() : "A");
+  const initial = fallbackInitial
+    ? fallbackInitial.charAt(0).toUpperCase()
+    : (data?.initial ?? "A");
   const config = data?.config ?? {};
 
   if (mode === "photo" && avatarUrl) {
