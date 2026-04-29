@@ -102,14 +102,15 @@ export async function POST(request: Request) {
     category?: string;
     is_urgent?: boolean;
     imageUrl?: string;
+    repostOf?: string;
   };
 
-  const content = body.content?.trim();
-  if (!content && !body.imageUrl) {
+  const content = body.content?.trim() ?? "";
+  if (!content && !body.imageUrl && !body.repostOf) {
     return NextResponse.json({ error: "Contenu vide" }, { status: 400 });
   }
 
-  // We only strictly moderate if there is text content
+  // Only moderate if there is text content
   if (content) {
     const mod = await moderateCommunityPost(content);
     if (!mod.allowed) {
@@ -138,8 +139,9 @@ export async function POST(request: Request) {
       anonymous_name: authorName,
       category: body.category ?? "reflections",
       content,
-      image_url: body.imageUrl,
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+      image_url: body.imageUrl || null,
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      repost_of: body.repostOf ?? null,
     })
     .select("id")
     .single();

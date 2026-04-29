@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2 } from "lucide-react";
+import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as ImageIcon, X, User, Trash2, Repeat2, Send } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
@@ -32,6 +32,20 @@ interface Post {
   recentAmens?: string[];
   plusAmens?: number;
   isMine?: boolean;
+  repostOf?: {
+    id: string;
+    author: string;
+    content: string;
+    category?: string;
+  };
+}
+
+interface Comment {
+  id: string;
+  author: string;
+  authorId: string;
+  content: string;
+  time: string;
 }
 
 interface SupabasePostRow {
@@ -42,7 +56,9 @@ interface SupabasePostRow {
   created_at: string | null;
   image_url: string | null;
   anonymous_name: string | null;
+  repost_of: string | null;
   community_amens: { user_id: string }[];
+  community_comments: { id: string }[];
 }
 
 const MOCK_POSTS: Post[] = [];
@@ -83,7 +99,19 @@ export default function CommunityPage() {
 
   // Share feedback
   const [shareCopied, setShareCopied] = useState<string | null>(null);
-  
+
+  // Comments sheet
+  const [commentsSheetPostId, setCommentsSheetPostId] = useState<string | null>(null);
+  const [commentsData, setCommentsData] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  // Repost sheet
+  const [repostSheetPost, setRepostSheetPost] = useState<Post | null>(null);
+  const [repostDraft, setRepostDraft] = useState("");
+  const [submittingRepost, setSubmittingRepost] = useState(false);
+
   // Image Upload State
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -139,10 +167,10 @@ export default function CommunityPage() {
       
       void supabase
         .from("community_posts")
-        .select("id, user_id, content, category, created_at, image_url, anonymous_name, community_amens(user_id)")
+        .select("id, user_id, content, category, created_at, image_url, anonymous_name, repost_of, community_amens(user_id), community_comments(id)")
         .order("created_at", { ascending: false })
         .limit(20)
-        .then(({ data, error }) => {
+        .then(async ({ data, error }) => {
           if (error) {
             console.error("Erreur de récupération Supabase:", error);
             return;
@@ -151,36 +179,62 @@ export default function CommunityPage() {
             console.log("Aucun post réel trouvé dans Supabase.");
             return;
           }
-          console.log("Posts récupérés depuis Supabase:", data.length);
-          const mapped: Post[] = data.map((row: SupabasePostRow) => {
+
+          // Fetch original posts for reposts
+          const allRepostIds = (data as SupabasePostRow[])
+            .filter((r) => r.repost_of)
+            .map((r) => r.repost_of as string);
+          const repostIds = allRepostIds.filter((id, i) => allRepostIds.indexOf(id) === i);
+          const repostMap: Record<string, { author: string; content: string; category: string }> = {};
+          if (repostIds.length > 0) {
+            const { data: originals } = await supabase
+              .from("community_posts")
+              .select("id, content, anonymous_name, category")
+              .in("id", repostIds);
+            if (originals) {
+              for (const orig of originals as { id: string; content: string; anonymous_name: string | null; category: string }[]) {
+                repostMap[orig.id] = {
+                  author: orig.anonymous_name ?? t("community_default_author"),
+                  content: orig.content ?? "",
+                  category: orig.category,
+                };
+              }
+            }
+          }
+
+          const mapped: Post[] = (data as SupabasePostRow[]).map((row) => {
             const created = row.created_at
               ? new Date(row.created_at).toLocaleTimeString("fr-FR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })
               : "";
-            
-            const amensList = (row.community_amens || []) as unknown as { user_id: string }[];
             const uid = user?.id;
-            const hasLiked = uid ? amensList.some(a => a.user_id === uid) : false;
+            const amensList = (row.community_amens || []) as { user_id: string }[];
+            const hasLiked = uid ? amensList.some((a) => a.user_id === uid) : false;
+            const commentCount = (row.community_comments || []).length;
+            const originalPost = row.repost_of ? repostMap[row.repost_of] : undefined;
 
             return {
               id: String(row.id),
-              author: row.anonymous_name || t("community_default_author"),
+              author: row.anonymous_name ?? t("community_default_author"),
               avatar: "",
               authorId: row.user_id,
               category: row.category === "prayer" ? t("community_category_prayer") : t("community_category_testimony"),
               time: created,
-              content: String(row.content ?? ""),
+              content: row.content ? String(row.content) : undefined,
               image: row.image_url ? String(row.image_url) : undefined,
               amens: amensList.length,
               hasAmen: hasLiked,
-              comments: 0,
+              comments: commentCount,
               urgent: false,
               isMine: uid === row.user_id,
+              repostOf: row.repost_of && originalPost
+                ? { id: row.repost_of, ...originalPost }
+                : undefined,
             };
           });
-          
+
           setPosts([...mapped, ...MOCK_POSTS]);
         });
     });
@@ -361,6 +415,126 @@ export default function CommunityPage() {
       await navigator.clipboard.writeText(shareText);
       setShareCopied(post.id);
       setTimeout(() => setShareCopied(null), 2000);
+    }
+  };
+
+  const openComments = async (postId: string) => {
+    setCommentsSheetPostId(postId);
+    setCommentsData([]);
+    setCommentsLoading(true);
+    try {
+      const res = await fetch(`/api/community/posts/comments?postId=${postId}`);
+      if (res.ok) {
+        const data = (await res.json()) as {
+          comments: { id: string; content: string; created_at: string; anonymous_name: string | null; user_id: string }[];
+        };
+        setCommentsData(
+          (data.comments ?? []).map((c) => ({
+            id: c.id,
+            author: c.anonymous_name ?? t("community_default_author"),
+            authorId: c.user_id,
+            content: c.content,
+            time: new Date(c.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+          }))
+        );
+      }
+    } catch (err) {
+      console.error("Erreur chargement commentaires:", err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const submitComment = async () => {
+    const text = commentDraft.trim();
+    if (!text || !commentsSheetPostId || submittingComment) return;
+    setSubmittingComment(true);
+    try {
+      const res = await fetch("/api/community/posts/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: commentsSheetPostId, content: text }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          comment: { id: string; content: string; created_at: string; anonymous_name: string | null; user_id: string };
+        };
+        setCommentsData((prev) => [
+          ...prev,
+          {
+            id: data.comment.id,
+            author: data.comment.anonymous_name ?? "Moi",
+            authorId: data.comment.user_id,
+            content: data.comment.content,
+            time: "maintenant",
+          },
+        ]);
+        setCommentDraft("");
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === commentsSheetPostId ? { ...p, comments: (p.comments ?? 0) + 1 } : p
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Erreur soumission commentaire:", err);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const openRepost = (post: Post) => {
+    setRepostSheetPost(post);
+    setRepostDraft("");
+  };
+
+  const submitRepost = async () => {
+    if (!repostSheetPost || submittingRepost) return;
+    setSubmittingRepost(true);
+    try {
+      const res = await fetch("/api/community/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: repostDraft.trim(),
+          category: repostSheetPost.category?.toLowerCase().includes("prière") ? "prayer" : "testimony",
+          repostOf: repostSheetPost.id,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { id?: string; xp?: XPResult };
+        if (data.xp) showXPToast(data.xp);
+        const newPost: Post = {
+          id: data.id ?? Date.now().toString(),
+          author: "Toi",
+          avatar: "",
+          authorId: userId ?? undefined,
+          category: repostSheetPost.category,
+          time: "maintenant",
+          content: repostDraft.trim() || undefined,
+          amens: 0,
+          hasAmen: false,
+          comments: 0,
+          urgent: false,
+          isMine: true,
+          repostOf: {
+            id: repostSheetPost.id,
+            author: repostSheetPost.author,
+            content: repostSheetPost.content ?? "",
+            category: repostSheetPost.category,
+          },
+        };
+        setPosts((prev) => [newPost, ...prev]);
+        setRepostSheetPost(null);
+        setRepostDraft("");
+      } else {
+        const errorData = (await res.json().catch(() => ({ error: "Erreur" }))) as { error: string };
+        alert("Erreur: " + errorData.error);
+      }
+    } catch (err) {
+      console.error("Erreur republication:", err);
+    } finally {
+      setSubmittingRepost(false);
     }
   };
 
@@ -622,8 +796,23 @@ export default function CommunityPage() {
                     </div>
                   </div>
 
+                  {/* Repost original quoted block */}
+                  {post.repostOf && (
+                    <div className="mt-4 rounded-xl border border-separator bg-bg-tertiary p-4">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Repeat2 className="h-3 w-3 text-text-tertiary" />
+                        <p className="font-sans text-[9px] uppercase tracking-wider text-text-tertiary">
+                          {post.repostOf.category ?? "Publication"} — {post.repostOf.author}
+                        </p>
+                      </div>
+                      <p className="font-sans text-[13px] leading-relaxed text-text-secondary line-clamp-4">
+                        {post.repostOf.content}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Post Content */}
-                  <div className="mt-4 flex flex-col gap-3">
+                  <div className={`flex flex-col gap-3 ${post.repostOf ? "mt-3" : "mt-4"}`}>
                     {post.quote && (
                       <p className="font-serif text-[17px] italic leading-relaxed text-text-primary">
                         {post.quote}
@@ -638,31 +827,50 @@ export default function CommunityPage() {
 
                   {/* Actions Bar */}
                   <div className="mt-6 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-5">
                       {/* Amen Button */}
-                      <button 
+                      <button
                         type="button"
                         onClick={() => toggleAmen(post.id)}
                         className="flex items-center gap-2 group"
                       >
-                        <Heart 
-                          className={`h-5 w-5 transition-colors ${post.hasAmen ? "fill-accent text-accent" : "text-text-primary group-hover:text-accent"}`} 
+                        <Heart
+                          className={`h-5 w-5 transition-colors ${post.hasAmen ? "fill-accent text-accent" : "text-text-primary group-hover:text-accent"}`}
                         />
                         <span className={`font-sans text-[11px] font-bold tracking-widest uppercase ${post.hasAmen ? "text-accent" : "text-text-secondary"}`}>
                           {post.amens > 0 ? `${post.amens} AMEN${post.amens > 1 ? 'S' : ''}` : "AMEN"}
                         </span>
                       </button>
-                      
+
                       {/* Comment Button */}
-                      {(post.comments ?? 0) > 0 && (
-                        <button className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors">
-                          <MessageSquare className="h-5 w-5" />
-                          <span className="font-sans text-[12px] font-medium">{post.comments}</span>
+                      <button
+                        type="button"
+                        onClick={() => void openComments(post.id)}
+                        className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors group"
+                        aria-label="Commenter"
+                      >
+                        <MessageSquare className="h-5 w-5 group-hover:text-accent transition-colors" />
+                        {(post.comments ?? 0) > 0 && (
+                          <span className="font-sans text-[11px] font-bold tracking-widest uppercase text-text-secondary">
+                            {post.comments}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Repost Button */}
+                      {!post.isMine && (
+                        <button
+                          type="button"
+                          onClick={() => openRepost(post)}
+                          className="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors"
+                          aria-label="Republier"
+                        >
+                          <Repeat2 className="h-5 w-5" />
                         </button>
                       )}
                     </div>
 
-                    {/* Right side stuff */}
+                    {/* Share */}
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => void sharePost(post)}
@@ -805,6 +1013,177 @@ export default function CommunityPage() {
         ) : null}
 
       </div>
+
+      {/* ── COMMENTS SHEET ── */}
+      <AnimatePresence>
+        {commentsSheetPostId && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setCommentsSheetPostId(null); setCommentDraft(""); }}
+              className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed inset-x-0 bottom-0 z-[90] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary shadow-2xl flex flex-col"
+              style={{ maxHeight: "78vh" }}
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-4 pb-3 shrink-0">
+                <div className="h-1 w-10 rounded-full bg-separator" />
+              </div>
+              {/* Header */}
+              <div className="px-5 pb-3 border-b border-separator shrink-0">
+                <p className="font-sans text-[11px] font-bold uppercase tracking-widest text-text-tertiary">
+                  Commentaires{commentsData.length > 0 ? ` (${commentsData.length})` : ""}
+                </p>
+              </div>
+              {/* Comments list */}
+              <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-5 min-h-0">
+                {commentsLoading ? (
+                  <div className="flex justify-center py-10">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                  </div>
+                ) : commentsData.length === 0 ? (
+                  <p className="text-center font-sans text-sm text-text-tertiary py-10">
+                    Soyez le premier à commenter…
+                  </p>
+                ) : (
+                  commentsData.map((comment) => (
+                    <div key={comment.id} className="flex gap-3">
+                      <div className="h-8 w-8 rounded-full bg-bg-tertiary border border-separator flex items-center justify-center shrink-0">
+                        <span className="font-sans text-xs font-semibold text-text-primary">
+                          {comment.author.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-serif text-sm text-text-primary">{comment.author}</span>
+                          <span className="font-sans text-[9px] text-text-tertiary">{comment.time}</span>
+                        </div>
+                        <p className="font-sans text-[13px] leading-relaxed text-text-secondary">
+                          {comment.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {/* Input */}
+              <div
+                className="px-5 py-4 border-t border-separator shrink-0"
+                style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+              >
+                <div className="flex gap-3 items-end">
+                  <textarea
+                    className="flex-1 resize-none rounded-xl border border-separator bg-bg-tertiary px-4 py-3 font-sans text-[14px] text-text-primary outline-none transition-colors focus:border-accent/40"
+                    rows={2}
+                    value={commentDraft}
+                    onChange={(e) => setCommentDraft(e.target.value)}
+                    placeholder="Écrire un commentaire…"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        void submitComment();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={!commentDraft.trim() || submittingComment}
+                    onClick={() => void submitComment()}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-white disabled:opacity-40 shrink-0 transition-opacity"
+                  >
+                    {submittingComment ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── REPOST SHEET ── */}
+      <AnimatePresence>
+        {repostSheetPost && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setRepostSheetPost(null); setRepostDraft(""); }}
+              className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed inset-x-0 bottom-0 z-[90] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary p-5 shadow-2xl"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
+            >
+              <div className="flex justify-center mb-4">
+                <div className="h-1 w-10 rounded-full bg-separator" />
+              </div>
+              <div className="flex items-center gap-2 mb-4">
+                <Repeat2 className="h-4 w-4 text-accent" />
+                <p className="font-sans text-[11px] font-bold uppercase tracking-widest text-text-tertiary">
+                  Republier
+                </p>
+              </div>
+              {/* Original post quoted */}
+              <div className="rounded-xl border border-separator bg-bg-tertiary p-4 mb-4">
+                <p className="font-sans text-[9px] uppercase tracking-wider text-text-tertiary mb-2">
+                  {repostSheetPost.category ?? "Publication"} — {repostSheetPost.author}
+                </p>
+                <p className="font-sans text-[13px] leading-relaxed text-text-secondary line-clamp-4">
+                  {repostSheetPost.content}
+                </p>
+              </div>
+              {/* Reposter comment */}
+              <textarea
+                className="w-full resize-none rounded-xl border border-separator bg-bg-tertiary p-4 font-sans text-[15px] leading-relaxed text-text-primary outline-none transition-colors focus:border-accent/40"
+                rows={3}
+                value={repostDraft}
+                onChange={(e) => setRepostDraft(e.target.value)}
+                placeholder="Ajouter un commentaire… (optionnel)"
+                autoFocus
+              />
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setRepostSheetPost(null); setRepostDraft(""); }}
+                  className="rounded-full px-5 py-2.5 font-sans text-[11px] font-bold uppercase tracking-widest text-text-secondary hover:text-text-primary"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  disabled={submittingRepost}
+                  onClick={() => void submitRepost()}
+                  className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-sans text-[11px] font-bold uppercase tracking-widest text-white disabled:opacity-50"
+                >
+                  {submittingRepost ? (
+                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <Repeat2 className="h-3.5 w-3.5" />
+                  )}
+                  Republier
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Toggle sheet : changer la visibilité de la photo ── */}
       <AnimatePresence>
