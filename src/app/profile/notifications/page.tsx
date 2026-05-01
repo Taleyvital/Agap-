@@ -40,7 +40,7 @@ const PREF_LABELS: { key: keyof NotifPrefs; label: string; icon: string }[] = [
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { permission, isSubscribed, isPWA, isIOS, subscribe } = usePushNotifications();
+  const { isSubscribed, isPWA, isIOS, subscribe } = usePushNotifications();
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
