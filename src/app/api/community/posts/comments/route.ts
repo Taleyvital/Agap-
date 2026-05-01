@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
+import { sendPushNotification } from "@/lib/push";
 
 export async function GET(request: Request) {
   const authClient = createSupabaseServerClient();
@@ -52,5 +53,22 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Notify post owner — fire-and-forget
+  const { data: post } = await serviceClient
+    .from("community_posts")
+    .select("user_id")
+    .eq("id", body.postId)
+    .maybeSingle();
+  if (post?.user_id && post.user_id !== user.id) {
+    sendPushNotification({
+      user_id: post.user_id,
+      type: "amen",
+      title: `💬 ${authorName} a commenté ta publication`,
+      body: content.slice(0, 80),
+      url: "/community",
+    }).catch(() => {});
+  }
+
   return NextResponse.json({ comment: data });
 }

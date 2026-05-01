@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import { moderateCommunityPost } from "@/lib/groq";
 import { awardXP } from "@/lib/xp";
+import { sendPushNotification } from "@/lib/push";
 
 // GET - Récupérer les posts de l'utilisateur connecté
 export async function GET(request: Request) {
@@ -152,6 +153,24 @@ export async function POST(request: Request) {
   }
 
   const xp = await awardXP(user.id, "COMMUNITY_POST_PUBLISHED");
+
+  // Notify original author when their post is reposted
+  if (body.repostOf) {
+    const { data: originalPost } = await serviceClient
+      .from("community_posts")
+      .select("user_id")
+      .eq("id", body.repostOf)
+      .maybeSingle();
+    if (originalPost?.user_id && originalPost.user_id !== user.id) {
+      sendPushNotification({
+        user_id: originalPost.user_id,
+        type: "amen",
+        title: "🔁 Quelqu'un a republié ta publication",
+        body: `${authorName} a partagé ton message avec la communauté`,
+        url: "/community",
+      }).catch(() => {});
+    }
+  }
 
   return NextResponse.json({ id: data.id, xp });
 }
