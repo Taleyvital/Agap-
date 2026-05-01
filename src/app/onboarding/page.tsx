@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { pickAnonymousName } from "@/lib/anonymous-name";
 import { Church, BookOpen, Cross, Flame, HelpCircle } from "lucide-react";
 import AvatarBuilder, { type AvatarConfig } from "@/components/AvatarBuilder";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
 const STEPS = 5;
 
@@ -75,6 +76,7 @@ export default function OnboardingPage() {
   const [authReady, setAuthReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPWAPrompt, setShowPWAPrompt] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -115,7 +117,11 @@ export default function OnboardingPage() {
     await supabase.from("avatar_customization").upsert({ ...avatarConfig, user_id: user.id, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     // Award coins for onboarding (via API to avoid server-only import)
     await fetch("/api/xp/award", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "ONBOARDING_COMPLETED" }) }).catch(() => null);
-    router.replace("/home");
+    if ("Notification" in window && Notification.permission === "default") {
+      setShowPWAPrompt(true);
+    } else {
+      router.replace("/home");
+    }
   };
 
   return (
@@ -317,6 +323,14 @@ export default function OnboardingPage() {
           )}
         </AnimatePresence>
       </div>
+
+      <PWAInstallPrompt
+        open={showPWAPrompt}
+        onClose={() => {
+          setShowPWAPrompt(false);
+          router.replace("/home");
+        }}
+      />
     </div>
   );
 }

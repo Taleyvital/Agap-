@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import { awardXP } from "@/lib/xp";
+import { sendPushNotification } from "@/lib/push";
 
 export async function POST(
   request: Request,
@@ -46,6 +47,13 @@ export async function POST(
   if (action === "approve" && track.artist_id) {
     await awardXP(track.artist_id, "GOSPEL_TRACK_UPLOADED");
     notifyArtist(track.artist_id, track.title, "approved", null).catch(() => {});
+    sendPushNotification({
+      user_id: track.artist_id,
+      type: "gospel",
+      title: "✅ Ton titre est en ligne",
+      body: `"${track.title}" est disponible sur AGAPE`,
+      url: `/gospel/${params.id}`,
+    }).catch(() => {});
   } else if (action === "reject" && track.artist_id) {
     notifyArtist(track.artist_id, track.title, "rejected", rejection_reason ?? null).catch(() => {});
   }

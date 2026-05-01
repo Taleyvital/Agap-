@@ -1,6 +1,7 @@
 // Server-only — uses supabase-server (next/headers). Do NOT import in client components.
 import { createSupabaseServiceClient } from "./supabase-server";
 import { XP_VALUES, getLevelForXP } from "./xp-shared";
+import { sendPushNotification } from "./push";
 
 const COIN_REWARDS: Record<string, number> = {
   LECTURE_DAY_COMPLETED:   10,
@@ -90,6 +91,16 @@ export async function awardXP(userId: string, actionType: string) {
   // Award coins in parallel (fire-and-forget; never blocks XP result)
   const coinActions = [actionType, ...(streakBonusType ? [streakBonusType] : [])];
   await Promise.all(coinActions.map((a) => awardCoins(userId, a)));
+
+  if (levelUp) {
+    sendPushNotification({
+      user_id: userId,
+      type: "xp",
+      title: `⭐ Nouveau niveau — ${newLevelName}`,
+      body: "Ton arbre spirituel vient d'évoluer",
+      url: "/dashboard",
+    }).catch(() => {});
+  }
 
   return {
     xpEarned,

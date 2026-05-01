@@ -39,6 +39,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar, setAvatarCacheMode, type AvatarDisplayMode } from "@/components/UserAvatar";
 import { useLanguage, LANGUAGE_OPTIONS, type AppLanguage } from "@/lib/i18n";
 import { getFlameColorHex } from "@/lib/flames";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
 interface Profile {
   first_name: string | null;
@@ -69,6 +71,8 @@ function stagger(i: number) {
 export default function ProfilePage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const { permission, isSubscribed, subscribe, isIOS, isPWA } = usePushNotifications();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
@@ -114,7 +118,7 @@ export default function ProfilePage() {
     {
       title: t("profile_section_preferences"),
       items: [
-        { href: "/home", label: t("profile_item_notifications"), Icon: Bell },
+        { href: "/profile/notifications", label: t("profile_item_notifications"), Icon: Bell },
         { href: "/home", label: t("profile_item_privacy"), Icon: Shield },
         { href: "/home", label: t("profile_item_help"), Icon: HelpCircle },
       ],
@@ -537,6 +541,53 @@ export default function ProfilePage() {
                   <ChevronRight className="h-4 w-4 text-text-tertiary" />
                 </Link>
               ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Notification status card ──────────────── */}
+        {permission !== "denied" && (
+          <motion.div {...stagger(4)} className="mt-5">
+            <div
+              className="flex items-center gap-3 rounded-[16px] p-4"
+              style={{ background: "#1c1c1c", border: "0.5px solid #2a2a2a" }}
+            >
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                style={{ background: isSubscribed ? "rgba(123,111,212,0.15)" : "#2a2a2a" }}
+              >
+                <Bell size={18} color={isSubscribed ? "#7B6FD4" : "#666666"} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-sans text-[14px] text-[#E8E8E8]">
+                  {isSubscribed ? "Notifications activées" : "Notifications désactivées"}
+                </p>
+                <p className="font-sans text-[12px] text-[#666666] mt-0.5">
+                  {isSubscribed
+                    ? "Tu es connecté à tous tes moments spirituels"
+                    : "Tu rates peut-être des moments importants"}
+                </p>
+              </div>
+              {isSubscribed ? (
+                <Link
+                  href="/profile/notifications"
+                  className="shrink-0 font-sans text-[13px] font-semibold"
+                  style={{ color: "#7B6FD4" }}
+                >
+                  Gérer →
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (isIOS && !isPWA) { setShowPushPrompt(true); return; }
+                    void subscribe().then((ok) => { if (ok) setShowPushPrompt(false); });
+                  }}
+                  className="shrink-0 font-sans text-[13px] font-semibold"
+                  style={{ color: "#7B6FD4" }}
+                >
+                  Activer →
+                </button>
+              )}
             </div>
           </motion.div>
         )}
@@ -1046,6 +1097,11 @@ export default function ProfilePage() {
           </>
         )}
       </AnimatePresence>
+
+      <PWAInstallPrompt
+        open={showPushPrompt}
+        onClose={() => setShowPushPrompt(false)}
+      />
     </AppShell>
   );
 }

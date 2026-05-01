@@ -12,6 +12,7 @@ import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect } from "react";
 import { useLanguage } from "@/lib/i18n";
+import { PushNotificationBanner } from "@/components/PushNotificationBanner";
 
 // Collection de versets pour le verset journalier
 const DAILY_VERSES = [
@@ -158,6 +159,8 @@ export default function HomePage() {
             <Bell className="h-5 w-5" />
           </button>
         </header>
+
+        <PushNotificationBanner />
 
         <FadeUp>
         <section className="mt-8">

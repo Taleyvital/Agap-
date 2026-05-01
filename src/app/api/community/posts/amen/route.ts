@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import { awardXP } from "@/lib/xp";
+import { sendPushNotification } from "@/lib/push";
 
 export async function POST(request: Request) {
   try {
@@ -46,6 +47,13 @@ export async function POST(request: Request) {
 
       if (post?.user_id && post.user_id !== user.id) {
         await awardXP(post.user_id, "COMMUNITY_AMEN_RECEIVED");
+        sendPushNotification({
+          user_id: post.user_id,
+          type: "amen",
+          title: "🙏 Quelqu'un a prié avec toi",
+          body: "Un membre de la communauté a dit Amen",
+          url: "/community",
+        }).catch(() => {});
       }
 
       return NextResponse.json({ action: "added" });
