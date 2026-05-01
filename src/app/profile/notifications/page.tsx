@@ -80,9 +80,7 @@ export default function NotificationsPage() {
       setShowPrompt(true);
       return;
     }
-    if (permission !== "granted") {
-      setShowPrompt(true);
-    }
+    await subscribe();
   };
 
   return (
