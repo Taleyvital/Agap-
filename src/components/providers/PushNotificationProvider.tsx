@@ -14,11 +14,6 @@ const FEATURES = [
   { icon: "⭐", label: "Nouveaux niveaux spirituels" },
 ];
 
-const IOS_STEPS = [
-  { num: 1, icon: "⬆️", text: "Appuie sur Partager en bas de Safari" },
-  { num: 2, icon: "📲", text: "Sélectionne « Sur l'écran d'accueil »" },
-  { num: 3, icon: "✨", text: "Ouvre AGAPE depuis l'icône ajoutée" },
-];
 
 export function PushNotificationProvider({ children }: { children: React.ReactNode }) {
   const [showModal, setShowModal] = useState(false);
@@ -52,8 +47,6 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
   };
 
   const handleClose = () => setShowModal(false);
-
-  const showIOSTutorial = isIOS && !isPWA;
 
   return (
     <>
