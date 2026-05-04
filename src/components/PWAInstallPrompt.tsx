@@ -13,7 +13,7 @@ const SNOOZE_KEY = "pwa_prompt_snoozed_until";
 const SNOOZE_DAYS = 3;
 
 export function PWAInstallPrompt({ open, onClose }: Props) {
-  const { isPWA, isIOS, subscribe, permission } = usePushNotifications();
+  const { subscribe } = usePushNotifications();
   const [step, setStep] = useState<"info" | "success" | "denied">("info");
   const [loading, setLoading] = useState(false);
 
@@ -39,13 +39,11 @@ export function PWAInstallPrompt({ open, onClose }: Props) {
     if (open) setStep("info");
   }, [open]);
 
-  const showIOSTutorial = isIOS && !isPWA;
-
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-6"
+          className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-24"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -109,55 +107,15 @@ export function PWAInstallPrompt({ open, onClose }: Props) {
                   ))}
                 </div>
 
-                {/* iOS tutorial if not in PWA */}
-                {showIOSTutorial && (
-                  <div className="mb-6">
-                    <div
-                      className="rounded-[16px] p-4 mb-3"
-                      style={{ background: "#1c1c1c", border: "0.5px solid #2a2a2a" }}
-                    >
-                      <p className="text-[12px] text-[#7B6FD4] font-semibold mb-3 uppercase tracking-widest">
-                        Installer AGAPE sur iPhone
-                      </p>
-                      <div className="flex flex-col gap-4">
-                        {IOS_STEPS.map(({ num, icon, text }) => (
-                          <div key={num} className="flex items-start gap-3">
-                            <span
-                              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold text-white"
-                              style={{ background: "#7B6FD4" }}
-                            >
-                              {num}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xl">{icon}</span>
-                              <span
-                                className="text-[13px] text-[#999999]"
-                                style={{ fontFamily: "var(--font-sans)" }}
-                              >
-                                {text}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-[12px] text-[#666666] text-center">
-                      Puis reviens dans AGAPE et active les notifications
-                    </p>
-                  </div>
-                )}
-
                 {/* Actions */}
-                {(!showIOSTutorial || permission !== "default") && (
-                  <button
-                    onClick={() => void handleSubscribe()}
-                    disabled={loading}
-                    className="w-full rounded-[14px] py-3.5 text-[15px] font-semibold text-white mb-3 disabled:opacity-60"
-                    style={{ background: "#7B6FD4", fontFamily: "var(--font-sans)" }}
-                  >
-                    {loading ? "Activation…" : "Activer les notifications"}
-                  </button>
-                )}
+                <button
+                  onClick={() => void handleSubscribe()}
+                  disabled={loading}
+                  className="w-full rounded-[14px] py-3.5 text-[15px] font-semibold text-white mb-3 disabled:opacity-60"
+                  style={{ background: "#7B6FD4", fontFamily: "var(--font-sans)" }}
+                >
+                  {loading ? "Activation…" : "Activer les notifications"}
+                </button>
 
                 <button
                   onClick={handleClose}
@@ -199,8 +157,3 @@ const FEATURES = [
   { icon: "✅", label: "Validation de tes titres gospel" },
 ];
 
-const IOS_STEPS = [
-  { num: 1, icon: "⬆️", text: "Appuie sur Partager en bas de Safari" },
-  { num: 2, icon: "📲", text: "Sélectionne « Sur l'écran d'accueil »" },
-  { num: 3, icon: "✨", text: "Ouvre AGAPE depuis l'icône ajoutée" },
-];
