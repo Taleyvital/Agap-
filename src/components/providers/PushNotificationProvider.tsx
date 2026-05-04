@@ -131,61 +131,29 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
                   </p>
 
                   {/* Feature list */}
-                  {!showIOSTutorial && (
-                    <div className="w-full flex flex-col gap-2.5 mb-6">
-                      {FEATURES.map(({ icon, label }) => (
-                        <div key={label} className="flex items-center gap-3">
-                          <span className="text-[18px] w-6 shrink-0">{icon}</span>
-                          <span
-                            className="text-[13px] text-[#999999]"
-                            style={{ fontFamily: "var(--font-sans)" }}
-                          >
-                            {label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* iOS tutorial */}
-                  {showIOSTutorial && (
-                    <div className="w-full mb-6">
-                      <p className="text-[11px] text-[#7B6FD4] font-semibold uppercase tracking-widest mb-3">
-                        Installer AGAPE sur iPhone
-                      </p>
-                      <div className="flex flex-col gap-4">
-                        {IOS_STEPS.map(({ num, icon, text }) => (
-                          <div key={num} className="flex items-center gap-3">
-                            <span
-                              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold text-white"
-                              style={{ background: "#7B6FD4" }}
-                            >
-                              {num}
-                            </span>
-                            <span className="text-xl">{icon}</span>
-                            <span
-                              className="text-[13px] text-[#999999]"
-                              style={{ fontFamily: "var(--font-sans)" }}
-                            >
-                              {text}
-                            </span>
-                          </div>
-                        ))}
+                  <div className="w-full flex flex-col gap-2.5 mb-6">
+                    {FEATURES.map(({ icon, label }) => (
+                      <div key={label} className="flex items-center gap-3">
+                        <span className="text-[18px] w-6 shrink-0">{icon}</span>
+                        <span
+                          className="text-[13px] text-[#999999]"
+                          style={{ fontFamily: "var(--font-sans)" }}
+                        >
+                          {label}
+                        </span>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
 
                   {/* Actions */}
-                  {!showIOSTutorial && (
-                    <button
-                      onClick={() => void handleActivate()}
-                      disabled={loading}
-                      className="w-full rounded-[14px] py-3.5 text-[15px] font-semibold text-white mb-3 disabled:opacity-60"
-                      style={{ background: "#7B6FD4", fontFamily: "var(--font-sans)" }}
-                    >
-                      {loading ? "Activation…" : "Activer les notifications"}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => void handleActivate()}
+                    disabled={loading}
+                    className="w-full rounded-[14px] py-3.5 text-[15px] font-semibold text-white mb-3 disabled:opacity-60"
+                    style={{ background: "#7B6FD4", fontFamily: "var(--font-sans)" }}
+                  >
+                    {loading ? "Activation…" : "Activer les notifications"}
+                  </button>
 
                   <button
                     onClick={handleClose}
