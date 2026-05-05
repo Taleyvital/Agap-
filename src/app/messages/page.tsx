@@ -512,7 +512,10 @@ export default function MessagesPage() {
                     {conv.streakCount > 0 && (
                       <span
                         className="font-sans text-xs font-semibold"
-                        style={{ color: getFlameColorHex(conv.streakCount) }}
+                        style={{
+                          color: getFlameColorHex(conv.streakCount),
+                          textShadow: "0 0 6px rgba(0,0,0,0.8)",
+                        }}
                       >
                         {conv.streakCount}
                       </span>
