@@ -534,7 +534,7 @@ export default function ConversationPage() {
           {streakCount > 0 && (
             <div className="flex items-center gap-1">
               <FlameIcon streak={streakCount} />
-              <span className="font-sans text-sm font-semibold" style={{ color: getFlameColorHex(streakCount), textShadow: "0 0 6px rgba(0,0,0,0.8)" }}>
+              <span className="font-sans text-sm font-semibold" style={{ color: getFlameColorHex(streakCount) }}>
                 {streakCount}
               </span>
             </div>

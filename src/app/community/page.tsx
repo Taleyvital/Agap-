@@ -11,6 +11,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useXPToast } from "@/components/providers/XPToastProvider";
 import type { XPResult } from "@/lib/xp-shared";
 import { useLanguage } from "@/lib/i18n";
+import { markCommunityAsSeen } from "@/hooks/useCommunityUnread";
 
 type Filter = "all" | "prayer" | "testimony";
 
@@ -118,8 +119,9 @@ export default function CommunityPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    markCommunityAsSeen();
     const supabase = createSupabaseBrowserClient();
-    
+
     void supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUserId(user.id);

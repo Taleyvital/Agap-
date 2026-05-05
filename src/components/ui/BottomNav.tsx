@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useCommunityUnread } from "@/hooks/useCommunityUnread";
 
 // Module-level cache — one fetch per session
 let _userId: string | null | undefined = undefined;
@@ -15,6 +16,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
   const [userId, setUserId] = useState<string | null>(_userId ?? null);
+  const communityUnread = useCommunityUnread();
 
   useEffect(() => {
     if (_userId !== undefined) return;
@@ -67,11 +69,18 @@ export function BottomNav() {
                 )}
               </div>
             ) : (
-              <Icon
-                className="h-6 w-6 shrink-0"
-                strokeWidth={active ? 2.2 : 1.5}
-                aria-hidden
-              />
+              <div className="relative">
+                <Icon
+                  className="h-6 w-6 shrink-0"
+                  strokeWidth={active ? 2.2 : 1.5}
+                  aria-hidden
+                />
+                {href === "/community" && communityUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 font-sans text-[9px] font-bold text-white">
+                    {communityUnread > 9 ? "9+" : communityUnread}
+                  </span>
+                )}
+              </div>
             )}
             <span className="font-sans text-[9px] font-semibold uppercase tracking-widest">
               {label}

@@ -11,6 +11,7 @@ import { VerseImageCard } from "@/components/ui/VerseImageCard";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect } from "react";
+import { useCommunityUnread } from "@/hooks/useCommunityUnread";
 import { useLanguage } from "@/lib/i18n";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
 
@@ -85,6 +86,7 @@ export default function HomePage() {
   const [isVerseModalOpen, setIsVerseModalOpen] = useState(false);
   const [dailyImage, setDailyImage] = useState<string | null>(null);
   const { t } = useLanguage();
+  const communityUnread = useCommunityUnread();
 
   // Get the daily verse
   const dailyVerse = getDailyVerse();
@@ -151,13 +153,18 @@ export default function HomePage() {
           <Link href="/chat" className="text-xs uppercase tracking-[0.15em] text-accent">
             AGAPE Chat
           </Link>
-          <button
-            type="button"
-            className="rounded-full p-2 text-text-secondary hover:text-text-primary"
+          <Link
+            href="/community"
+            className="relative rounded-full p-2 text-text-secondary hover:text-text-primary"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
-          </button>
+            {communityUnread > 0 && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 font-sans text-[9px] font-bold text-white">
+                {communityUnread > 9 ? "9+" : communityUnread}
+              </span>
+            )}
+          </Link>
         </header>
 
         <PushNotificationBanner />
