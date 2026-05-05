@@ -11,7 +11,7 @@ export function getFlameColor(streakCount: number): FlameColor {
 
 export function getFlameColorHex(streakCount: number): string {
   const color = getFlameColor(streakCount);
-  if (color === "white") return "rgb(var(--text-primary))";
+  if (color === "white") return "var(--flame-white)";
   if (color === "gold") return "#E8C84A";
   if (color === "violet") return "#7B6FD4";
   return "#666666";

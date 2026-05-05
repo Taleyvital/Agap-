@@ -18,6 +18,7 @@
   --accent-light: 236 233 251;
   --separator: 234 232 225;
   --danger: 217 61 59;
+  --flame-white: #1c1c1c;
 }
 
 .dark {
@@ -32,6 +33,7 @@
   --accent-light: 157 147 232;
   --separator: 42 42 42;
   --danger: 226 75 74;
+  --flame-white: #ffffff;
 }
 
 html {
