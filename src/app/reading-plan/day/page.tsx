@@ -159,19 +159,19 @@ function DayReadingContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#7B6FD4] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!dayReading) {
     return (
-      <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6">
-        <p className="text-[#666666] font-sans text-center">Contenu introuvable.</p>
+      <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-6">
+        <p className="text-text-secondary font-sans text-center">Contenu introuvable.</p>
         <button
           onClick={() => router.push("/reading-plan")}
-          className="mt-4 text-[#7B6FD4] font-sans text-sm"
+          className="mt-4 text-accent font-sans text-sm"
         >
           Retour aux plans
         </button>
@@ -182,9 +182,9 @@ function DayReadingContent() {
   const parsedRef = parseRef(dayReading.bibleReference);
 
   return (
-    <div className="min-h-screen bg-[#141414]">
+    <div className="min-h-screen bg-bg-primary transition-colors duration-300">
       {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-50 bg-[#141414]/90 backdrop-blur-xl">
+      <header className="fixed left-0 right-0 top-0 z-50 bg-bg-primary/90 backdrop-blur-xl">
         <div
           className="mx-auto flex max-w-2xl items-end justify-between px-6 pb-4"
           style={{
@@ -193,16 +193,16 @@ function DayReadingContent() {
           }}
         >
           <div className="min-w-0 flex-1 pr-4">
-            <span className="block font-sans uppercase tracking-[0.15em] text-[10px] font-bold text-[#7B6FD4]">
+            <span className="block font-sans uppercase tracking-[0.15em] text-[10px] font-bold text-accent">
               {t("rplan_day_label")} {dayReading.dayNumber} • {dayReading.totalDays}
             </span>
-            <h1 className="truncate font-serif text-lg italic tracking-tight text-[#E8E8E8]">
+            <h1 className="truncate font-serif text-lg italic tracking-tight text-text-primary">
               {dayReading.title}
             </h1>
           </div>
           <button
             onClick={() => router.push(`/reading-plan/${dayReading.planId}`)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#666666] transition-colors hover:text-[#E8E8E8] active:opacity-70"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:text-text-primary active:opacity-70"
             aria-label="Fermer"
           >
             <X className="h-5 w-5" />
@@ -220,7 +220,7 @@ function DayReadingContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative mb-8 h-56 overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c]"
+            className="relative mb-8 h-56 overflow-hidden rounded-2xl border border-separator bg-bg-secondary"
           >
             <Image
               src={dayReading.imageUrl}
@@ -230,7 +230,7 @@ function DayReadingContent() {
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 672px"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/20 to-transparent" />
           </motion.section>
         )}
 
@@ -241,10 +241,10 @@ function DayReadingContent() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
+          <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-text-secondary">
             {t("rplan_bible_reading")}
           </span>
-          <h2 className="text-[#666666] mt-1 font-sans font-medium">
+          <h2 className="text-text-secondary mt-1 font-sans font-medium">
             {dayReading.bibleReference}
           </h2>
         </motion.div>
@@ -254,18 +254,18 @@ function DayReadingContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-12 bg-[#1a1830] rounded-xl p-6 border-l-[3px] border-[#7B6FD4] cursor-pointer select-none"
+          className="mb-12 dark:bg-[#1a1830] bg-accent/[0.08] rounded-xl p-6 border-l-[3px] border-accent cursor-pointer select-none"
           onPointerDown={onScripturePointerDown}
           onPointerUp={onScripturePointerUp}
           onPointerLeave={onScripturePointerUp}
         >
-          <p className="font-serif italic text-xl leading-relaxed text-[#E8E8E8] mb-4">
+          <p className="font-serif italic text-xl leading-relaxed text-text-primary mb-4">
             « {dayReading.bibleReference} »
           </p>
-          <span className="font-sans uppercase tracking-[0.2em] text-[11px] text-[#7B6FD4] font-bold">
+          <span className="font-sans uppercase tracking-[0.2em] text-[11px] text-accent font-bold">
             {dayReading.bibleReference}
           </span>
-          <p className="mt-3 font-sans text-[10px] text-[#444444] uppercase tracking-widest">
+          <p className="mt-3 font-sans text-[10px] text-text-tertiary uppercase tracking-widest">
             {t("rplan_long_press")}
           </p>
         </motion.section>
@@ -278,11 +278,11 @@ function DayReadingContent() {
           className="mb-12"
         >
           <header className="mb-4">
-            <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
+            <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-text-secondary">
               {t("rplan_meditation")}
             </span>
           </header>
-          <div className="space-y-6 text-[#c9c4d4] leading-relaxed font-sans font-light text-[15px]">
+          <div className="space-y-6 text-text-primary leading-relaxed font-sans font-light text-[15px]">
             {dayReading.paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -298,20 +298,20 @@ function DayReadingContent() {
             className="mb-12"
           >
             <header className="mb-6">
-              <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-[#666666]">
+              <span className="font-sans uppercase tracking-[0.15em] text-[11px] text-text-secondary">
                 {t("rplan_questions")}
               </span>
             </header>
             <div className="space-y-4">
               {dayReading.questions.map((question) => (
-                <div key={question.id} className="bg-[#1c1c1c] p-6 rounded-xl space-y-4">
-                  <p className="text-[#E8E8E8] text-sm font-sans font-medium">
+                <div key={question.id} className="bg-bg-secondary p-6 rounded-xl space-y-4">
+                  <p className="text-text-primary text-sm font-sans font-medium">
                     {question.text}
                   </p>
                   <textarea
                     value={answers[question.id] || ""}
                     onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    className="w-full bg-[#141414] border-none rounded-lg text-sm text-[#E8E8E8] placeholder-[#474552] focus:ring-1 focus:ring-[#7B6FD4] min-h-[100px] resize-none p-4"
+                    className="w-full bg-bg-primary border-none rounded-lg text-sm text-text-primary placeholder-text-tertiary focus:ring-1 focus:ring-accent min-h-[100px] resize-none p-4"
                     placeholder={
                       question.id === 1
                         ? t("rplan_write_thoughts")
@@ -329,21 +329,18 @@ function DayReadingContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-12 rounded-2xl overflow-hidden h-24 relative"
-          style={{
-            background: "linear-gradient(135deg, #7B6FD422 0%, #7B6FD408 100%)",
-          }}
+          className="mt-12 rounded-2xl overflow-hidden h-24 relative bg-gradient-to-br from-accent/[0.13] to-accent/[0.03]"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-[#141414] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-bg-primary to-transparent" />
         </motion.div>
       </main>
 
       {/* Bottom Action Bar */}
-      <footer className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#141414] via-[#141414]/90 to-transparent z-40">
+      <footer className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-bg-primary via-bg-primary/90 to-transparent z-40">
         <div className="max-w-2xl mx-auto flex gap-4">
           <button
             onClick={handleShare}
-            className="flex-1 bg-[#1c1c1c] text-[#E8E8E8] font-sans uppercase tracking-[0.15em] text-[11px] py-4 rounded-full flex items-center justify-center gap-2 hover:bg-[#252525] transition-all active:scale-95"
+            className="flex-1 bg-bg-secondary text-text-primary font-sans uppercase tracking-[0.15em] text-[11px] py-4 rounded-full flex items-center justify-center gap-2 hover:bg-bg-tertiary transition-all active:scale-95"
           >
             <Share2 className="w-4 h-4" />
             {t("rplan_share")}
@@ -351,7 +348,7 @@ function DayReadingContent() {
           <button
             onClick={handleComplete}
             disabled={isCompleted}
-            className="flex-[2] bg-[#7B6FD4] text-[#E8E8E8] font-sans uppercase tracking-[0.15em] text-[11px] font-bold py-4 rounded-full flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
+            className="flex-[2] bg-accent text-white font-sans uppercase tracking-[0.15em] text-[11px] font-bold py-4 rounded-full flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
           >
             {isCompleted ? (
               <>
@@ -385,8 +382,8 @@ export default function DayReadingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#141414] flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-[#7B6FD4] border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >
