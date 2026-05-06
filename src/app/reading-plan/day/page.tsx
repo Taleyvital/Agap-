@@ -2,6 +2,7 @@
 
 import { Suspense, useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { X, Share2, CheckCircle } from "lucide-react";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
@@ -22,6 +23,7 @@ interface DayReading {
   paragraphs: string[];
   questions: Question[];
   planId: string;
+  imageUrl: string | null;
 }
 
 function DayReadingContent() {
@@ -66,12 +68,12 @@ function DayReadingContent() {
         if (!reflectionRes.data) { setLoading(false); return; }
 
         const r = reflectionRes.data;
-        const paragraphs = (r.content as string)
+        const paragraphs = ((r.content as string | null) ?? "")
           .split(/\n\n+/)
           .map((p: string) => p.trim())
           .filter(Boolean);
 
-        const questions: Question[] = (r.reflection_prompt as string)
+        const questions: Question[] = ((r.reflection_prompt as string | null) ?? "")
           .split("|")
           .map((q: string, i: number) => ({ id: i + 1, text: q.trim() }))
           .filter((q) => q.text.length > 0);
@@ -84,6 +86,7 @@ function DayReadingContent() {
           paragraphs,
           questions,
           planId,
+          imageUrl: (r.image_url as string | null) ?? null,
         });
       } catch (error) {
         console.error("Error loading day reading:", error);
@@ -199,6 +202,26 @@ function DayReadingContent() {
       </header>
 
       <main className="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+        {/* Day image */}
+        {dayReading.imageUrl && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative mb-8 h-56 overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c]"
+          >
+            <Image
+              src={dayReading.imageUrl}
+              alt={dayReading.title}
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 672px"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/20 to-transparent" />
+          </motion.section>
+        )}
+
         {/* Bible Reference */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
