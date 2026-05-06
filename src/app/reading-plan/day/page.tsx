@@ -184,24 +184,36 @@ function DayReadingContent() {
   return (
     <div className="min-h-screen bg-[#141414]">
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-[#141414]/80 backdrop-blur-xl h-16 flex items-center justify-between px-6">
-        <div className="flex flex-col">
-          <span className="font-sans uppercase tracking-[0.15em] text-[10px] text-[#7B6FD4] font-bold">
-            {t("rplan_day_label")} {dayReading.dayNumber} • {dayReading.totalDays}
-          </span>
-          <h1 className="font-serif italic text-lg tracking-tight text-[#E8E8E8]">
-            {dayReading.title}
-          </h1>
-        </div>
-        <button
-          onClick={() => router.push(`/reading-plan/${dayReading.planId}`)}
-          className="flex items-center justify-center text-[#666666] hover:text-[#E8E8E8] transition-colors active:opacity-70"
+      <header className="fixed left-0 right-0 top-0 z-50 bg-[#141414]/90 backdrop-blur-xl">
+        <div
+          className="mx-auto flex max-w-2xl items-end justify-between px-6 pb-4"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
+            minHeight: "calc(env(safe-area-inset-top, 0px) + 76px)",
+          }}
         >
-          <X className="w-5 h-5" />
-        </button>
+          <div className="min-w-0 flex-1 pr-4">
+            <span className="block font-sans uppercase tracking-[0.15em] text-[10px] font-bold text-[#7B6FD4]">
+              {t("rplan_day_label")} {dayReading.dayNumber} • {dayReading.totalDays}
+            </span>
+            <h1 className="truncate font-serif text-lg italic tracking-tight text-[#E8E8E8]">
+              {dayReading.title}
+            </h1>
+          </div>
+          <button
+            onClick={() => router.push(`/reading-plan/${dayReading.planId}`)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#666666] transition-colors hover:text-[#E8E8E8] active:opacity-70"
+            aria-label="Fermer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </header>
 
-      <main className="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+      <main
+        className="pb-32 px-6 max-w-2xl mx-auto"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 104px)" }}
+      >
         {/* Day image */}
         {dayReading.imageUrl && (
           <motion.section
