@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Star } from "lucide-react";
+import { ArrowLeft, Check, Copy, Star } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useLanguage } from "@/lib/i18n";
 
@@ -33,7 +33,18 @@ export default function ReadingPlanDetailPage() {
   const [plan, setPlan] = useState<ReadingPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlanCompleted, setIsPlanCompleted] = useState(false);
+  const [copied, setCopied] = useState(false);
   const currentDayRef = useRef<HTMLDivElement>(null);
+
+  const handleCopyVerse = async () => {
+    if (!plan) return;
+    const text = plan.quoteReference
+      ? `${plan.description} — ${plan.quoteReference}`
+      : plan.description;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -191,14 +202,27 @@ export default function ReadingPlanDetailPage() {
             )}
 
             {/* Description as quote */}
-            <blockquote className="font-serif italic text-base text-text-secondary border-l border-accent/30 pl-4 py-1">
-              {plan.description}
-              {plan.quoteReference && (
-                <footer className="mt-2 text-[11px] font-sans tracking-[0.15em] uppercase not-italic text-text-secondary/60">
-                  — {plan.quoteReference}
-                </footer>
-              )}
-            </blockquote>
+            <div className="relative group">
+              <blockquote className="font-serif italic text-base text-text-secondary border-l border-accent/30 pl-4 py-1 pr-10">
+                {plan.description}
+                {plan.quoteReference && (
+                  <footer className="mt-2 text-[11px] font-sans tracking-[0.15em] uppercase not-italic text-text-secondary/60">
+                    — {plan.quoteReference}
+                  </footer>
+                )}
+              </blockquote>
+              <button
+                onClick={handleCopyVerse}
+                className="absolute top-1 right-0 p-1.5 rounded-lg transition-all active:scale-90"
+                title="Copier le verset"
+              >
+                {copied ? (
+                  <Check className="w-3.5 h-3.5 text-accent" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5 text-text-secondary/40 group-hover:text-text-secondary/70 transition-colors" />
+                )}
+              </button>
+            </div>
           </div>
         </motion.section>
 
