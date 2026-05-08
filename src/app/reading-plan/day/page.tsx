@@ -9,6 +9,7 @@ import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { useLanguage } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { getBooks, getChapter } from "@/lib/bible";
 
 interface Question {
   id: number;
@@ -40,8 +41,46 @@ function DayReadingContent() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [verseCardOpen, setVerseCardOpen] = useState(false);
+  const [verseText, setVerseText] = useState<string | null>(null);
+  const [verseLoading, setVerseLoading] = useState(false);
 
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!dayReading?.bibleReference) return;
+    const ref = dayReading.bibleReference;
+    const match = ref.match(/^(.+?)\s+(\d+):(\d+)(?:[–\-](\d+))?$/);
+    if (!match) return;
+
+    const bookName = match[1].trim();
+    const chapter = parseInt(match[2]);
+    const verseStart = parseInt(match[3]);
+    const verseEnd = match[4] ? parseInt(match[4]) : verseStart;
+
+    setVerseLoading(true);
+    const fetch = async () => {
+      try {
+        const books = await getBooks("FRLSG");
+        const book = books.find(
+          (b) =>
+            b.name.toLowerCase() === bookName.toLowerCase() ||
+            b.name.toLowerCase().startsWith(bookName.toLowerCase())
+        );
+        if (!book) return;
+        const verses = await getChapter("FRLSG", book.bookid, chapter);
+        const text = verses
+          .filter((v) => v.verse >= verseStart && v.verse <= verseEnd)
+          .map((v) => v.text.replace(/<[^>]*>/g, ""))
+          .join(" ");
+        if (text) setVerseText(text);
+      } catch {
+        // silently fail on low connectivity
+      } finally {
+        setVerseLoading(false);
+      }
+    };
+    void fetch();
+  }, [dayReading?.bibleReference]);
 
   useEffect(() => {
     const load = async () => {
@@ -234,7 +273,7 @@ function DayReadingContent() {
           </motion.section>
         )}
 
-        {/* Bible Reference */}
+        {/* Bible Reference + Verse Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -247,28 +286,28 @@ function DayReadingContent() {
           <h2 className="text-text-secondary mt-1 font-sans font-medium">
             {dayReading.bibleReference}
           </h2>
+
+          {(verseLoading || verseText) && (
+            <div
+              className="mt-4 dark:bg-[#1a1830] bg-accent/[0.08] rounded-xl p-5 border-l-[3px] border-accent cursor-pointer select-none"
+              onPointerDown={onScripturePointerDown}
+              onPointerUp={onScripturePointerUp}
+              onPointerLeave={onScripturePointerUp}
+            >
+              {verseLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border border-accent border-t-transparent rounded-full animate-spin" />
+                  <span className="font-sans text-xs text-text-secondary">Chargement…</span>
+                </div>
+              ) : (
+                <p className="font-serif italic text-lg leading-relaxed text-text-primary">
+                  « {verseText} »
+                </p>
+              )}
+            </div>
+          )}
         </motion.div>
 
-        {/* Scripture Card — long-press opens fullscreen */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-12 dark:bg-[#1a1830] bg-accent/[0.08] rounded-xl p-6 border-l-[3px] border-accent cursor-pointer select-none"
-          onPointerDown={onScripturePointerDown}
-          onPointerUp={onScripturePointerUp}
-          onPointerLeave={onScripturePointerUp}
-        >
-          <p className="font-serif italic text-xl leading-relaxed text-text-primary mb-4">
-            « {dayReading.bibleReference} »
-          </p>
-          <span className="font-sans uppercase tracking-[0.2em] text-[11px] text-accent font-bold">
-            {dayReading.bibleReference}
-          </span>
-          <p className="mt-3 font-sans text-[10px] text-text-tertiary uppercase tracking-widest">
-            {t("rplan_long_press")}
-          </p>
-        </motion.section>
 
         {/* Meditation / Content */}
         <motion.section
@@ -370,7 +409,7 @@ function DayReadingContent() {
         book={parsedRef.book}
         chapter={parsedRef.chapter}
         verse={parsedRef.verse}
-        text={dayReading.bibleReference}
+        text={verseText ?? dayReading.bibleReference}
         isOpen={verseCardOpen}
         onClose={() => setVerseCardOpen(false)}
       />

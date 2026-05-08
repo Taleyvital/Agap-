@@ -99,11 +99,15 @@ export default function AdminReadingPlanPage() {
   const [bpBooks, setBpBooks] = useState<BibleBook[]>([]);
   const [bpBookSearch, setBpBookSearch] = useState("");
   const [bpSelectedBook, setBpSelectedBook] = useState<BibleBook | null>(null);
-  const [bpChapter, setBpChapter] = useState(1);
+  const [bpChapterStr, setBpChapterStr] = useState("1");
   const [bpVerses, setBpVerses] = useState<BibleVerseRow[]>([]);
   const [bpLoading, setBpLoading] = useState(false);
-  const [bpVerseStart, setBpVerseStart] = useState(1);
-  const [bpVerseEnd, setBpVerseEnd] = useState(1);
+  const [bpVerseStartStr, setBpVerseStartStr] = useState("1");
+  const [bpVerseEndStr, setBpVerseEndStr] = useState("1");
+
+  const bpChapter = Math.max(1, parseInt(bpChapterStr) || 1);
+  const bpVerseStart = Math.max(1, parseInt(bpVerseStartStr) || 1);
+  const bpVerseEnd = Math.max(bpVerseStart, parseInt(bpVerseEndStr) || bpVerseStart);
 
   const loadBpBooks = useCallback(async (translation: string) => {
     setBpBooks([]);
@@ -122,8 +126,8 @@ export default function AdminReadingPlanPage() {
     try {
       const verses = await getChapter(bpTranslation, bpSelectedBook.bookid, bpChapter);
       setBpVerses(verses);
-      setBpVerseStart(1);
-      setBpVerseEnd(Math.min(3, verses.length));
+      setBpVerseStartStr("1");
+      setBpVerseEndStr(String(Math.min(3, verses.length)));
     } catch { /* ignore */ }
     finally { setBpLoading(false); }
   }, [bpSelectedBook, bpChapter, bpTranslation]);
@@ -271,7 +275,9 @@ export default function AdminReadingPlanPage() {
     setBpBookSearch("");
     setBpSelectedBook(null);
     setBpVerses([]);
-    setBpChapter(1);
+    setBpChapterStr("1");
+    setBpVerseStartStr("1");
+    setBpVerseEndStr("1");
   };
 
   const openCreateDay = () => {
@@ -826,7 +832,7 @@ export default function AdminReadingPlanPage() {
                               <button
                                 key={b.bookid}
                                 type="button"
-                                onClick={() => { setBpSelectedBook(b); setBpChapter(1); setBpVerses([]); setBpBookSearch(b.name); }}
+                                onClick={() => { setBpSelectedBook(b); setBpChapterStr("1"); setBpVerses([]); setBpBookSearch(b.name); }}
                                 className={`w-full px-4 py-2.5 text-left font-sans text-sm transition-colors ${
                                   bpSelectedBook?.bookid === b.bookid
                                     ? "bg-[#7B6FD4]/20 text-[#7B6FD4]"
@@ -850,8 +856,8 @@ export default function AdminReadingPlanPage() {
                               type="number"
                               min={1}
                               max={bpSelectedBook.chapters}
-                              value={bpChapter}
-                              onChange={(e) => setBpChapter(Math.max(1, Math.min(bpSelectedBook.chapters, Number(e.target.value))))}
+                              value={bpChapterStr}
+                              onChange={(e) => setBpChapterStr(e.target.value)}
                               className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2 font-sans text-sm text-[#E8E8E8] focus:border-[#7B6FD4] focus:outline-none"
                             />
                             <span className="font-sans text-[11px] text-[#666666] whitespace-nowrap">/ {bpSelectedBook.chapters}</span>
@@ -879,8 +885,8 @@ export default function AdminReadingPlanPage() {
                               type="number"
                               min={1}
                               max={bpVerses.length}
-                              value={bpVerseStart}
-                              onChange={(e) => setBpVerseStart(Math.max(1, Math.min(bpVerses.length, Number(e.target.value))))}
+                              value={bpVerseStartStr}
+                              onChange={(e) => setBpVerseStartStr(e.target.value)}
                               className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2 font-sans text-sm text-[#E8E8E8] focus:border-[#7B6FD4] focus:outline-none"
                             />
                           </div>
@@ -891,8 +897,8 @@ export default function AdminReadingPlanPage() {
                               type="number"
                               min={bpVerseStart}
                               max={bpVerses.length}
-                              value={bpVerseEnd}
-                              onChange={(e) => setBpVerseEnd(Math.max(bpVerseStart, Math.min(bpVerses.length, Number(e.target.value))))}
+                              value={bpVerseEndStr}
+                              onChange={(e) => setBpVerseEndStr(e.target.value)}
                               className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2 font-sans text-sm text-[#E8E8E8] focus:border-[#7B6FD4] focus:outline-none"
                             />
                           </div>
