@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   ArrowLeft, Plus, Pencil, Trash2, ChevronRight, ChevronLeft,
-  BookOpen, ImageIcon, Loader2, Check, X, GripVertical,
+  BookOpen, ImageIcon, Loader2, Check, X, GripVertical, Copy,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -89,7 +89,14 @@ export default function AdminReadingPlanPage() {
   const [dayImagePreview, setDayImagePreview] = useState<string | null>(null);
   const [daySaving, setDaySaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [copiedRef, setCopiedRef] = useState<string | null>(null);
   const dayImageRef = useRef<HTMLInputElement>(null);
+
+  const handleCopyRef = async (ref: string, key: string) => {
+    await navigator.clipboard.writeText(ref);
+    setCopiedRef(key);
+    setTimeout(() => setCopiedRef(null), 2000);
+  };
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -463,7 +470,20 @@ export default function AdminReadingPlanPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-sans text-sm text-[#E8E8E8] truncate">{day.title}</p>
                         {day.bible_reference && (
-                          <p className="font-sans text-[11px] text-[#666666]">{day.bible_reference}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <p className="font-sans text-[11px] text-[#666666]">{day.bible_reference}</p>
+                            <button
+                              type="button"
+                              onClick={() => void handleCopyRef(day.bible_reference!, `list-${day.id}`)}
+                              className="flex items-center justify-center transition-all active:scale-90"
+                            >
+                              {copiedRef === `list-${day.id}` ? (
+                                <Check className="h-3 w-3 text-[#7B6FD4]" />
+                              ) : (
+                                <Copy className="h-3 w-3 text-[#666666]/50 hover:text-[#666666]" />
+                              )}
+                            </button>
+                          </div>
                         )}
                       </div>
                       <button
@@ -709,13 +729,28 @@ export default function AdminReadingPlanPage() {
               {/* Bible reference */}
               <div>
                 <p className="mb-1.5 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Référence biblique</p>
-                <input
-                  type="text"
-                  value={dayForm.bible_reference}
-                  onChange={(e) => setDayForm((p) => ({ ...p, bible_reference: e.target.value }))}
-                  placeholder="Ex : Philippiens 4:7"
-                  className="w-full rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3 font-sans text-sm text-[#E8E8E8] placeholder:text-[#666666] focus:border-[#7B6FD4] focus:outline-none"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={dayForm.bible_reference}
+                    onChange={(e) => setDayForm((p) => ({ ...p, bible_reference: e.target.value }))}
+                    placeholder="Ex : Philippiens 4:7"
+                    className="flex-1 rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3 font-sans text-sm text-[#E8E8E8] placeholder:text-[#666666] focus:border-[#7B6FD4] focus:outline-none"
+                  />
+                  {dayForm.bible_reference.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyRef(dayForm.bible_reference, "form")}
+                      className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl border border-[#2a2a2a] bg-[#141414] text-[#666666] transition-all active:scale-90 hover:border-[#7B6FD4]/40 hover:text-[#7B6FD4]"
+                    >
+                      {copiedRef === "form" ? (
+                        <Check className="h-4 w-4 text-[#7B6FD4]" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Content */}
