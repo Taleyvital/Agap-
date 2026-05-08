@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   ArrowLeft, Plus, Pencil, Trash2, ChevronRight, ChevronLeft,
-  BookOpen, ImageIcon, Loader2, Check, X, GripVertical, Copy,
+  BookOpen, ImageIcon, Loader2, Check, X, GripVertical, Search, ChevronDown,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { getBooks, getChapter, TRANSLATIONS } from "@/lib/bible";
+import type { BibleBook, BibleVerseRow } from "@/lib/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -89,14 +91,55 @@ export default function AdminReadingPlanPage() {
   const [dayImagePreview, setDayImagePreview] = useState<string | null>(null);
   const [daySaving, setDaySaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [copiedRef, setCopiedRef] = useState<string | null>(null);
   const dayImageRef = useRef<HTMLInputElement>(null);
 
-  const handleCopyRef = async (ref: string, key: string) => {
-    await navigator.clipboard.writeText(ref);
-    setCopiedRef(key);
-    setTimeout(() => setCopiedRef(null), 2000);
+  // ── Bible picker state ──────────────────────────────────────────────────────
+  const [bpOpen, setBpOpen] = useState(false);
+  const [bpTranslation, setBpTranslation] = useState("FRLSG");
+  const [bpBooks, setBpBooks] = useState<BibleBook[]>([]);
+  const [bpBookSearch, setBpBookSearch] = useState("");
+  const [bpSelectedBook, setBpSelectedBook] = useState<BibleBook | null>(null);
+  const [bpChapter, setBpChapter] = useState(1);
+  const [bpVerses, setBpVerses] = useState<BibleVerseRow[]>([]);
+  const [bpLoading, setBpLoading] = useState(false);
+  const [bpVerseStart, setBpVerseStart] = useState(1);
+  const [bpVerseEnd, setBpVerseEnd] = useState(1);
+
+  const loadBpBooks = useCallback(async (translation: string) => {
+    setBpBooks([]);
+    setBpSelectedBook(null);
+    setBpVerses([]);
+    try {
+      const books = await getBooks(translation);
+      setBpBooks(books);
+    } catch { /* ignore */ }
+  }, []);
+
+  const loadBpChapter = useCallback(async () => {
+    if (!bpSelectedBook) return;
+    setBpLoading(true);
+    setBpVerses([]);
+    try {
+      const verses = await getChapter(bpTranslation, bpSelectedBook.bookid, bpChapter);
+      setBpVerses(verses);
+      setBpVerseStart(1);
+      setBpVerseEnd(Math.min(3, verses.length));
+    } catch { /* ignore */ }
+    finally { setBpLoading(false); }
+  }, [bpSelectedBook, bpChapter, bpTranslation]);
+
+  const bpApplyReference = () => {
+    if (!bpSelectedBook) return;
+    const ref = bpVerseEnd > bpVerseStart
+      ? `${bpSelectedBook.name} ${bpChapter}:${bpVerseStart}-${bpVerseEnd}`
+      : `${bpSelectedBook.name} ${bpChapter}:${bpVerseStart}`;
+    setDayForm((p) => ({ ...p, bible_reference: ref }));
+    setBpOpen(false);
   };
+
+  useEffect(() => {
+    if (bpOpen && bpBooks.length === 0) void loadBpBooks(bpTranslation);
+  }, [bpOpen, bpBooks.length, bpTranslation, loadBpBooks]);
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -223,11 +266,20 @@ export default function AdminReadingPlanPage() {
   };
 
   // ── Day CRUD ────────────────────────────────────────────────────────────────
+  const resetBpState = () => {
+    setBpOpen(false);
+    setBpBookSearch("");
+    setBpSelectedBook(null);
+    setBpVerses([]);
+    setBpChapter(1);
+  };
+
   const openCreateDay = () => {
     const nextNum = days.length > 0 ? Math.max(...days.map((d) => d.day_number)) + 1 : 1;
     setDayForm({ day_number: nextNum, title: "", bible_reference: "", content: "", questions: [""], image_url: "" });
     setEditingDay(null);
     setDayImageFile(null); setDayImagePreview(null);
+    resetBpState();
     setDaySheet("create");
   };
 
@@ -244,6 +296,7 @@ export default function AdminReadingPlanPage() {
     setEditingDay(day);
     setDayImageFile(null);
     setDayImagePreview(day.image_url ?? null);
+    resetBpState();
     setDaySheet("edit");
   };
 
@@ -470,20 +523,7 @@ export default function AdminReadingPlanPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-sans text-sm text-[#E8E8E8] truncate">{day.title}</p>
                         {day.bible_reference && (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <p className="font-sans text-[11px] text-[#666666]">{day.bible_reference}</p>
-                            <button
-                              type="button"
-                              onClick={() => void handleCopyRef(day.bible_reference!, `list-${day.id}`)}
-                              className="flex items-center justify-center transition-all active:scale-90"
-                            >
-                              {copiedRef === `list-${day.id}` ? (
-                                <Check className="h-3 w-3 text-[#7B6FD4]" />
-                              ) : (
-                                <Copy className="h-3 w-3 text-[#666666]/50 hover:text-[#666666]" />
-                              )}
-                            </button>
-                          </div>
+                          <p className="font-sans text-[11px] text-[#666666]">{day.bible_reference}</p>
                         )}
                       </div>
                       <button
@@ -728,29 +768,161 @@ export default function AdminReadingPlanPage() {
 
               {/* Bible reference */}
               <div>
-                <p className="mb-1.5 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Référence biblique</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={dayForm.bible_reference}
-                    onChange={(e) => setDayForm((p) => ({ ...p, bible_reference: e.target.value }))}
-                    placeholder="Ex : Philippiens 4:7"
-                    className="flex-1 rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3 font-sans text-sm text-[#E8E8E8] placeholder:text-[#666666] focus:border-[#7B6FD4] focus:outline-none"
-                  />
-                  {dayForm.bible_reference.trim() && (
-                    <button
-                      type="button"
-                      onClick={() => void handleCopyRef(dayForm.bible_reference, "form")}
-                      className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl border border-[#2a2a2a] bg-[#141414] text-[#666666] transition-all active:scale-90 hover:border-[#7B6FD4]/40 hover:text-[#7B6FD4]"
-                    >
-                      {copiedRef === "form" ? (
-                        <Check className="h-4 w-4 text-[#7B6FD4]" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </button>
-                  )}
+                <div className="mb-1.5 flex items-center justify-between">
+                  <p className="font-sans text-[10px] uppercase tracking-wider text-[#666666]">Référence biblique</p>
+                  <button
+                    type="button"
+                    onClick={() => { setBpOpen((o) => !o); setBpBookSearch(""); }}
+                    className="flex items-center gap-1 rounded-lg border border-[#7B6FD4]/30 px-2 py-1 font-sans text-[10px] text-[#7B6FD4]"
+                  >
+                    <Search className="h-3 w-3" />
+                    Chercher dans la Bible
+                  </button>
                 </div>
+
+                <input
+                  type="text"
+                  value={dayForm.bible_reference}
+                  onChange={(e) => setDayForm((p) => ({ ...p, bible_reference: e.target.value }))}
+                  placeholder="Ex : Philippiens 4:7"
+                  className="w-full rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3 font-sans text-sm text-[#E8E8E8] placeholder:text-[#666666] focus:border-[#7B6FD4] focus:outline-none"
+                />
+
+                {/* ── Bible Picker ── */}
+                {bpOpen && (
+                  <div className="mt-3 rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 space-y-3">
+                    {/* Translation */}
+                    <div>
+                      <p className="mb-1 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Traduction</p>
+                      <select
+                        value={bpTranslation}
+                        onChange={(e) => { setBpTranslation(e.target.value); void loadBpBooks(e.target.value); }}
+                        className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2 font-sans text-sm text-[#E8E8E8] focus:border-[#7B6FD4] focus:outline-none"
+                      >
+                        {TRANSLATIONS.flatMap((g) => g.items).map((t) => (
+                          <option key={t.slug} value={t.slug}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Book filter */}
+                    <div>
+                      <p className="mb-1 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Livre</p>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#666666]" />
+                        <input
+                          type="text"
+                          value={bpBookSearch}
+                          onChange={(e) => setBpBookSearch(e.target.value)}
+                          placeholder="Filtrer un livre…"
+                          className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] pl-9 pr-4 py-2 font-sans text-sm text-[#E8E8E8] placeholder:text-[#666666] focus:border-[#7B6FD4] focus:outline-none"
+                        />
+                      </div>
+                      {bpBookSearch.trim() && (
+                        <div className="mt-1.5 max-h-40 overflow-y-auto rounded-xl border border-[#2a2a2a] bg-[#1c1c1c]">
+                          {bpBooks
+                            .filter((b) => b.name.toLowerCase().includes(bpBookSearch.toLowerCase()))
+                            .map((b) => (
+                              <button
+                                key={b.bookid}
+                                type="button"
+                                onClick={() => { setBpSelectedBook(b); setBpChapter(1); setBpVerses([]); setBpBookSearch(b.name); }}
+                                className={`w-full px-4 py-2.5 text-left font-sans text-sm transition-colors ${
+                                  bpSelectedBook?.bookid === b.bookid
+                                    ? "bg-[#7B6FD4]/20 text-[#7B6FD4]"
+                                    : "text-[#E8E8E8] hover:bg-[#2a2a2a]"
+                                }`}
+                              >
+                                {b.name}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Chapter + Load */}
+                    {bpSelectedBook && (
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <p className="mb-1 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Chapitre</p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min={1}
+                              max={bpSelectedBook.chapters}
+                              value={bpChapter}
+                              onChange={(e) => setBpChapter(Math.max(1, Math.min(bpSelectedBook.chapters, Number(e.target.value))))}
+                              className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2 font-sans text-sm text-[#E8E8E8] focus:border-[#7B6FD4] focus:outline-none"
+                            />
+                            <span className="font-sans text-[11px] text-[#666666] whitespace-nowrap">/ {bpSelectedBook.chapters}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void loadBpChapter()}
+                          disabled={bpLoading}
+                          className="flex items-center gap-1.5 rounded-xl bg-[#7B6FD4]/20 border border-[#7B6FD4]/30 px-3 py-2 font-sans text-sm text-[#7B6FD4] disabled:opacity-50"
+                        >
+                          {bpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          Charger
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Verse range */}
+                    {bpVerses.length > 0 && (
+                      <>
+                        <div className="flex gap-2 items-center">
+                          <div className="flex-1">
+                            <p className="mb-1 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Verset début</p>
+                            <input
+                              type="number"
+                              min={1}
+                              max={bpVerses.length}
+                              value={bpVerseStart}
+                              onChange={(e) => setBpVerseStart(Math.max(1, Math.min(bpVerses.length, Number(e.target.value))))}
+                              className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2 font-sans text-sm text-[#E8E8E8] focus:border-[#7B6FD4] focus:outline-none"
+                            />
+                          </div>
+                          <span className="font-sans text-xs text-[#666666] mt-5">→</span>
+                          <div className="flex-1">
+                            <p className="mb-1 font-sans text-[10px] uppercase tracking-wider text-[#666666]">Verset fin</p>
+                            <input
+                              type="number"
+                              min={bpVerseStart}
+                              max={bpVerses.length}
+                              value={bpVerseEnd}
+                              onChange={(e) => setBpVerseEnd(Math.max(bpVerseStart, Math.min(bpVerses.length, Number(e.target.value))))}
+                              className="w-full rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2 font-sans text-sm text-[#E8E8E8] focus:border-[#7B6FD4] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Verse preview */}
+                        <div className="rounded-xl border border-[#7B6FD4]/20 bg-[#7B6FD4]/5 px-4 py-3">
+                          <p className="font-sans text-[10px] uppercase tracking-wider text-[#7B6FD4]/60 mb-2">
+                            {bpSelectedBook!.name} {bpChapter}:{bpVerseStart}{bpVerseEnd > bpVerseStart ? `–${bpVerseEnd}` : ""}
+                          </p>
+                          <p className="font-serif italic text-sm text-[#E8E8E8] leading-relaxed">
+                            {bpVerses
+                              .filter((v) => v.verse >= bpVerseStart && v.verse <= bpVerseEnd)
+                              .map((v) => v.text.replace(/<[^>]*>/g, ""))
+                              .join(" ")}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={bpApplyReference}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#7B6FD4] py-2.5 font-sans text-sm font-semibold text-white"
+                        >
+                          <Check className="h-4 w-4" />
+                          Utiliser cette référence
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Content */}
