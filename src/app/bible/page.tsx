@@ -654,10 +654,10 @@ function BiblePageContent() {
               type="button"
               onClick={() => setTranslationSheetOpen(true)}
               style={{
-                background: "#1c1c1c",
-                border: "0.5px solid #2a2a2a",
+                background: "#f4f4f5",
+                border: "none",
                 borderRadius: "10px",
-                color: "#E8E8E8",
+                color: "#18181b",
                 fontFamily: "var(--font-sans)",
                 fontSize: "13px",
                 padding: "5px 12px",
@@ -668,7 +668,7 @@ function BiblePageContent() {
               }}
             >
               <span>{translation}</span>
-              <span style={{ color: "#666666", fontSize: "10px" }}>▾</span>
+              <span style={{ color: "#71717a", fontSize: "10px" }}>▾</span>
             </button>
 
             {/* Compare toggle button */}
@@ -681,12 +681,13 @@ function BiblePageContent() {
                 });
               }}
               style={{
-                background: compareMode ? "rgba(123,111,212,0.15)" : "#1c1c1c",
-                border: compareMode ? "0.5px solid rgba(123,111,212,0.5)" : "0.5px solid #2a2a2a",
+                background: compareMode ? "#ffffff" : "#f4f4f5",
+                border: "none",
                 borderRadius: "10px",
-                color: compareMode ? "#7B6FD4" : "#666666",
+                color: "#18181b",
                 fontFamily: "var(--font-sans)",
                 fontSize: "12px",
+                fontWeight: compareMode ? 700 : 400,
                 padding: "5px 12px",
                 cursor: "pointer",
                 letterSpacing: "0.05em",
@@ -702,12 +703,13 @@ function BiblePageContent() {
                 type="button"
                 onClick={() => setStrongMode((prev) => !prev)}
                 style={{
-                  background: strongMode ? "rgba(123,111,212,0.15)" : "#1c1c1c",
-                  border: strongMode ? "0.5px solid rgba(123,111,212,0.5)" : "0.5px solid #2a2a2a",
+                  background: strongMode ? "#ffffff" : "#f4f4f5",
+                  border: "none",
                   borderRadius: "10px",
-                  color: strongMode ? "#7B6FD4" : "#666666",
+                  color: "#18181b",
                   fontFamily: "var(--font-sans)",
                   fontSize: "12px",
+                  fontWeight: strongMode ? 700 : 400,
                   padding: "5px 12px",
                   cursor: "pointer",
                   letterSpacing: "0.05em",
@@ -724,10 +726,10 @@ function BiblePageContent() {
                 type="button"
                 onClick={() => router.push("/bible/stories")}
                 style={{
-                  background:     "#1c1c1c",
-                  border:         "0.5px solid rgba(123,111,212,0.3)",
+                  background:     "#f4f4f5",
+                  border:         "none",
                   borderRadius:   "10px",
-                  color:          "#7B6FD4",
+                  color:          "#18181b",
                   fontFamily:     "var(--font-sans)",
                   fontSize:       "12px",
                   padding:        "5px 10px",
