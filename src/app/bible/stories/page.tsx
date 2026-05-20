@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChevronLeft, Play, Sparkles } from "lucide-react";
@@ -28,7 +28,25 @@ function StoriesContent() {
   const [customChar, setCustomChar]   = useState(searchParams.get("customChar") ?? "");
   const [generating, setGenerating]   = useState(false);
   const [genError, setGenError]       = useState("");
+  const [isDark, setIsDark]           = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setIsDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const t = {
+    bg:      isDark ? "#141414" : "#ffffff",
+    card:    isDark ? "#1c1c1c" : "#f5f5f5",
+    border:  isDark ? "#2a2a2a" : "#e5e5e5",
+    text:    isDark ? "#E8E8E8" : "#1a1a1a",
+    textSub: isDark ? "#555555" : "#888888",
+    inputBg: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+  };
 
   function goToStory(passageRef: string, character: string, bookId?: number, chapter?: number) {
     const params = new URLSearchParams({ character });
@@ -51,30 +69,30 @@ function StoriesContent() {
 
   return (
     <AppShell>
-      <div style={{ background: "#141414", minHeight: "100vh", paddingBottom: 32 }}>
+      <div style={{ background: t.bg, minHeight: "100vh", paddingBottom: 32 }}>
 
         {/* ── Header ──────────────────────────────────────── */}
         <div style={{ padding: "56px 20px 0" }}>
           <button
             type="button"
             onClick={() => router.back()}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#666", marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: t.textSub, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}
           >
             <ChevronLeft size={18} />
             <span style={{ fontFamily: "var(--font-sans)", fontSize: 13 }}>Bible</span>
           </button>
 
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 22, color: "#E8E8E8", margin: 0, lineHeight: 1.2 }}>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 22, color: t.text, margin: 0, lineHeight: 1.2 }}>
             Bible Immersive
           </h1>
-          <p style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "#666", fontStyle: "italic", marginTop: 6 }}>
+          <p style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: t.textSub, fontStyle: "italic", marginTop: 6 }}>
             Vis la Parole de l&apos;intérieur
           </p>
         </div>
 
         {/* ── Carousel "Histoires populaires" ─────────────── */}
         <div style={{ marginTop: 32 }}>
-          <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "#555", letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 20px", marginBottom: 14 }}>
+          <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: t.textSub, letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 20px", marginBottom: 14 }}>
             Histoires populaires
           </p>
 
@@ -94,6 +112,7 @@ function StoriesContent() {
                 key={story.passageRef}
                 story={story}
                 index={i}
+                isDark={isDark}
                 onPress={() => goToStory(story.passageRef, story.character, story.bookId, story.chapter)}
               />
             ))}
@@ -107,8 +126,8 @@ function StoriesContent() {
           </p>
 
           <div style={{
-            background: "#1c1c1c",
-            border: "0.5px solid #2a2a2a",
+            background: t.card,
+            border: `0.5px solid ${t.border}`,
             borderRadius: 16,
             padding: "20px 18px",
           }}>
@@ -117,8 +136,8 @@ function StoriesContent() {
                 <Sparkles size={16} color="#7B6FD4" />
               </div>
               <div>
-                <p style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "#E8E8E8", margin: 0 }}>Ton histoire personnalisée</p>
-                <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "#555", margin: 0 }}>L&apos;IA compose le récit en ~10 secondes</p>
+                <p style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: t.text, margin: 0 }}>Ton histoire personnalisée</p>
+                <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: t.textSub, margin: 0 }}>L&apos;IA compose le récit en ~10 secondes</p>
               </div>
             </div>
 
@@ -126,14 +145,14 @@ function StoriesContent() {
               value={customRef}
               onChange={(e) => setCustomRef(e.target.value)}
               placeholder="Référence biblique (ex: Jean 3)"
-              style={inputStyle}
+              style={{ ...inputStyle, border: `0.5px solid ${t.border}`, color: t.text, background: t.inputBg }}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
             />
             <input
               value={customChar}
               onChange={(e) => setCustomChar(e.target.value)}
               placeholder="Personnage principal (ex: Nicodème)"
-              style={{ ...inputStyle, marginTop: 10 }}
+              style={{ ...inputStyle, marginTop: 10, border: `0.5px solid ${t.border}`, color: t.text, background: t.inputBg }}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
             />
 
@@ -194,10 +213,12 @@ function StoriesContent() {
 function StoryCard({
   story,
   index,
+  isDark,
   onPress,
 }: {
   story: typeof PRESET_STORIES[number];
   index: number;
+  isDark: boolean;
   onPress: () => void;
 }) {
   return (
@@ -212,8 +233,8 @@ function StoryCard({
         flexShrink: 0,
         width: 160,
         height: 200,
-        background: "#1c1c1c",
-        border: "0.5px solid #2a2a2a",
+        background: isDark ? "#1c1c1c" : "#f5f5f5",
+        border: `0.5px solid ${isDark ? "#2a2a2a" : "#e5e5e5"}`,
         borderRadius: 16,
         padding: "16px 14px",
         cursor: "pointer",
@@ -242,14 +263,14 @@ function StoryCard({
       </div>
 
       <div>
-        <p style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "#E8E8E8", margin: "0 0 4px", lineHeight: 1.2 }}>
+        <p style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: isDark ? "#E8E8E8" : "#1a1a1a", margin: "0 0 4px", lineHeight: 1.2 }}>
           {story.character}
         </p>
         <p style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "#7B6FD4", margin: "0 0 6px" }}>
           {story.title}
         </p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontFamily: "var(--font-sans)", fontSize: 10, color: "#555" }}>~3 min</span>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 10, color: isDark ? "#555" : "#888" }}>~3 min</span>
           <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(123,111,212,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Play size={10} color="#7B6FD4" fill="#7B6FD4" />
           </div>
@@ -262,11 +283,11 @@ function StoryCard({
 // ── Helpers ──────────────────────────────────────────────────
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(255,255,255,0.04)",
+  background: "transparent",
   border: "0.5px solid #2a2a2a",
   borderRadius: 10,
   padding: "12px 14px",
-  color: "#E8E8E8",
+  color: "inherit",
   fontFamily: "var(--font-sans)",
   fontSize: 14,
   outline: "none",

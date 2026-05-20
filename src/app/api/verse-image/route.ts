@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getVerseBackground } from '@/lib/verseImage'
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 // Explicitly reference env var to ensure it's included in serverless bundle
 const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY
