@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, BookOpen } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { useLanguage } from "@/lib/i18n";
 
 interface ReadingPlan {
@@ -38,7 +38,7 @@ export default function ReadingPlanPage() {
     const init = async () => {
       try {
         const supabase = createSupabaseBrowserClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await getAuthUser(supabase);
         if (!user) { router.push("/login"); return; }
 
         const { data } = await supabase
@@ -165,7 +165,7 @@ export default function ReadingPlanPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                      onClick={() => router.push(`/reading-plan/${plan.id}`)}
+                      onClick={() => router.push(`/reading-plan/_?id=${plan.id}`)}
                       className="group relative flex flex-col bg-bg-secondary rounded-[16px] overflow-hidden border border-separator hover:bg-bg-tertiary transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-sm"
                     >
                       {/* Gradient Header or Cover Image */}

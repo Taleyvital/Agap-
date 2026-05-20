@@ -178,14 +178,11 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
         if (!blob) return;
         const filename = `${bookUpper}-${chapter}-${verse}.png`;
 
-        if (navigator.share) {
-          const file = new File([blob], filename, { type: "image/png" });
-          try {
-            await navigator.share({ files: [file], title: `${bookUpper} ${coords}`, text });
-          } catch {
-            // User cancelled — no-op
-          }
-        } else {
+        const file = new File([blob], filename, { type: "image/png" });
+        try {
+          const { share } = await import("@/lib/share");
+          await share({ files: [file], title: `${bookUpper} ${coords}`, text });
+        } catch {
           // Desktop fallback: download
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -468,6 +465,10 @@ export function VerseFullCard({ book, chapter, verse, text, isOpen, onClose, bac
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                  drag="y"
+                  dragConstraints={{ top: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.4 }}
+                  onDragEnd={(_, info) => { if (info.offset.y > 80) setShowImagePicker(false); }}
                   className="fixed inset-x-0 bottom-0 z-[260] mx-auto max-w-[430px] rounded-t-3xl bg-bg-secondary border-t border-x border-separator"
                 >
                   <div className="p-6">

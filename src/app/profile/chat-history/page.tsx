@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, MessageCircle, Trash2, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { useLanguage } from "@/lib/i18n";
 
 interface ChatMessage {
@@ -26,7 +26,7 @@ export default function ChatHistoryPage() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) {
         router.push("/login");
         return;
@@ -79,7 +79,7 @@ export default function ChatHistoryPage() {
     if (!confirm(t("chat_history_clear_all_confirm"))) return;
 
     const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser(supabase);
     if (!user) return;
 
     const { error } = await supabase

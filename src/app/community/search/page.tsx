@@ -8,7 +8,7 @@ import Link from "next/link";
 import { ArrowLeft, Search, UserCheck, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 
 interface PublicProfile {
   user_id: string;
@@ -40,7 +40,7 @@ export default function CommunitySearchPage() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) { router.push("/login"); return; }
       setCurrentUserId(user.id);
 

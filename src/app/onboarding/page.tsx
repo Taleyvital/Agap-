@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { pickAnonymousName } from "@/lib/anonymous-name";
 import { Church, BookOpen, Cross, Flame, HelpCircle } from "lucide-react";
 import AvatarBuilder, { type AvatarConfig } from "@/components/AvatarBuilder";
@@ -81,7 +81,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (user) {
         const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
         if (profile) { router.replace("/home"); return; }
@@ -105,7 +105,7 @@ export default function OnboardingPage() {
     setLoading(true);
     setError(null);
     const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser(supabase);
     if (!user) { setError("Session introuvable. Réessaie."); setLoading(false); return; }
     const anonymous_name = pickAnonymousName();
     const { error: upsertError } = await supabase.from("profiles").upsert(

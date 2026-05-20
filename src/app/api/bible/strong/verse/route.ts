@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-static";
+
 // bolls.life book ID (1-66) → OSIS code used by STEP Bible
 const OSIS: Record<number, string> = {
   1: "Gen", 2: "Exod", 3: "Lev", 4: "Num", 5: "Deut",

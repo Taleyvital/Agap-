@@ -33,7 +33,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/AppShell";
 import { PremiumPaywall } from "@/components/ui/PremiumPaywall";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar, setAvatarCacheMode, type AvatarDisplayMode } from "@/components/UserAvatar";
@@ -132,7 +132,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) return;
       setUser(user);
       const { data } = await supabase
@@ -329,7 +329,7 @@ export default function ProfilePage() {
     const supabase = createSupabaseBrowserClient();
 
     // Verify current password via re-auth
-    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const authUser = await getAuthUser(supabase);
     const email = authUser?.email ?? "";
     const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pwCurrent });
     if (signInErr) { setPwError("Mot de passe actuel incorrect."); setPwLoading(false); return; }
@@ -710,6 +710,10 @@ export default function ProfilePage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) setAvatarMenuOpen(false); }}
               className="fixed bottom-0 left-0 right-0 z-[61] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary px-6 pb-10 pt-5"
             >
               {/* Handle */}
@@ -834,6 +838,10 @@ export default function ProfilePage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 26, stiffness: 260 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) setThemeSheetOpen(false); }}
               className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary p-6 shadow-2xl overflow-y-auto"
               style={{ maxHeight: "90vh" }}
             >
@@ -1023,6 +1031,10 @@ export default function ProfilePage() {
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 26, stiffness: 260 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) setPwSheetOpen(false); }}
               className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary p-6 shadow-2xl"
             >
               {/* Handle */}

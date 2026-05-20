@@ -3,6 +3,10 @@ import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/s
 import { awardXP } from "@/lib/xp";
 import { sendPushNotification } from "@/lib/push";
 
+export async function generateStaticParams() {
+  return [{ id: "_" }];
+}
+
 export async function POST(
   request: Request,
   { params }: { params: { id: string } },
@@ -65,7 +69,6 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
-  // Unused — kept for REST completeness
   return NextResponse.json({ id: params.id });
 }
 

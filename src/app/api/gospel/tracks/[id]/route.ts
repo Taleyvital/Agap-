@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 
+export async function generateStaticParams() {
+  return [{ id: "_" }];
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } },
@@ -85,7 +89,7 @@ export async function GET(
 ) {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  if (!user) return NextResponse.json({ track: null }, { status: 200 });
 
   const service = createSupabaseServiceClient();
 
@@ -97,7 +101,7 @@ export async function GET(
     .maybeSingle();
 
   if (error || !track) {
-    return NextResponse.json({ error: "Track introuvable" }, { status: 404 });
+    return NextResponse.json({ track: null }, { status: 200 });
   }
 
   // Generate signed URL for private audio (1h expiry)

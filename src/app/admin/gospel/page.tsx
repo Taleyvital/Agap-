@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Play, Pause, Check, X, ChevronLeft, Music } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import type { GospelTrack } from "@/types/gospel";
 import { formatDuration } from "@/types/gospel";
 
@@ -25,7 +25,7 @@ export default function AdminGospelPage() {
   // Check admin status
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    getAuthUser(supabase).then(async (user) => {
       if (!user) { router.replace("/login"); return; }
       const { data } = await supabase
         .from("profiles")

@@ -7,7 +7,7 @@ import { ChevronLeft, Trash2, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { getChapter } from "@/lib/bible";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import type { BibleVerseRow } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
 
@@ -29,7 +29,7 @@ export default function SavedVersesPage() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) {
         router.push("/login");
         return;

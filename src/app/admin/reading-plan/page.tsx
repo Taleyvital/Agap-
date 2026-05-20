@@ -7,7 +7,7 @@ import {
   ArrowLeft, Plus, Pencil, Trash2, ChevronRight, ChevronLeft,
   BookOpen, ImageIcon, Loader2, Check, X, GripVertical, Search, ChevronDown,
 } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { getBooks, getChapter, TRANSLATIONS } from "@/lib/bible";
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
 
@@ -148,7 +148,7 @@ export default function AdminReadingPlanPage() {
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    getAuthUser(supabase).then(async (user) => {
       if (!user) { router.replace("/login"); return; }
       const { data } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
       if (!data?.is_admin) { router.replace("/home"); return; }

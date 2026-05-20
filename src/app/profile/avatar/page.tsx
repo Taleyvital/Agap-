@@ -6,7 +6,7 @@ import { ChevronLeft, Check, Lock, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import AvatarBuilder, { type AvatarConfig } from "@/components/AvatarBuilder";
 import { invalidateAvatarCache } from "@/components/UserAvatar";
 
@@ -153,7 +153,7 @@ export default function AvatarEditorPage() {
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await sb.auth.getUser();
+      const user = await getAuthUser(sb);
       if (!user) return;
       setUserId(user.id);
 

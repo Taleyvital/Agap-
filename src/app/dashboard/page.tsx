@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, BookOpen, Timer, Highlighter, MessageSquare, Heart, Star, Zap, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { LEVELS, getLevelForXP, getNextLevel } from "@/lib/xp-shared";
 import { useLanguage } from "@/lib/i18n";
 
@@ -121,7 +121,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) { router.push("/login"); return; }
 
       const [levelRes, xpRes] = await Promise.all([

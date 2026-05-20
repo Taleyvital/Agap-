@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Upload, Play, Pause, CheckCircle, Music, Image as ImageIcon } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { AppShell } from "@/components/layout/AppShell";
 import { GOSPEL_GENRES, GOSPEL_LANGUAGES } from "@/types/gospel";
 
@@ -83,7 +83,7 @@ export default function GospelUploadPage() {
 
     setIsUploading(true);
     const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser(supabase);
     if (!user) { setError("Non authentifié"); setIsUploading(false); return; }
 
     const ext  = file.name.split(".").pop() ?? "mp3";
@@ -125,7 +125,7 @@ export default function GospelUploadPage() {
     setCoverPreview(URL.createObjectURL(file));
 
     const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser(supabase);
     if (!user) return;
 
     const ext  = file.name.split(".").pop() ?? "jpg";

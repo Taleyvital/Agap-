@@ -9,7 +9,7 @@ import { FadeUp } from "@/components/home/HomeMotion";
 import { Card } from "@/components/ui/Card";
 import { VerseImageCard } from "@/components/ui/VerseImageCard";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { useEffect } from "react";
 import { useCommunityUnread } from "@/hooks/useCommunityUnread";
 import { useLanguage } from "@/lib/i18n";
@@ -96,7 +96,7 @@ export default function HomePage() {
     const supabase = createSupabaseBrowserClient();
 
     const checkAuth = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const authUser = await getAuthUser(supabase);
       if (!authUser) {
         router.replace("/login");
         return;
@@ -117,18 +117,43 @@ export default function HomePage() {
       setProfile(profileData);
     };
     
-    // Fetch daily image
+    const DAILY_KEYWORDS = [
+      'sunrise dawn golden light nature',
+      'peaceful lake mountain reflection',
+      'forest light rays morning mist',
+      'ocean waves sunset dramatic sky',
+      'starry night cosmos universe',
+      'flowers field bloom spring',
+      'waterfall nature forest green',
+      'desert sand dunes golden hour',
+      'snow mountain peak winter',
+      'autumn leaves forest path',
+      'cherry blossom spring pink',
+      'meadow wildflowers nature',
+      'northern lights aurora sky',
+      'cliff ocean dramatic landscape',
+      'misty mountains sunrise fog',
+    ];
+
     const fetchDailyImage = async () => {
+      const key = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
+      if (!key) return;
       try {
-        const res = await fetch('/api/daily-image')
-        if (!res.ok) throw new Error('fetch failed')
-        const data = await res.json()
-        if (data.url) setDailyImage(data.url)
-      } catch (error) {
-        console.error('Failed to fetch daily image:', error)
+        const today = new Date();
+        const dayIndex = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+        const keyword = DAILY_KEYWORDS[dayIndex % DAILY_KEYWORDS.length];
+        const res = await fetch(
+          `https://api.unsplash.com/photos/random?query=${encodeURIComponent(keyword)}&orientation=portrait&content_filter=high`,
+          { headers: { Authorization: `Client-ID ${key}` } }
+        );
+        if (!res.ok) return;
+        const data = await res.json() as { urls: { regular: string } };
+        if (data.urls?.regular) setDailyImage(data.urls.regular);
+      } catch {
+        // silencieux si hors ligne
       }
-    }
-    
+    };
+
     void checkAuth();
     void fetchDailyImage();
   }, []);

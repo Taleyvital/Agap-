@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useCommunityUnread } from "@/hooks/useCommunityUnread";
+import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 
 // Module-level cache — one fetch per session
 let _userId: string | null | undefined = undefined;
@@ -17,6 +18,7 @@ export function BottomNav() {
   const { t } = useLanguage();
   const [userId, setUserId] = useState<string | null>(_userId ?? null);
   const communityUnread = useCommunityUnread();
+  const keyboardVisible = useKeyboardVisible();
 
   useEffect(() => {
     if (_userId !== undefined) return;
@@ -35,6 +37,8 @@ export function BottomNav() {
     { href: "/prayer",    label: t("nav_pray"),      Icon: Flame },
     { href: "/profile",   label: t("nav_profile"),   Icon: User },
   ] as const;
+
+  if (keyboardVisible) return null;
 
   return (
     <nav

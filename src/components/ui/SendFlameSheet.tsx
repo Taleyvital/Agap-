@@ -124,6 +124,10 @@ export function SendFlameSheet({ isOpen, onClose, verseRef, verseText }: SendFla
           <motion.div
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.4 }}
+            onDragEnd={(_, info) => { if (info.offset.y > 80) onClose(); }}
             className="fixed inset-x-0 bottom-0 z-[280] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary"
             style={{ maxHeight: "75vh" }}
           >

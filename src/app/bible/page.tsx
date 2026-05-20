@@ -14,7 +14,7 @@ import {
   getChapter,
 } from "@/lib/bible";
 import type { BibleBook, BibleVerseRow } from "@/lib/types";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { cacheBibleChapter, getCachedChapter } from "@/lib/bible-cache";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
@@ -140,7 +140,7 @@ function BiblePageContent() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
@@ -164,7 +164,7 @@ function BiblePageContent() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) return;
       await supabase
         .from("profiles")
@@ -178,7 +178,7 @@ function BiblePageContent() {
     if (!translationInitialized.current) return;
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) return;
       await supabase
         .from("profiles")
@@ -1253,6 +1253,10 @@ function BiblePageContent() {
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.4 }}
+            onDragEnd={(_, info) => { if (info.offset.y > 80) { setColorPickerOpen(false); setVerseToColor(null); } }}
             className="fixed inset-x-0 bottom-0 z-[60] mx-auto max-w-[430px] rounded-t-2xl border border-separator bg-bg-secondary p-6"
           >
             <div className="flex items-center gap-3 mb-4">
@@ -1314,6 +1318,10 @@ function BiblePageContent() {
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.4 }}
+            onDragEnd={(_, info) => { if (info.offset.y > 80) { setSheetOpen(false); setNoteInput(""); } }}
             className="fixed inset-x-0 bottom-0 z-[60] mx-auto max-w-[430px] rounded-t-2xl border border-separator bg-bg-secondary p-6"
           >
             <div className="flex items-center gap-3 mb-4">
@@ -1365,6 +1373,10 @@ function BiblePageContent() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) setTranslationSheetOpen(false); }}
               className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-2xl border border-separator bg-bg-secondary"
               style={{ maxHeight: "80vh", overflowY: "auto" }}
             >
@@ -1398,6 +1410,10 @@ function BiblePageContent() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) setCompareSheetOpen(false); }}
               className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-2xl border border-separator bg-bg-secondary"
               style={{ maxHeight: "80vh", overflowY: "auto" }}
             >

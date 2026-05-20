@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
+const isMobileBuild = process.env.MOBILE_BUILD === "true";
+
 const nextConfig = {
+  ...(isMobileBuild && {
+    output: "export",
+    trailingSlash: true,
+  }),
   images: {
+    unoptimized: isMobileBuild,
     remotePatterns: [
       {
         protocol: "https",

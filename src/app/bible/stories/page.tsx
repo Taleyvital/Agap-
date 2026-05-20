@@ -10,14 +10,14 @@ const PREMIUM_ONLY = process.env.NEXT_PUBLIC_STORIES_PREMIUM_ONLY === "true";
 const FREE_STORY_LIMIT = 3;
 
 const PRESET_STORIES = [
-  { passageRef: "1Samuel17",  character: "David",           title: "Face à Goliath",       bookId: 9,  chapter: 17, color: "#1a2230" },
-  { passageRef: "Ruth1",      character: "Ruth",            title: "Fidélité à Naomi",     bookId: 8,  chapter: 1,  color: "#1a2018" },
-  { passageRef: "Luc1",       character: "Marie",           title: "L'Annonciation",       bookId: 42, chapter: 1,  color: "#1a1830" },
-  { passageRef: "Matthieu14", character: "Pierre",          title: "Marche sur l'eau",     bookId: 40, chapter: 14, color: "#1a2230" },
-  { passageRef: "Genese37",   character: "Joseph",          title: "Trahison des frères",  bookId: 1,  chapter: 37, color: "#231a18" },
-  { passageRef: "Actes9",     character: "Paul",            title: "Chemin de Damas",      bookId: 44, chapter: 9,  color: "#1a1830" },
-  { passageRef: "Daniel6",    character: "Daniel",          title: "La fosse aux lions",   bookId: 27, chapter: 6,  color: "#1a2018" },
-  { passageRef: "Jean20",     character: "Marie-Madeleine", title: "La résurrection",      bookId: 43, chapter: 20, color: "#231a18" },
+  { passageRef: "1Samuel17",  character: "David",           title: "Face à Goliath",       bookId: 9,  chapter: 17 },
+  { passageRef: "Ruth1",      character: "Ruth",            title: "Fidélité à Naomi",     bookId: 8,  chapter: 1  },
+  { passageRef: "Luc1",       character: "Marie",           title: "L'Annonciation",       bookId: 42, chapter: 1  },
+  { passageRef: "Matthieu14", character: "Pierre",          title: "Marche sur l'eau",     bookId: 40, chapter: 14 },
+  { passageRef: "Genese37",   character: "Joseph",          title: "Trahison des frères",  bookId: 1,  chapter: 37 },
+  { passageRef: "Actes9",     character: "Paul",            title: "Chemin de Damas",      bookId: 44, chapter: 9  },
+  { passageRef: "Daniel6",    character: "Daniel",          title: "La fosse aux lions",   bookId: 27, chapter: 6  },
+  { passageRef: "Jean20",     character: "Marie-Madeleine", title: "La résurrection",      bookId: 43, chapter: 20 },
 ] as const;
 
 function StoriesContent() {
@@ -107,8 +107,8 @@ function StoriesContent() {
           </p>
 
           <div style={{
-            background: "#1a1830",
-            border: "0.5px solid rgba(123,111,212,0.35)",
+            background: "#1c1c1c",
+            border: "0.5px solid #2a2a2a",
             borderRadius: 16,
             padding: "20px 18px",
           }}>
@@ -212,8 +212,8 @@ function StoryCard({
         flexShrink: 0,
         width: 160,
         height: 200,
-        background: story.color,
-        border: "0.5px solid rgba(255,255,255,0.06)",
+        background: "#1c1c1c",
+        border: "0.5px solid #2a2a2a",
         borderRadius: 16,
         padding: "16px 14px",
         cursor: "pointer",

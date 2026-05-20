@@ -20,9 +20,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirm?: string; general?: string }>({});
   const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setIsDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
     const supabase = createSupabaseBrowserClient();
     void (async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -102,8 +108,18 @@ export default function LoginPage() {
 
   if (!mounted) return null;
 
+  const t = {
+    bg:          isDark ? "#141414" : "#ffffff",
+    card:        isDark ? "#1c1c1c" : "#f5f5f5",
+    border:      isDark ? "#2a2a2a" : "#e5e5e5",
+    text:        isDark ? "#E8E8E8" : "#1a1a1a",
+    textSub:     isDark ? "#666666" : "#888888",
+    inputBg:     isDark ? "#1c1c1c" : "#f0f0f0",
+    inputBorder: isDark ? "#2a2a2a" : "#d0d0d0",
+  };
+
   return (
-    <main className="fixed inset-0 overflow-y-auto" style={{ background: "#141414" }}>
+    <main className="fixed inset-0 overflow-y-auto" style={{ background: t.bg }}>
       <div className="flex min-h-full flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-[360px]">
           {/* Logo */}
@@ -114,21 +130,38 @@ export default function LoginPage() {
 
             <h1
               className="mt-4 tracking-[0.15em] uppercase"
-              style={{ fontFamily: "var(--font-serif)", fontSize: "28px", color: "#E8E8E8", fontWeight: 600 }}
+              style={{ fontFamily: "var(--font-serif)", fontSize: "28px", color: t.text, fontWeight: 600 }}
             >
               AGAPE
             </h1>
 
             <p
               className="mt-1 italic"
-              style={{ fontFamily: "var(--font-sans)", fontSize: "13px", color: "#666666" }}
+              style={{ fontFamily: "var(--font-sans)", fontSize: "13px", color: t.textSub }}
             >
               Ton compagnon spirituel
             </p>
           </div>
 
           {/* Séparateur */}
-          <div className="my-8 h-px w-full" style={{ background: "#2a2a2a" }} />
+          <div className="my-8 h-px w-full" style={{ background: t.border }} />
+
+          {/* Erreur générale — visible au-dessus du clavier */}
+          {errors.general && (
+            <div style={{
+              background: "rgba(226,75,74,0.12)",
+              border: "0.5px solid rgba(226,75,74,0.4)",
+              borderRadius: 12,
+              padding: "12px 16px",
+              marginBottom: 16,
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              color: "#E24B4A",
+              textAlign: "center",
+            }}>
+              {errors.general}
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             <motion.div
@@ -141,7 +174,7 @@ export default function LoginPage() {
               {/* Titre */}
               <h2
                 className="mb-6"
-                style={{ fontFamily: "var(--font-serif)", fontSize: "20px", color: "#E8E8E8", fontWeight: 600 }}
+                style={{ fontFamily: "var(--font-serif)", fontSize: "20px", color: t.text, fontWeight: 600 }}
               >
                 {mode === "login" ? "Bienvenue" : "Créer un compte"}
               </h2>
@@ -155,9 +188,9 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ton@email.com"
-                    style={fieldStyle(!!errors.email)}
+                    style={fieldStyle(!!errors.email, t)}
                     onFocus={(e) => { e.currentTarget.style.borderColor = errors.email ? "#E24B4A" : "#7B6FD4"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = errors.email ? "#E24B4A" : "#2a2a2a"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = errors.email ? "#E24B4A" : t.inputBorder; }}
                   />
                   {errors.email && <FieldError>{errors.email}</FieldError>}
                 </div>
@@ -171,9 +204,9 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Mot de passe"
-                      style={{ ...fieldStyle(!!errors.password), paddingRight: "44px" }}
+                      style={{ ...fieldStyle(!!errors.password, t), paddingRight: "44px" }}
                       onFocus={(e) => { e.currentTarget.style.borderColor = errors.password ? "#E24B4A" : "#7B6FD4"; }}
-                      onBlur={(e) => { e.currentTarget.style.borderColor = errors.password ? "#E24B4A" : "#2a2a2a"; }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = errors.password ? "#E24B4A" : t.inputBorder; }}
                     />
                     <EyeButton show={showPassword} onToggle={() => setShowPassword((v) => !v)} />
                   </div>
@@ -190,21 +223,14 @@ export default function LoginPage() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirmer le mot de passe"
-                        style={{ ...fieldStyle(!!errors.confirm), paddingRight: "44px" }}
+                        style={{ ...fieldStyle(!!errors.confirm, t), paddingRight: "44px" }}
                         onFocus={(e) => { e.currentTarget.style.borderColor = errors.confirm ? "#E24B4A" : "#7B6FD4"; }}
-                        onBlur={(e) => { e.currentTarget.style.borderColor = errors.confirm ? "#E24B4A" : "#2a2a2a"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = errors.confirm ? "#E24B4A" : t.inputBorder; }}
                       />
                       <EyeButton show={showConfirm} onToggle={() => setShowConfirm((v) => !v)} />
                     </div>
                     {errors.confirm && <FieldError>{errors.confirm}</FieldError>}
                   </div>
-                )}
-
-                {/* Erreur générale */}
-                {errors.general && (
-                  <p style={{ fontFamily: "var(--font-sans)", fontSize: "12px", color: "#E24B4A" }}>
-                    {errors.general}
-                  </p>
                 )}
 
                 {/* Bouton principal */}
@@ -243,7 +269,7 @@ export default function LoginPage() {
                     style={{
                       background: "transparent",
                       border: "none",
-                      color: "#555555",
+                      color: t.textSub,
                       fontFamily: "var(--font-sans)",
                       fontSize: "12px",
                       cursor: "pointer",
@@ -259,7 +285,7 @@ export default function LoginPage() {
               {/* Lien de bascule */}
               <p
                 className="mt-8 text-center"
-                style={{ fontFamily: "var(--font-sans)", fontSize: "13px", color: "#666666" }}
+                style={{ fontFamily: "var(--font-sans)", fontSize: "13px", color: t.textSub }}
               >
                 {mode === "login" ? "Pas encore de compte ? " : "Déjà un compte ? "}
                 <button
@@ -291,13 +317,16 @@ export default function LoginPage() {
   );
 }
 
-function fieldStyle(hasError: boolean): React.CSSProperties {
+function fieldStyle(
+  hasError: boolean,
+  t: { inputBg: string; inputBorder: string; text: string }
+): React.CSSProperties {
   return {
-    background: "#1c1c1c",
-    border: `0.5px solid ${hasError ? "#E24B4A" : "#2a2a2a"}`,
+    background: t.inputBg,
+    border: `0.5px solid ${hasError ? "#E24B4A" : t.inputBorder}`,
     borderRadius: "12px",
     padding: "14px 16px",
-    color: "#E8E8E8",
+    color: t.text,
     fontFamily: "var(--font-sans)",
     fontSize: "14px",
     outline: "none",

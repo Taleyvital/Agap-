@@ -69,14 +69,15 @@ export function VerseImageCard({
   const handleShare = async () => {
     const shareText = `"${verseText}" — ${reference}\n\nPartagé depuis AGAPE 🕊️`
     try {
-      if (navigator.share) {
-        await navigator.share({ text: shareText, title: 'AGAPE – Verset du jour' })
-      } else {
+      const { share } = await import('@/lib/share')
+      await share({ text: shareText, title: 'AGAPE – Verset du jour' })
+    } catch {
+      try {
         await navigator.clipboard.writeText(shareText)
         setShared(true)
         setTimeout(() => setShared(false), 2000)
-      }
-    } catch { /* user cancelled share */ }
+      } catch { /* silent */ }
+    }
   }
 
   if (loading) return <VerseImageSkeleton variant={variant} />

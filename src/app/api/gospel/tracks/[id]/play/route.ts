@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 
+export async function generateStaticParams() {
+  return [{ id: "_" }];
+}
+
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } },

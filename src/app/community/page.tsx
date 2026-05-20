@@ -7,7 +7,7 @@ import { Bell, Heart, MessageSquare, Share2, MoreHorizontal, Plus, Image as Imag
 import { UserAvatar } from "@/components/UserAvatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { useXPToast } from "@/components/providers/XPToastProvider";
 import type { XPResult } from "@/lib/xp-shared";
 import { useLanguage } from "@/lib/i18n";
@@ -122,7 +122,7 @@ export default function CommunityPage() {
     markCommunityAsSeen();
     const supabase = createSupabaseBrowserClient();
 
-    void supabase.auth.getUser().then(({ data: { user } }) => {
+    void getAuthUser(supabase).then((user) => {
       if (user) {
         setUserId(user.id);
 
@@ -407,16 +407,15 @@ export default function CommunityPage() {
   const sharePost = async (post: Post) => {
     const text = post.content || post.quote || "";
     const shareText = `${post.author} — ${text}\n\nPartagé depuis AGAPE`;
-    if (navigator.share) {
+    try {
+      const { share } = await import("@/lib/share");
+      await share({ text: shareText });
+    } catch {
       try {
-        await navigator.share({ text: shareText });
-      } catch {
-        // User cancelled — ignore
-      }
-    } else {
-      await navigator.clipboard.writeText(shareText);
-      setShareCopied(post.id);
-      setTimeout(() => setShareCopied(null), 2000);
+        await navigator.clipboard.writeText(shareText);
+        setShareCopied(post.id);
+        setTimeout(() => setShareCopied(null), 2000);
+      } catch { /* silent */ }
     }
   };
 
@@ -1032,6 +1031,10 @@ export default function CommunityPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) { setCommentsSheetPostId(null); setCommentDraft(""); } }}
               className="fixed inset-x-0 bottom-0 z-[90] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary shadow-2xl flex flex-col"
               style={{ maxHeight: "78vh" }}
             >
@@ -1130,6 +1133,10 @@ export default function CommunityPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) { setRepostSheetPost(null); setRepostDraft(""); } }}
               className="fixed inset-x-0 bottom-0 z-[90] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary p-5 shadow-2xl"
               style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
             >
@@ -1203,6 +1210,10 @@ export default function CommunityPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) setShowAvatarToggleSheet(false); }}
               className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary px-6 pb-10 pt-7 shadow-2xl"
             >
               <div className="mb-5 flex justify-center">
@@ -1281,6 +1292,10 @@ export default function CommunityPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) setShowConsentSheet(false); }}
               className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-3xl border-t border-separator bg-bg-secondary px-6 pb-10 pt-7 shadow-2xl"
             >
               <div className="mb-5 flex justify-center">

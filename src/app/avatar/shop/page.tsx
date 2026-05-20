@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import AvatarBuilder, { type AvatarConfig } from "@/components/AvatarBuilder";
 
 type ShopCategory = "hair" | "beard" | "accessory" | "background";
@@ -52,7 +52,7 @@ export default function AvatarShopPage() {
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await sb.auth.getUser();
+      const user = await getAuthUser(sb);
       if (!user) return;
       setUserId(user.id);
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChevronLeft, Bell } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
@@ -49,7 +49,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) return;
       setUserId(user.id);
       const { data } = await supabase

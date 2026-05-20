@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, HandHeart, Plus } from "lucide-react";
+import { Check, HandHeart, Plus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrayerRequests } from "@/hooks/usePrayerRequests";
 import { PrayerRequest } from "@/lib/types";
@@ -298,12 +298,33 @@ function BottomSheets({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-[32px] border-t border-separator bg-bg-secondary p-8 shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-[32px] border-t border-separator bg-bg-secondary shadow-2xl"
           >
-             <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-bg-tertiary" />
-             <p className="text-center text-[10px] font-bold uppercase tracking-[0.25em] text-text-tertiary mb-8">
-               {t("prayer_add_heading")}
-             </p>
+            {/* Drag handle — only this zone triggers swipe-to-close */}
+            <motion.div
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) { setAddOpen(false); } }}
+              className="flex cursor-grab flex-col items-center pb-2 pt-4 active:cursor-grabbing"
+            >
+              <div className="h-1 w-12 rounded-full bg-bg-tertiary" />
+            </motion.div>
+
+            <div className="px-8 pb-8">
+             <div className="relative mb-8 flex items-center justify-center">
+               <p className="text-center text-[10px] font-bold uppercase tracking-[0.25em] text-text-tertiary">
+                 {t("prayer_add_heading")}
+               </p>
+               <button
+                 type="button"
+                 onClick={() => setAddOpen(false)}
+                 className="absolute right-0 flex h-8 w-8 items-center justify-center rounded-full bg-bg-tertiary text-text-tertiary transition-colors hover:text-text-primary"
+                 aria-label="Fermer"
+               >
+                 <X size={16} />
+               </button>
+             </div>
 
              <form onSubmit={onAdd} className="space-y-6">
                <div className="space-y-2">
@@ -342,6 +363,7 @@ function BottomSheets({
                  {t("prayer_add_btn")} <HandHeart className="h-4 w-4" aria-hidden />
                </button>
              </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -354,13 +376,33 @@ function BottomSheets({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-[32px] border-t border-separator bg-bg-secondary p-8 shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[70] mx-auto max-w-[430px] rounded-t-[32px] border-t border-separator bg-bg-secondary shadow-2xl"
           >
-             <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-bg-tertiary" />
-             
-             <div className="text-center space-y-2 mb-8">
-               <h2 className="font-serif text-2xl italic text-text-primary">🎉 {t("prayer_answer_title")}</h2>
-               <p className="text-xs text-text-tertiary">{t("prayer_answer_subtitle")}</p>
+            {/* Drag handle */}
+            <motion.div
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 80) { setAnswerOpen(false); } }}
+              className="flex cursor-grab flex-col items-center pb-2 pt-4 active:cursor-grabbing"
+            >
+              <div className="h-1 w-12 rounded-full bg-bg-tertiary" />
+            </motion.div>
+
+            <div className="px-8 pb-8">
+             <div className="relative mb-8 flex items-center justify-center">
+               <div className="text-center space-y-2">
+                 <h2 className="font-serif text-2xl italic text-text-primary">🎉 {t("prayer_answer_title")}</h2>
+                 <p className="text-xs text-text-tertiary">{t("prayer_answer_subtitle")}</p>
+               </div>
+               <button
+                 type="button"
+                 onClick={() => setAnswerOpen(false)}
+                 className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-bg-tertiary text-text-tertiary transition-colors hover:text-text-primary"
+                 aria-label="Fermer"
+               >
+                 <X size={16} />
+               </button>
              </div>
 
              <div className="flex justify-center mb-8">
@@ -412,6 +454,7 @@ function BottomSheets({
                  {t("prayer_answer_confirm")} ✓
                </button>
              </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

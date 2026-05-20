@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase-server";
 
+export const dynamic = "force-static";
+
 const CACHE_DAYS = 30;
 
 export interface StrongDefinitionRow {

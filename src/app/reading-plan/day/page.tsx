@@ -8,7 +8,7 @@ import { X, Share2, CheckCircle } from "lucide-react";
 import { useXPToast, triggerXP } from "@/components/providers/XPToastProvider";
 import { VerseFullCard } from "@/components/ui/VerseFullCard";
 import { useLanguage } from "@/lib/i18n";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { getBooks, getChapter } from "@/lib/bible";
 
 interface Question {
@@ -87,7 +87,7 @@ function DayReadingContent() {
       if (!planId) { setLoading(false); return; }
       try {
         const supabase = createSupabaseBrowserClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await getAuthUser(supabase);
         if (!user) { router.push("/login"); return; }
 
         const [reflectionRes, planRes] = await Promise.all([
@@ -159,7 +159,7 @@ function DayReadingContent() {
 
     try {
       const supabase = createSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (user) {
         const nextDay = dayReading.dayNumber + 1;
         const isLastDay = dayReading.dayNumber >= dayReading.totalDays;
@@ -187,13 +187,13 @@ function DayReadingContent() {
 
   const handleShare = () => {
     if (!dayReading) return;
-    if (navigator.share) {
-      navigator.share({
+    void import("@/lib/share").then(({ share }) =>
+      share({
         title: `AGAPE - Jour ${dayReading.dayNumber}: ${dayReading.title}`,
         text: dayReading.bibleReference,
         url: window.location.href,
-      });
-    }
+      })
+    );
   };
 
   if (loading) {

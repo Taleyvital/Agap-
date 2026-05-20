@@ -8,7 +8,7 @@ import Link from "next/link";
 import { ArrowLeft, UserPlus, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import { getFlameColorHex } from "@/lib/flames";
 import { UserAvatar } from "@/components/UserAvatar";
 
@@ -177,7 +177,7 @@ export default function MessagesPage() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     void (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) { router.push("/login"); return; }
       currentUserIdRef.current = user.id;
 

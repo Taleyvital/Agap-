@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { PremiumPaywall } from "@/components/ui/PremiumPaywall";
 import { useGospelPlayer } from "@/components/providers/GospelPlayerProvider";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient, getAuthUser } from "@/lib/supabase";
 import type { GospelTrack } from "@/types/gospel";
 import { formatDuration, GOSPEL_GENRES } from "@/types/gospel";
 
@@ -45,7 +45,8 @@ export default function GospelPage() {
 
   const premiumGateEnabled = process.env.NEXT_PUBLIC_GOSPEL_PREMIUM_ONLY === "true";
 
-  const [isPremium, setIsPremium]         = useState<boolean | null>(null);
+  // Si la gate premium est désactivée, on sait déjà que l'accès est libre → pas de spinner
+  const [isPremium, setIsPremium]         = useState<boolean | null>(!premiumGateEnabled ? true : null);
   const [showPaywall, setShowPaywall]     = useState(false);
   const [tracks, setTracks]               = useState<GospelTrack[]>([]);
   const [featured, setFeatured]           = useState<GospelTrack[]>([]);
@@ -67,10 +68,9 @@ export default function GospelPage() {
   useEffect(() => {
     const init = async () => {
       const supabase = createSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getAuthUser(supabase);
       if (!user) return;
 
-      // User initial for avatar
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, is_premium")
@@ -80,20 +80,18 @@ export default function GospelPage() {
       const name = profile?.full_name || user.email || "?";
       setUserInitial(name.charAt(0).toUpperCase());
 
-      if (!premiumGateEnabled) {
-        setIsPremium(true);
-        return;
+      if (premiumGateEnabled) {
+        const premium = profile?.is_premium ?? false;
+        setIsPremium(premium);
+        if (!premium) setShowPaywall(true);
       }
-      const premium = profile?.is_premium ?? false;
-      setIsPremium(premium);
-      if (!premium) setShowPaywall(true);
     };
     init();
   }, [premiumGateEnabled]);
 
   const fetchMyTracks = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser(supabase);
     if (!user) return;
 
     const { data: tracksData } = await supabase
@@ -137,7 +135,7 @@ export default function GospelPage() {
 
   const fetchTracks = useCallback(async (genre?: string) => {
     setLoading(true);
-    const params = new URLSearchParams({ limit: "40" });
+    const params = new URLSearchParams({ limit: "20" });
     if (genre) params.set("genre", genre);
     const res  = await fetch(`/api/gospel/tracks?${params}`);
     const data = await res.json();

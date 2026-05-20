@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import { awardXP } from "@/lib/xp";
 
+export async function generateStaticParams() {
+  return [{ id: "_" }];
+}
+
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } },
