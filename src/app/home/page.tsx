@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useCommunityUnread } from "@/hooks/useCommunityUnread";
 import { useLanguage } from "@/lib/i18n";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
+import { NotificationPanel } from "@/components/NotificationPanel";
 
 // Collection de versets pour le verset journalier
 const DAILY_VERSES = [
@@ -84,6 +85,7 @@ export default function HomePage() {
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [profile, setProfile] = useState<{ first_name: string | null; anonymous_name: string | null } | null>(null);
   const [isVerseModalOpen, setIsVerseModalOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [dailyImage, setDailyImage] = useState<string | null>(null);
   const { t } = useLanguage();
   const communityUnread = useCommunityUnread();
@@ -178,18 +180,25 @@ export default function HomePage() {
           <Link href="/chat" className="text-xs uppercase tracking-[0.15em] text-accent">
             AGAPE Chat
           </Link>
-          <Link
-            href="/community"
-            className="relative rounded-full p-2 text-text-secondary hover:text-text-primary"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {communityUnread > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 font-sans text-[9px] font-bold text-white">
-                {communityUnread > 9 ? "9+" : communityUnread}
-              </span>
-            )}
-          </Link>
+          <div className="relative">
+            <button
+              onClick={() => setIsNotifOpen((v) => !v)}
+              className="relative rounded-full p-2 text-text-secondary hover:text-text-primary transition-colors"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {communityUnread > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 font-sans text-[9px] font-bold text-white">
+                  {communityUnread > 9 ? "9+" : communityUnread}
+                </span>
+              )}
+            </button>
+            <NotificationPanel
+              isOpen={isNotifOpen}
+              onClose={() => setIsNotifOpen(false)}
+              communityUnread={communityUnread}
+            />
+          </div>
         </header>
 
         <PushNotificationBanner />
